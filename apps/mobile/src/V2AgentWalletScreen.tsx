@@ -438,6 +438,7 @@ function WorldCupTab({
   const [category, setCategory] = useState<MarketCategory>("冠军");
   const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
   const insight = createWorldCupInsightCopy(explore);
+  const previewCards = createWorldCupPreviewCards(explore);
 
   if (worldCupView === "explore") {
     return (
@@ -636,7 +637,23 @@ function WorldCupTab({
           <Text style={styles.sectionHint}>Agent 实时看</Text>
         </View>
 
-        {items.slice(0, 2).map((item) => (
+        {previewCards.length > 0 ? previewCards.map((card) => (
+          <Pressable
+            key={card.id}
+            style={styles.watchCard}
+            onPress={() => {
+              onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+              onHome();
+            }}
+          >
+            <Text style={styles.watchFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
+            <View style={styles.watchBody}>
+              <Text style={styles.watchTitle}>{card.displayTitle || card.title}</Text>
+              <Text style={styles.watchMeta}>{card.agentNote || "实时市场"}</Text>
+            </View>
+            <Text style={styles.watchPrice}>{card.probabilityLabel || optionPriceLabel(card) || "查看"}</Text>
+          </Pressable>
+        )) : items.slice(0, 2).map((item) => (
           <Pressable key={item.id} style={styles.watchCard} onPress={() => onAsk(item.title)}>
             <Text style={styles.watchFlag}>⚽</Text>
             <View style={styles.watchBody}>
@@ -1033,6 +1050,14 @@ function createWorldCupInsightCopy(explore?: V2WorldCupExploreView): {
     text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`,
     marketCard: champion
   };
+}
+
+function createWorldCupPreviewCards(explore?: V2WorldCupExploreView): V2WorldCupExploreMarketCard[] {
+  if (!explore) return [];
+  return [
+    ...explore.cards.champion.slice(0, 1),
+    ...(explore.cards.group_stage[0] ? explore.cards.group_stage.slice(0, 1) : explore.cards.golden_boot.slice(0, 1))
+  ].slice(0, 2);
 }
 
 function GoldenBootMarketList() {
