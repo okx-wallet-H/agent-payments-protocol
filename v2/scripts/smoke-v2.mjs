@@ -13,6 +13,11 @@ assert(home.home?.shell?.main === "premium_ai_conversation", "home shell is AI c
 assert(Array.isArray(home.home?.quickPrompts) && home.home.quickPrompts.length > 0, "home has quick prompts");
 assert(home.home?.panels?.topRight?.walletLabel === "0x1111...1111", "home uses provided wallet address");
 
+const explore = await getJson("/api/v2/world-cup/explore");
+assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");
+assert(Array.isArray(explore.explore?.categories), "world cup explore has categories");
+assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
+
 const recharge = await postJson("/api/v2/phase-one", {
   text: "我要充值500U",
   walletAddress,

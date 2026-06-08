@@ -264,6 +264,39 @@ export interface V2MarketSnapshot {
   raw?: unknown;
 }
 
+export type V2WorldCupExploreCategory = "champion" | "golden_boot" | "group_stage" | "upcoming_matches";
+
+export interface V2WorldCupExploreOption {
+  id: string;
+  label: string;
+  price?: number;
+  priceLabel?: string;
+  assetId?: string;
+  side?: "yes" | "no";
+}
+
+export interface V2WorldCupExploreMarketCard {
+  id: string;
+  category: V2WorldCupExploreCategory;
+  title: string;
+  subtitle?: string;
+  probabilityLabel?: string;
+  volumeLabel?: string;
+  status: "tradeable" | "watch_only";
+  market: V2MarketSnapshot;
+  options: V2WorldCupExploreOption[];
+}
+
+export interface V2WorldCupExploreView {
+  type: "world_cup_explore_view";
+  categories: Array<{
+    id: V2WorldCupExploreCategory;
+    label: string;
+  }>;
+  cards: Record<V2WorldCupExploreCategory, V2WorldCupExploreMarketCard[]>;
+  updatedAt: string;
+}
+
 export interface V2ReceiveAddress {
   id: string;
   label: string;

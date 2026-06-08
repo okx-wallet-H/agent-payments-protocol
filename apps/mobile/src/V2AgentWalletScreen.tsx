@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy } from "@privy-io/expo";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +15,14 @@ import {
   View
 } from "react-native";
 import { useV2AgentWallet } from "./use-v2-agent-wallet";
-import type { V2ConversationCard, V2MobileChatMessage } from "./types";
+import { createApi } from "./api";
+import type {
+  V2ConversationCard,
+  V2MobileChatMessage,
+  V2WorldCupExploreCategory,
+  V2WorldCupExploreMarketCard,
+  V2WorldCupExploreView
+} from "./types";
 
 const worldCupPoster = require("../assets/world-cup-poster.png");
 
@@ -24,6 +31,12 @@ type WorldCupView = "home" | "explore";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 
 const marketCategories: MarketCategory[] = ["冠军", "金靴奖得主", "小组赛", "近期比赛"];
+const exploreCategoryByTab: Record<MarketCategory, V2WorldCupExploreCategory> = {
+  冠军: "champion",
+  金靴奖得主: "golden_boot",
+  小组赛: "group_stage",
+  近期比赛: "upcoming_matches"
+};
 
 const championMarkets = [
   { flag: "🇪🇸", name: "西班牙", percent: "17%", volume: "78.67万 交易额", color: "#d0a000" },
@@ -101,7 +114,11 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [code, setCode] = useState("");
   const [input, setInput] = useState("");
   const [activeTab, setActiveTab] = useState<MainTab>("agent");
+  const [worldCupExplore, setWorldCupExplore] = useState<V2WorldCupExploreView | undefined>();
+  const [worldCupExploreLoading, setWorldCupExploreLoading] = useState(false);
+  const [worldCupExploreError, setWorldCupExploreError] = useState<string | undefined>();
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
+  const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
     apiBaseUrl,
     getAccessToken,
@@ -109,6 +126,30 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     userId: user?.id,
     walletAddress
   });
+
+  useEffect(() => {
+    if (!isReady || !user || activeTab !== "worldcup") return;
+
+    let cancelled = false;
+    setWorldCupExploreLoading(true);
+    setWorldCupExploreError(undefined);
+
+    worldCupApi
+      .getWorldCupExplore()
+      .then((explore) => {
+        if (!cancelled) setWorldCupExplore(explore);
+      })
+      .catch((error) => {
+        if (!cancelled) setWorldCupExploreError(error instanceof Error ? error.message : "世界杯数据暂时不可用");
+      })
+      .finally(() => {
+        if (!cancelled) setWorldCupExploreLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isReady, user, worldCupApi]);
 
   async function run(action: () => Promise<unknown>) {
     try {
@@ -205,6 +246,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
 
         {activeTab === "worldcup" ? (
           <WorldCupTab
+            explore={worldCupExplore}
+            exploreError={worldCupExploreError}
+            exploreLoading={worldCupExploreLoading}
             items={agent.session.home?.panels.topLeft.items || []}
             onAsk={(text) => run(() => send(text))}
             onHome={() => setActiveTab("agent")}
@@ -348,10 +392,16 @@ function AgentTab({
 }
 
 function WorldCupTab({
+  explore,
+  exploreError,
+  exploreLoading,
   items,
   onAsk,
   onHome
 }: {
+  explore?: V2WorldCupExploreView;
+  exploreError?: string;
+  exploreLoading: boolean;
   items: { id: string; title: string; subtitle?: string; value?: string }[];
   onAsk: (text: string) => void;
   onHome: () => void;
@@ -363,6 +413,9 @@ function WorldCupTab({
     return (
       <ExploreWorldCupPage
         activeCategory={category}
+        explore={explore}
+        exploreError={exploreError}
+        exploreLoading={exploreLoading}
         onBack={() => setWorldCupView("home")}
         onCategoryChange={setCategory}
       />
@@ -562,13 +615,23 @@ function WorldCupTab({
 
 function ExploreWorldCupPage({
   activeCategory,
+  explore,
+  exploreError,
+  exploreLoading,
   onBack,
   onCategoryChange
 }: {
   activeCategory: MarketCategory;
+  explore?: V2WorldCupExploreView;
+  exploreError?: string;
+  exploreLoading?: boolean;
   onBack: () => void;
   onCategoryChange: (category: MarketCategory) => void;
 }) {
+  const activeExploreCategory = exploreCategoryByTab[activeCategory];
+  const activeCards = explore?.cards[activeExploreCategory] || [];
+  const hasDynamicCards = activeCards.length > 0;
+
   return (
     <ScrollView contentContainerStyle={styles.explorePage} showsVerticalScrollIndicator={false}>
       <View style={styles.exploreHeader}>
@@ -591,11 +654,73 @@ function ExploreWorldCupPage({
         ))}
       </ScrollView>
 
-      {activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
-      {activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
-      {activeCategory === "小组赛" ? <GroupMarketList /> : null}
-      {activeCategory === "近期比赛" ? <MatchMarketList /> : null}
+      {exploreLoading ? (
+        <View style={styles.exploreStatusRow}>
+          <ActivityIndicator size="small" />
+          <Text style={styles.exploreStatusText}>正在更新世界杯数据</Text>
+        </View>
+      ) : null}
+
+      {!exploreLoading && exploreError ? <Text style={styles.exploreStatusText}>展示本地样稿，数据稍后自动更新</Text> : null}
+
+      {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} /> : null}
+      {hasDynamicCards && activeCategory !== "冠军" ? <DynamicExploreMarketList cards={activeCards} /> : null}
+
+      {!hasDynamicCards && activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
+      {!hasDynamicCards && activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
+      {!hasDynamicCards && activeCategory === "小组赛" ? <GroupMarketList /> : null}
+      {!hasDynamicCards && activeCategory === "近期比赛" ? <MatchMarketList /> : null}
     </ScrollView>
+  );
+}
+
+function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+  return (
+    <View style={styles.exploreSection}>
+      <View style={styles.marketSectionTitleRow}>
+        <View style={styles.marketIconBadge}>
+          <Text style={styles.marketIconText}>⚽</Text>
+        </View>
+        <Text style={styles.marketSectionTitle}>2026 年世界杯冠军</Text>
+        <Ionicons name="chevron-forward" size={22} color={colors.ink} />
+      </View>
+      <View style={styles.championGrid}>
+        {cards.slice(0, 12).map((card, index) => (
+          <View key={card.id} style={styles.championItem}>
+            <View style={[styles.championFlagCard, { backgroundColor: championCardColor(index) }]}>
+              <Text style={styles.championFlag}>{flagForMarket(card.title)}</Text>
+              <Text style={styles.championPercent}>{card.probabilityLabel || optionPriceLabel(card) || "观察"}</Text>
+            </View>
+            <Text style={styles.championName}>{shortMarketTitle(card.title)}</Text>
+            <Text style={styles.championVolume}>{card.volumeLabel || card.subtitle || "实时市场"}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function DynamicExploreMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+  return (
+    <View style={styles.exploreCardList}>
+      {cards.slice(0, 16).map((card) => (
+        <View key={card.id} style={styles.playerMarketCard}>
+          <View style={styles.playerTopRow}>
+            <Text style={styles.playerFlag}>{flagForMarket(card.title)}</Text>
+            <Text style={styles.playerName}>{card.title}</Text>
+            <Text style={styles.playerPercent}>{card.probabilityLabel || optionPriceLabel(card) || "观察"}</Text>
+          </View>
+          <View style={styles.playerTrack}>
+            <View style={[styles.playerTrackFill, { width: probabilityWidth(card) }]} />
+          </View>
+          <View style={styles.yesNoRow}>
+            <Text style={styles.yesPill}>{card.options[0]?.priceLabel ? `Yes ${card.options[0].priceLabel}` : "Yes"}</Text>
+            <Text style={styles.noPill}>{card.options[1]?.priceLabel ? `No ${card.options[1].priceLabel}` : "No"}</Text>
+          </View>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -1008,6 +1133,46 @@ function CardMessage({
       <Text style={styles.cardBody}>{card.agentNote}</Text>
     </View>
   );
+}
+
+function championCardColor(index: number): string {
+  const colors = ["#d0a000", "#b70d25", "#b20b22", "#005514", "#6397bd", "#d5bf00", "#0c6d43", "#1f4f9c"];
+  return colors[index % colors.length];
+}
+
+function flagForMarket(title: string): string {
+  const text = title.toLowerCase();
+  if (/spain|西班牙/.test(text)) return "🇪🇸";
+  if (/france|法国/.test(text)) return "🇫🇷";
+  if (/england|英格兰|harry kane|凯恩/.test(text)) return "🏴";
+  if (/portugal|葡萄牙/.test(text)) return "🇵🇹";
+  if (/argentina|阿根廷/.test(text)) return "🇦🇷";
+  if (/brazil|巴西/.test(text)) return "🇧🇷";
+  if (/mexico|墨西哥/.test(text)) return "🇲🇽";
+  if (/korea|韩国/.test(text)) return "🇰🇷";
+  if (/belgium|比利时/.test(text)) return "🇧🇪";
+  if (/canada|加拿大/.test(text)) return "🇨🇦";
+  if (/norway|挪威|haaland|哈兰德/.test(text)) return "🇳🇴";
+  return "⚽";
+}
+
+function shortMarketTitle(title: string): string {
+  return title
+    .replace(/会赢得 2026 年世界杯冠军吗？/g, "")
+    .replace(/Will /i, "")
+    .replace(/ win the 2026 FIFA World Cup\??/i, "")
+    .trim()
+    .slice(0, 18) || "世界杯";
+}
+
+function optionPriceLabel(card: V2WorldCupExploreMarketCard): string | undefined {
+  return card.options.find((option) => option.side === "yes")?.priceLabel || card.options[0]?.priceLabel;
+}
+
+function probabilityWidth(card: V2WorldCupExploreMarketCard): `${number}%` {
+  const price = card.options.find((option) => option.side === "yes")?.price || card.options[0]?.price || 0.1;
+  const percent = Math.max(3, Math.min(100, Math.round(price * 100)));
+  return `${percent}%`;
 }
 
 function shortAddress(address?: string): string | undefined {
@@ -2055,6 +2220,21 @@ const styles = StyleSheet.create({
   },
   marketTabTextActive: {
     color: "#fff"
+  },
+  exploreStatusRow: {
+    minHeight: 34,
+    borderRadius: 17,
+    backgroundColor: "#f2f2f1",
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start"
+  },
+  exploreStatusText: {
+    color: "#716b65",
+    fontSize: 12,
+    fontWeight: "700"
   },
   exploreSection: {
     gap: 18

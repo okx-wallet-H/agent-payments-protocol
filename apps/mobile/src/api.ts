@@ -13,7 +13,8 @@ import type {
   V2MobileHomeView,
   V2PhaseOneRecord,
   V2StrategyCard,
-  V2TrackingCard
+  V2TrackingCard,
+  V2WorldCupExploreView
 } from "./types";
 
 export interface ApiClient {
@@ -43,6 +44,7 @@ export interface ApiClient {
   listV2Tracking(userId?: string): Promise<V2TrackingCard[]>;
   listV2Strategies(userId?: string): Promise<V2StrategyCard[]>;
   listV2Records(userId?: string): Promise<V2PhaseOneRecord[]>;
+  getWorldCupExplore(): Promise<V2WorldCupExploreView>;
 }
 
 type GetAccessToken = () => Promise<string | null | undefined>;
@@ -225,6 +227,15 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         getAccessToken
       );
       return data.items;
+    },
+    async getWorldCupExplore() {
+      const data = await request<{ explore: V2WorldCupExploreView }>(
+        cleanBaseUrl,
+        "/api/v2/world-cup/explore",
+        undefined,
+        getAccessToken
+      );
+      return data.explore;
     }
   };
 }
