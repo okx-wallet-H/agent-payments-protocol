@@ -1,0 +1,46 @@
+{
+  "name": "agent-wallet-xlayer-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate:postgres": "node scripts/postgres-migrate.mjs",
+    "smoke:mvp": "node scripts/smoke-mvp.mjs",
+    "smoke:v2": "node v2/scripts/smoke-v2.mjs",
+    "smoke:v2:auth": "node v2/scripts/smoke-v2-auth.mjs",
+    "typecheck": "tsc --noEmit",
+    "mobile:dev": "npm --prefix apps/mobile run start",
+    "mobile:dev:v2": "npm --prefix apps/mobile run start:v2",
+    "mobile:ios": "npm --prefix apps/mobile run ios",
+    "mobile:ios:v2": "npm --prefix apps/mobile run ios:v2",
+    "mobile:android": "npm --prefix apps/mobile run android",
+    "mobile:android:v2": "npm --prefix apps/mobile run android:v2",
+    "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
+    "mobile:build:ios": "npm --prefix apps/mobile run build:ios",
+    "mobile:build:android": "npm --prefix apps/mobile run build:android"
+  },
+  "dependencies": {
+    "@privy-io/node": "^0.20.0",
+    "@privy-io/react-auth": "^3.29.2",
+    "jose": "^6.2.3",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.7",
+    "pg": "^8.21.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "viem": "2.52.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
+  }
+}

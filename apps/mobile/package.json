@@ -1,0 +1,52 @@
+{
+  "name": "agent-wallet-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "start:v2": "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true expo start",
+    "ios": "expo start --ios",
+    "ios:v2": "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true expo start --ios",
+    "android": "expo start --android",
+    "android:v2": "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true expo start --android",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "build:ios": "npx eas build --platform ios --profile production",
+    "build:android": "npx eas build --platform android --profile production",
+    "submit:ios": "npx eas submit --platform ios --profile production",
+    "submit:android": "npx eas submit --platform android --profile production"
+  },
+  "dependencies": {
+    "@ethersproject/shims": "^5.8.0",
+    "@expo/vector-icons": "15.1.1",
+    "@privy-io/expo": "^0.69.0",
+    "@privy-io/expo-native-extensions": "^0.0.11",
+    "expo": "56.0.9",
+    "expo-apple-authentication": "~56.0.4",
+    "expo-application": "~56.0.3",
+    "expo-clipboard": "^56.0.4",
+    "expo-constants": "~56.0.17",
+    "expo-crypto": "~56.0.4",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.13",
+    "expo-secure-store": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "expo-web-browser": "~56.0.5",
+    "fast-text-encoding": "^1.0.6",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-get-random-values": "~1.11.0",
+    "react-native-passkeys": "^0.4.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-webview": "13.16.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "typescript": "~6.0.3"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}
