@@ -1,7 +1,7 @@
 import { createBusinessGoal, createPredictionResearchPlan } from "./business-agent";
 import { createPredictionCard } from "./prediction-card";
 import { createDefaultReceiveAddresses, createReceiveCard } from "./receive-card";
-import { createRechargeProgress, createStrategyProgress } from "./progress-stream";
+import { createRechargeProgress, createSelectedMarketProgress, createStrategyProgress } from "./progress-stream";
 import type { ConversationTurn, MarketSnapshot } from "../domain/types";
 
 export function handlePhaseOneUserText(input: {
@@ -34,9 +34,9 @@ export function handlePhaseOneUserText(input: {
     return {
       id: crypto.randomUUID(),
       goal,
-      progress: createStrategyProgress(goal),
+      progress: input.candidateMarket ? createSelectedMarketProgress(goal) : createStrategyProgress(goal),
       cards: input.candidateMarket ? [createPredictionCard(input.candidateMarket)] : [],
-      finalText: plan.market ? "我先整理成一张策略卡，你可以先模拟。" : "我先去找世界杯相关市场。",
+      finalText: plan.market ? "这场我先建议观察，点卡片可以继续跟踪或先模拟。" : "我先去找世界杯相关市场。",
       createdAt: new Date().toISOString()
     };
   }

@@ -27,6 +27,14 @@ export function createStrategyProgress(goal: BusinessGoal): AgentProgressMessage
   ];
 }
 
+export function createSelectedMarketProgress(goal: BusinessGoal): AgentProgressMessage[] {
+  return [
+    createProgressMessage(goal, "我先看这场的价格和热度。"),
+    createProgressMessage(goal, "再对比一下市场现在偏向哪边。"),
+    createProgressMessage(goal, "先给你一个能看懂的观察结论。")
+  ];
+}
+
 export function createInternalFundProgress(goal: BusinessGoal): AgentProgressMessage[] {
   return [
     createProgressMessage(goal, "我在帮你准备策略资金。"),

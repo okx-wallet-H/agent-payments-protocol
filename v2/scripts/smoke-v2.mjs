@@ -48,11 +48,17 @@ const selectedPrediction = await postJson("/api/v2/phase-one", {
   candidateMarket: selectedWorldCupMarket,
   userId
 });
+const selectedProgressText = selectedPrediction.mobileTurn.messages
+  .filter((message) => message.kind === "progress")
+  .map((message) => message.text)
+  .join(" ");
 const selectedPredictionCard = selectedPrediction.mobileTurn.cards.find((card) => card.type === "prediction_card");
 assert(
   selectedPredictionCard?.market?.marketId === selectedWorldCupMarket.marketId,
   "prediction can analyze selected world cup market"
 );
+assert(selectedProgressText.includes("我先看这场的价格和热度"), "selected market uses friendly analysis progress");
+assert(!selectedPrediction.mobileTurn.messages.some((message) => message.text === "我先整理成一张策略卡，你可以先模拟。"), "selected market avoids old strategy-card wording");
 assert(selectedPredictionCard?.title?.includes("世界杯"), "selected prediction card uses friendly world cup title");
 assert(!/^Will /i.test(selectedPredictionCard?.title || ""), "selected prediction card title is not raw English");
 assert(selectedPredictionCard?.metrics?.priceLabel?.includes("会"), "selected prediction card uses friendly price labels");
