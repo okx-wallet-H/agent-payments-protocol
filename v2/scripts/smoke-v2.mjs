@@ -61,6 +61,7 @@ const track = await postJson("/api/v2/phase-one/actions", {
 });
 assert(track.record?.type === "tracking.saved", "track writes tracking record");
 assert(track.mobileTurn?.messages?.some((message) => message.card?.type === "tracking_card"), "track returns tracking mobile card");
+assert(track.card?.title?.includes("世界杯") || track.card?.market?.provider !== "okx-outcomes", "tracking card keeps friendly world cup title");
 
 const duplicateTrack = await postJson("/api/v2/phase-one/actions", {
   action: "track",

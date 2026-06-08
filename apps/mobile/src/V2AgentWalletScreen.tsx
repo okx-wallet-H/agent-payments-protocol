@@ -21,6 +21,7 @@ import type {
   V2MarketSnapshot,
   V2MobileChatMessage,
   V2PredictionCard,
+  V2TrackingCard,
   V2WorldCupExploreCategory,
   V2WorldCupExploreMarketCard,
   V2WorldCupExploreView
@@ -1304,10 +1305,54 @@ function CardMessage({
     );
   }
 
+  if (card.type === "tracking_card") {
+    return <TrackingCardMessage card={card} onAction={onAction} />;
+  }
+
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{card.title}</Text>
       <Text style={styles.cardBody}>{card.agentNote}</Text>
+    </View>
+  );
+}
+
+function TrackingCardMessage({
+  card,
+  onAction
+}: {
+  card: V2TrackingCard;
+  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
+}) {
+  return (
+    <View style={styles.trackingCard}>
+      <View style={styles.predictionHeaderRow}>
+        <View style={styles.trackingFlagBadge}>
+          <Ionicons name="eye-outline" size={24} color="#fff" />
+        </View>
+        <View style={styles.predictionHeaderText}>
+          <Text style={styles.trackingEyebrow}>Agent 已开始跟踪</Text>
+          <Text style={styles.trackingStatus}>{card.statusText}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.trackingTitle}>{card.title.replace(/^已跟踪：/, "")}</Text>
+
+      <View style={styles.trackingWatchBox}>
+        <Text style={styles.trackingWatchLabel}>接下来重点看</Text>
+        <Text style={styles.trackingWatchText}>{card.watchText}</Text>
+      </View>
+
+      <Text style={styles.trackingNote}>{card.agentNote}</Text>
+
+      <View style={styles.predictionActionRow}>
+        <Pressable style={styles.predictionPrimaryAction} onPress={() => onAction("build_strategy", card)}>
+          <Text style={styles.predictionPrimaryActionText}>策略</Text>
+        </Pressable>
+        <Pressable style={styles.predictionGhostAction} onPress={() => onAction("simulate", card)}>
+          <Text style={styles.predictionGhostActionText}>先模拟</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1802,6 +1847,64 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "900"
+  },
+  trackingCard: {
+    borderRadius: 26,
+    backgroundColor: "#13251a",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  trackingFlagBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "#217d1a",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  trackingEyebrow: {
+    color: "#aaff35",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  trackingStatus: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  trackingTitle: {
+    color: "#fff",
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "900"
+  },
+  trackingWatchBox: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 14,
+    gap: 6
+  },
+  trackingWatchLabel: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  trackingWatchText: {
+    color: "#fff",
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  trackingNote: {
+    color: "rgba(255, 255, 255, 0.78)",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
   },
   error: {
     paddingHorizontal: 22,
