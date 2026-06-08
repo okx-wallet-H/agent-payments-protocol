@@ -549,7 +549,17 @@ function WorldCupTab({
           </View>
         </View>
 
-        <Pressable style={styles.agentInsightCard} onPress={() => onAsk("继续分析今天的世界杯机会")}>
+        <Pressable
+          style={styles.agentInsightCard}
+          onPress={() => {
+            if (insight.marketCard) {
+              onAnalyzeMarket(`帮我继续分析：${insight.marketCard.displayTitle || insight.marketCard.title}`, insight.marketCard.market);
+              onHome();
+              return;
+            }
+            onAsk("继续分析今天的世界杯机会");
+          }}
+        >
           <View style={styles.agentInsightTop}>
             <Text style={styles.agentInsightLabel}>今日 Agent 观点</Text>
             <Text style={styles.agentInsightStatus}>已更新</Text>
@@ -990,7 +1000,11 @@ function ChampionMarketGrid() {
   );
 }
 
-function createWorldCupInsightCopy(explore?: V2WorldCupExploreView): { title: string; text: string } {
+function createWorldCupInsightCopy(explore?: V2WorldCupExploreView): {
+  title: string;
+  text: string;
+  marketCard?: V2WorldCupExploreMarketCard;
+} {
   const champion = explore?.cards.champion?.[0];
   const group = explore?.cards.group_stage?.[0];
   const second = group || explore?.cards.golden_boot?.[0];
@@ -1009,13 +1023,15 @@ function createWorldCupInsightCopy(explore?: V2WorldCupExploreView): { title: st
     const secondName = second.displayName || shortMarketTitle(second.displayTitle || second.title);
     return {
       title: `先看${championName}冠军盘，再跟踪${secondName}。`,
-      text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`
+      text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`,
+      marketCard: champion
     };
   }
 
   return {
     title: `先看${championName}冠军盘。`,
-    text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`
+    text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`,
+    marketCard: champion
   };
 }
 
