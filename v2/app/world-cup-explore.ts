@@ -57,7 +57,12 @@ export function createWorldCupExploreView(markets: MarketSnapshot[]): WorldCupEx
 }
 
 export function inferWorldCupCategory(market: MarketSnapshot): WorldCupExploreCategory {
-  const text = `${market.question} ${market.raw ? JSON.stringify(market.raw).slice(0, 500) : ""}`.toLowerCase();
+  const question = market.question.toLowerCase();
+  if (/(golden boot|金靴|top scorer|最佳射手)/i.test(question)) return "golden_boot";
+  if (/(win the .*world cup|world cup winner|世界杯冠军|赢得.*世界杯|夺冠)/i.test(question)) return "champion";
+  if (/( vs | v |\bdraw\b|平局|match|比赛)/i.test(question)) return "upcoming_matches";
+
+  const text = `${question} ${market.raw ? JSON.stringify(market.raw).slice(0, 500) : ""}`.toLowerCase();
   if (/(golden boot|金靴|top scorer|最佳射手)/i.test(text)) return "golden_boot";
   if (/(group|组第一|小组|小组赛)/i.test(text)) return "group_stage";
   if (/( vs | v |\\bdraw\\b|平局|近期|match|比赛)/i.test(text)) return "upcoming_matches";
