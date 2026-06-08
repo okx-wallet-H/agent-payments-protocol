@@ -437,6 +437,7 @@ function WorldCupTab({
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
   const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
+  const insight = createWorldCupInsightCopy(explore);
 
   if (worldCupView === "explore") {
     return (
@@ -553,8 +554,8 @@ function WorldCupTab({
             <Text style={styles.agentInsightLabel}>今日 Agent 观点</Text>
             <Text style={styles.agentInsightStatus}>已更新</Text>
           </View>
-          <Text style={styles.agentInsightTitle}>先观察西班牙冠军盘，优先跟踪墨西哥 A 组排名。</Text>
-          <Text style={styles.agentInsightText}>热度在上升，但部分价格已经不便宜。让 Agent 继续看盘口、资金和新闻，再决定是否出手。</Text>
+          <Text style={styles.agentInsightTitle}>{insight.title}</Text>
+          <Text style={styles.agentInsightText}>{insight.text}</Text>
           <View style={styles.agentInsightAction}>
             <Text style={styles.agentInsightActionText}>让 Agent 继续分析</Text>
             <Ionicons name="arrow-forward" size={16} color="#fff" />
@@ -987,6 +988,35 @@ function ChampionMarketGrid() {
       </View>
     </View>
   );
+}
+
+function createWorldCupInsightCopy(explore?: V2WorldCupExploreView): { title: string; text: string } {
+  const champion = explore?.cards.champion?.[0];
+  const group = explore?.cards.group_stage?.[0];
+  const second = group || explore?.cards.golden_boot?.[0];
+
+  if (!champion) {
+    return {
+      title: "先观察冠军盘，等实时数据更新。",
+      text: "Agent 会优先看交易额、价格和热度变化，数据稳定后再给你重点方向。"
+    };
+  }
+
+  const championName = champion.displayName || shortMarketTitle(champion.displayTitle || champion.title);
+  const championPrice = champion.probabilityLabel || optionPriceLabel(champion) || "观察中";
+
+  if (second) {
+    const secondName = second.displayName || shortMarketTitle(second.displayTitle || second.title);
+    return {
+      title: `先看${championName}冠军盘，再跟踪${secondName}。`,
+      text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`
+    };
+  }
+
+  return {
+    title: `先看${championName}冠军盘。`,
+    text: `${championName}当前热度靠前，市场给到 ${championPrice}。我会继续看价格、成交和资金变化。`
+  };
 }
 
 function GoldenBootMarketList() {
