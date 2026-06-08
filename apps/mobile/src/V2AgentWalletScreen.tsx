@@ -1680,7 +1680,7 @@ function marketTypeLabel(type?: string): string {
 }
 
 function marketStatusLabel(card: V2WorldCupExploreMarketCard): string {
-  if (card.status === "tradeable" && card.market.acceptingOrders) return "可观察";
+  if (card.status === "observable" && card.market.acceptingOrders) return "可观察";
   if (card.market.status === "resolved") return "已结算";
   if (card.market.status === "settling") return "结算中";
   return "观察中";

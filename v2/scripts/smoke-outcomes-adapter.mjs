@@ -15,7 +15,7 @@ assert(champion?.chainId === 196, "sets X Layer chain id");
 assert(champion?.yesAssetId === "sample-esp-yes", "reads YES asset id");
 assert(champion?.noAssetId === "sample-esp-no", "reads NO asset id");
 assert(champion?.yesPrice === 0.17, "parses YES price");
-assert(champion?.acceptingOrders === true, "active market with asset is tradeable");
+assert(champion?.acceptingOrders === true, "active market with asset is observable");
 
 const pending = normalizeOkxOutcomes({
   markets: [
@@ -33,7 +33,7 @@ const pending = normalizeOkxOutcomes({
 assert(pending?.acceptingOrders === false, "assetId null is watch-only");
 
 const best = pickBestOkxWorldCupMarket(normalized.markets);
-assert(Boolean(best?.marketId), "picks a best tradeable market");
+assert(Boolean(best?.marketId), "picks a best observable market");
 
 const explore = createWorldCupExploreView(normalized.markets);
 assert(explore.type === "world_cup_explore_view", "creates explore view");
@@ -43,6 +43,7 @@ assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 
 assert(explore.cards.champion.some((card) => card.displayName === "西班牙"), "renders short display name");
 assert(explore.cards.champion.every((card) => card.displayTitle), "renders display title");
 assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds friendly agent notes");
+assert(explore.cards.champion.every((card) => card.status === "observable" || card.status === "watch_only"), "uses observe-first card status");
 assert(isSortedByVolume(explore.cards.champion), "sorts champion cards by market volume");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
 

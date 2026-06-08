@@ -285,7 +285,7 @@ export interface V2WorldCupExploreMarketCard {
   agentNote?: string;
   probabilityLabel?: string;
   volumeLabel?: string;
-  status: "tradeable" | "watch_only";
+  status: "observable" | "watch_only";
   market: V2MarketSnapshot;
   options: V2WorldCupExploreOption[];
 }

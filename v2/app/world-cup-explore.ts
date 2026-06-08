@@ -21,7 +21,7 @@ export interface WorldCupExploreMarketCard {
   agentNote?: string;
   probabilityLabel?: string;
   volumeLabel?: string;
-  status: "tradeable" | "watch_only";
+  status: "observable" | "watch_only";
   market: MarketSnapshot;
   options: WorldCupExploreOption[];
 }
@@ -147,7 +147,7 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
     agentNote: createWorldCupAgentNote(category, market),
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
     volumeLabel: formatVolume(market.volume24h || market.volume),
-    status: market.acceptingOrders ? "tradeable" : "watch_only",
+    status: market.acceptingOrders ? "observable" : "watch_only",
     market,
     options: [
       {
