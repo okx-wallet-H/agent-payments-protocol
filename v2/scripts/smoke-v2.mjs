@@ -25,6 +25,12 @@ assert(explore.explore?.cards?.champion !== undefined, "world cup explore has ch
 const selectedWorldCupMarket = explore.explore?.cards?.champion?.[0]?.market;
 assert(Boolean(selectedWorldCupMarket?.marketId), "world cup explore exposes selectable market");
 
+const liveModeExplore = await getJson("/api/v2/world-cup/explore?mode=live");
+assert(liveModeExplore.explore?.type === "world_cup_explore_view", "world cup live-mode fallback returns view");
+if (liveModeExplore.explore?.source?.mode === "sample") {
+  assert(Boolean(liveModeExplore.explore?.source?.warning), "world cup live-mode fallback explains sample data");
+}
+
 const recharge = await postJson("/api/v2/phase-one", {
   text: "我要充值500U",
   walletAddress,

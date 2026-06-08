@@ -680,7 +680,8 @@ function ExploreWorldCupPage({
   const activeCards = explore?.cards[activeExploreCategory] || [];
   const hasDynamicCards = activeCards.length > 0;
   const sourceText = explore?.source?.label || "赛事数据";
-  const sourceMessage = explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
+  const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
+  const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
 
   return (
     <ScrollView contentContainerStyle={styles.explorePage} showsVerticalScrollIndicator={false}>
@@ -715,6 +716,7 @@ function ExploreWorldCupPage({
         <View style={styles.exploreSourceCard}>
           <Text style={styles.exploreSourceLabel}>{sourceText}</Text>
           <Text style={styles.exploreSourceText}>{exploreError ? "先展示赛事样例，数据稍后自动更新。" : sourceMessage}</Text>
+          {sourceUpdatedAt ? <Text style={styles.exploreSourceTime}>更新于 {sourceUpdatedAt}</Text> : null}
         </View>
       ) : null}
 
@@ -1600,6 +1602,13 @@ function formatMarketEndTime(value?: string): string | undefined {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
   return `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatExploreUpdatedAt(value?: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return undefined;
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function shortAddress(address?: string): string | undefined {
@@ -2949,6 +2958,11 @@ const styles = StyleSheet.create({
     color: "#716b65",
     fontSize: 12,
     lineHeight: 17,
+    fontWeight: "700"
+  },
+  exploreSourceTime: {
+    color: "#9a948e",
+    fontSize: 11,
     fontWeight: "700"
   },
   exploreSection: {
