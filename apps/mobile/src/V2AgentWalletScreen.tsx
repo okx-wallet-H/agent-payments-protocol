@@ -712,6 +712,7 @@ function ExploreWorldCupPage({
   const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
   const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
   const sourceSummary = explore?.summary ? `已同步 ${explore.summary.totalMarkets} 个市场` : undefined;
+  const categoryCounts = explore?.summary?.categoryCounts;
 
   return (
     <ScrollView contentContainerStyle={styles.explorePage} showsVerticalScrollIndicator={false}>
@@ -730,7 +731,9 @@ function ExploreWorldCupPage({
             style={[styles.marketTab, activeCategory === category ? styles.marketTabActive : null]}
             onPress={() => onCategoryChange(category)}
           >
-            <Text style={[styles.marketTabText, activeCategory === category ? styles.marketTabTextActive : null]}>{category}</Text>
+            <Text style={[styles.marketTabText, activeCategory === category ? styles.marketTabTextActive : null]}>
+              {formatMarketTabLabel(category, categoryCounts)}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -779,6 +782,14 @@ function ExploreEmptyState({ category }: { category: MarketCategory }) {
       <Text style={styles.exploreEmptyText}>{textByCategory[category]}</Text>
     </View>
   );
+}
+
+function formatMarketTabLabel(
+  category: MarketCategory,
+  counts?: Record<V2WorldCupExploreCategory, number>
+): string {
+  if (!counts) return category;
+  return `${category} ${counts[exploreCategoryByTab[category]] || 0}`;
 }
 
 function DynamicChampionMarketGrid({
