@@ -20,6 +20,7 @@ import type {
   V2ConversationCard,
   V2MarketSnapshot,
   V2MobileChatMessage,
+  V2PredictionCard,
   V2WorldCupExploreCategory,
   V2WorldCupExploreMarketCard,
   V2WorldCupExploreView
@@ -1299,25 +1300,7 @@ function CardMessage({
 
   if (card.type === "prediction_card") {
     return (
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{card.title}</Text>
-        <Text style={styles.cardBody}>{card.agentNote}</Text>
-        <View style={styles.metricRow}>
-          {card.metrics.probabilityLabel ? <Text style={styles.metric}>{card.metrics.probabilityLabel}</Text> : null}
-          {card.metrics.priceLabel ? <Text style={styles.metric}>{card.metrics.priceLabel}</Text> : null}
-        </View>
-        <View style={styles.actionRow}>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("simulate", card)}>
-            <Text style={styles.secondaryButtonText}>先模拟</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("track", card)}>
-            <Text style={styles.secondaryButtonText}>跟踪</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("build_strategy", card)}>
-            <Text style={styles.secondaryButtonText}>策略</Text>
-          </Pressable>
-        </View>
-      </View>
+      <PredictionCardMessage card={card} onAction={onAction} />
     );
   }
 
@@ -1325,6 +1308,64 @@ function CardMessage({
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{card.title}</Text>
       <Text style={styles.cardBody}>{card.agentNote}</Text>
+    </View>
+  );
+}
+
+function PredictionCardMessage({
+  card,
+  onAction
+}: {
+  card: V2PredictionCard;
+  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
+}) {
+  return (
+    <View style={styles.predictionCard}>
+      <View style={styles.predictionHeaderRow}>
+        <View style={styles.predictionFlagBadge}>
+          <Text style={styles.predictionFlagText}>{flagForMarket(card.title)}</Text>
+        </View>
+        <View style={styles.predictionHeaderText}>
+          <Text style={styles.predictionEyebrow}>Agent 预测卡</Text>
+          <Text style={styles.predictionStatus}>{card.statusText}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.predictionTitle}>{card.title}</Text>
+
+      <View style={styles.predictionOddsRow}>
+        <View style={styles.predictionOddBox}>
+          <Text style={styles.predictionOddLabel}>会</Text>
+          <Text style={styles.predictionOddValue}>{card.metrics.probabilityLabel?.replace(/^会\s*/, "") || "观察"}</Text>
+        </View>
+        <View style={styles.predictionOddBox}>
+          <Text style={styles.predictionOddLabel}>价格</Text>
+          <Text style={styles.predictionOddValueSmall}>{card.metrics.priceLabel || "实时更新"}</Text>
+        </View>
+      </View>
+
+      <View style={styles.predictionTrack}>
+        <View style={[styles.predictionTrackFill, { width: predictionProgressWidth(card) }]} />
+      </View>
+
+      <View style={styles.predictionNoteBox}>
+        <Ionicons name="pulse-outline" size={18} color="#aaff35" />
+        <Text style={styles.predictionCardNoteText}>{card.agentNote}</Text>
+      </View>
+
+      {card.metrics.heatLabel ? <Text style={styles.predictionMeta}>热度 {card.metrics.heatLabel}</Text> : null}
+
+      <View style={styles.predictionActionRow}>
+        <Pressable style={styles.predictionPrimaryAction} onPress={() => onAction("track", card)}>
+          <Text style={styles.predictionPrimaryActionText}>跟踪</Text>
+        </Pressable>
+        <Pressable style={styles.predictionGhostAction} onPress={() => onAction("simulate", card)}>
+          <Text style={styles.predictionGhostActionText}>先模拟</Text>
+        </Pressable>
+        <Pressable style={styles.predictionGhostAction} onPress={() => onAction("build_strategy", card)}>
+          <Text style={styles.predictionGhostActionText}>策略</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1362,6 +1403,12 @@ function groupTitleFromCard(card: V2WorldCupExploreMarketCard): string {
   const group = text.match(/世界杯\s*([A-Z])\s*组/);
   if (group) return `2026 年世界杯 ${group[1]} 组第一`;
   return "2026 年世界杯小组赛";
+}
+
+function predictionProgressWidth(card: V2PredictionCard): `${number}%` {
+  const price = card.market.yesPrice || 0.1;
+  const percent = Math.max(3, Math.min(100, Math.round(price * 100)));
+  return `${percent}%`;
 }
 
 function shortMarketTitle(title: string): string {
@@ -1617,6 +1664,144 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.ink,
     fontWeight: "700"
+  },
+  predictionCard: {
+    borderRadius: 26,
+    backgroundColor: "#0c2113",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  predictionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionFlagBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionFlagText: {
+    fontSize: 30
+  },
+  predictionHeaderText: {
+    flex: 1,
+    gap: 4
+  },
+  predictionEyebrow: {
+    color: "#aaff35",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionStatus: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  predictionTitle: {
+    color: "#fff",
+    fontSize: 21,
+    lineHeight: 28,
+    fontWeight: "900"
+  },
+  predictionOddsRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  predictionOddBox: {
+    flex: 1,
+    minHeight: 78,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 14,
+    gap: 8,
+    justifyContent: "center"
+  },
+  predictionOddLabel: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  predictionOddValue: {
+    color: "#fff",
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: "900"
+  },
+  predictionOddValueSmall: {
+    color: "#fff",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  predictionTrack: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.16)",
+    overflow: "hidden"
+  },
+  predictionTrackFill: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "#20b26a"
+  },
+  predictionNoteBox: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 13,
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start"
+  },
+  predictionCardNoteText: {
+    flex: 1,
+    color: "rgba(255, 255, 255, 0.82)",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  predictionMeta: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  predictionActionRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  predictionPrimaryAction: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "#217d1a",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionPrimaryActionText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionGhostAction: {
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionGhostActionText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900"
   },
   error: {
     paddingHorizontal: 22,
