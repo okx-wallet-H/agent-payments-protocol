@@ -280,6 +280,7 @@ export interface V2WorldCupExploreMarketCard {
   category: V2WorldCupExploreCategory;
   title: string;
   subtitle?: string;
+  agentNote?: string;
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "tradeable" | "watch_only";

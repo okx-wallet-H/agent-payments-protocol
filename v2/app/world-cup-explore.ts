@@ -16,6 +16,7 @@ export interface WorldCupExploreMarketCard {
   category: WorldCupExploreCategory;
   title: string;
   subtitle?: string;
+  agentNote?: string;
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "tradeable" | "watch_only";
@@ -72,12 +73,14 @@ export function inferWorldCupCategory(market: MarketSnapshot): WorldCupExploreCa
 function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
   const yesPrice = market.yesPrice;
   const noPrice = market.noPrice;
+  const category = inferWorldCupCategory(market);
 
   return {
     id: market.marketId,
-    category: inferWorldCupCategory(market),
+    category,
     title: friendlyWorldCupTitle(market.question),
     subtitle: market.endDate ? `结束时间 ${market.endDate}` : undefined,
+    agentNote: createAgentNote(category, market),
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
     volumeLabel: formatVolume(market.volume24h || market.volume),
     status: market.acceptingOrders ? "tradeable" : "watch_only",
@@ -101,6 +104,29 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
       }
     ].filter((option) => option.price !== undefined || option.assetId)
   };
+}
+
+function createAgentNote(category: WorldCupExploreCategory, market: MarketSnapshot): string {
+  const price = market.yesPrice ?? 0;
+  const volume = market.volume24h || market.volume || 0;
+  const isHot = volume >= 100_000 || price >= 0.45;
+  const isLongShot = price > 0 && price <= 0.12;
+
+  if (category === "golden_boot") {
+    return isHot ? "射手盘热度在前排，先看出场稳定性。" : "金靴盘波动快，适合让 Agent 先盯着。";
+  }
+
+  if (category === "group_stage") {
+    return isHot ? "小组盘热度不错，临场阵容会影响判断。" : "小组盘先观察赛程，不急着下结论。";
+  }
+
+  if (category === "upcoming_matches") {
+    return "比赛盘变化快，开赛前再看资金和赔率。";
+  }
+
+  if (isLongShot) return "赔率更轻，适合先放进观察列表。";
+  if (isHot) return "热度靠前，先让 Agent 继续盯价格变化。";
+  return "数据已经同步，先观察热度和资金变化。";
 }
 
 function formatPrice(price?: number): string | undefined {

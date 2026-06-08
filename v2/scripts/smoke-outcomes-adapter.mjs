@@ -83,6 +83,7 @@ const explore = createWorldCupExploreView(normalized.markets);
 assert(explore.type === "world_cup_explore_view", "creates explore view");
 assert(explore.cards.champion.length >= 1, "maps champion category");
 assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 2026 年世界杯冠军吗？"), "renders friendly Chinese title");
+assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds friendly agent notes");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
 
 console.log(JSON.stringify({

@@ -693,6 +693,7 @@ function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCa
             </View>
             <Text style={styles.championName}>{shortMarketTitle(card.title)}</Text>
             <Text style={styles.championVolume}>{card.volumeLabel || card.subtitle || "实时市场"}</Text>
+            {card.agentNote ? <Text style={styles.championNote} numberOfLines={2}>{card.agentNote}</Text> : null}
           </View>
         ))}
       </View>
@@ -717,6 +718,7 @@ function DynamicExploreMarketList({ cards }: { cards: V2WorldCupExploreMarketCar
             <Text style={styles.yesPill}>{card.options[0]?.priceLabel ? `Yes ${card.options[0].priceLabel}` : "Yes"}</Text>
             <Text style={styles.noPill}>{card.options[1]?.priceLabel ? `No ${card.options[1].priceLabel}` : "No"}</Text>
           </View>
+          {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
           <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
         </View>
       ))}
@@ -1157,6 +1159,15 @@ function flagForMarket(title: string): string {
 }
 
 function shortMarketTitle(title: string): string {
+  const zhChampion = title.match(/^(.+?)会赢得 2026 年世界杯冠军吗？$/);
+  if (zhChampion) return zhChampion[1];
+
+  const zhGoldenBoot = title.match(/^(.+?)会拿到 2026 年世界杯金靴吗？$/);
+  if (zhGoldenBoot) return zhGoldenBoot[1];
+
+  const zhGroup = title.match(/^(.+?)会在 2026 年世界杯 [A-Z] 组排名第一吗？$/);
+  if (zhGroup) return zhGroup[1];
+
   return title
     .replace(/会赢得 2026 年世界杯冠军吗？/g, "")
     .replace(/Will /i, "")
@@ -2296,6 +2307,11 @@ const styles = StyleSheet.create({
     color: "#89847f",
     fontSize: 13
   },
+  championNote: {
+    color: "#5f5b55",
+    fontSize: 12,
+    lineHeight: 16
+  },
   exploreCardList: {
     gap: 22,
     paddingTop: 12
@@ -2366,6 +2382,11 @@ const styles = StyleSheet.create({
   marketVolume: {
     color: "#8b8782",
     fontSize: 13
+  },
+  marketAgentNote: {
+    color: "#5f5b55",
+    fontSize: 13,
+    lineHeight: 18
   },
   detailButton: {
     minHeight: 48,
