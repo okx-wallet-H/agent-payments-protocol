@@ -8,8 +8,8 @@ import type { MarketSnapshot } from "@/v2/domain/types";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const data = await readMarketsSafely();
+export async function GET(request: Request) {
+  const data = await readMarketsSafely(readDataMode(request));
 
   return NextResponse.json({
     explore: createWorldCupExploreView(data.markets, data.source)
@@ -21,8 +21,7 @@ type ExploreData = {
   source: ReturnType<typeof createWorldCupExploreSource>;
 };
 
-async function readMarketsSafely(): Promise<ExploreData> {
-  const mode = readDataMode();
+async function readMarketsSafely(mode: ReturnType<typeof readDataMode>): Promise<ExploreData> {
   if (mode === "sample") return sampleData();
 
   if (mode !== "plugin" && hasOkxOutcomesCredentials()) {
@@ -66,8 +65,9 @@ function sampleData(warning?: string): ExploreData {
   };
 }
 
-function readDataMode(): "auto" | "live" | "plugin" | "sample" {
-  const value = process.env.OKX_OUTCOMES_DATA_MODE?.trim().toLowerCase();
+function readDataMode(request: Request): "auto" | "live" | "plugin" | "sample" {
+  const url = new URL(request.url);
+  const value = (url.searchParams.get("mode") || process.env.OKX_OUTCOMES_DATA_MODE || "").trim().toLowerCase();
   if (value === "live" || value === "plugin" || value === "sample") return value;
   return "auto";
 }
