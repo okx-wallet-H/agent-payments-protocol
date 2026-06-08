@@ -18,6 +18,8 @@ assert(Array.isArray(home.home?.recent?.records), "home returns recent record li
 
 const explore = await getJson("/api/v2/world-cup/explore");
 assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");
+assert(Boolean(explore.explore?.source?.label), "world cup explore returns friendly source label");
+assert(Boolean(explore.explore?.source?.message), "world cup explore returns friendly source message");
 assert(Array.isArray(explore.explore?.categories), "world cup explore has categories");
 assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
 const selectedWorldCupMarket = explore.explore?.cards?.champion?.[0]?.market;

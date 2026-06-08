@@ -26,6 +26,17 @@ export interface WorldCupExploreMarketCard {
   options: WorldCupExploreOption[];
 }
 
+export type WorldCupExploreSourceProvider = "okx-outcomes" | "polymarket-plugin" | "local-sample";
+
+export interface WorldCupExploreSource {
+  provider: WorldCupExploreSourceProvider;
+  mode: "live" | "fallback" | "sample";
+  label: string;
+  message: string;
+  updatedAt: string;
+  warning?: string;
+}
+
 export interface WorldCupExploreView {
   type: "world_cup_explore_view";
   categories: Array<{
@@ -33,6 +44,7 @@ export interface WorldCupExploreView {
     label: string;
   }>;
   cards: Record<WorldCupExploreCategory, WorldCupExploreMarketCard[]>;
+  source: WorldCupExploreSource;
   updatedAt: string;
 }
 
@@ -43,8 +55,12 @@ const categories: WorldCupExploreView["categories"] = [
   { id: "upcoming_matches", label: "近期比赛" }
 ];
 
-export function createWorldCupExploreView(markets: MarketSnapshot[]): WorldCupExploreView {
+export function createWorldCupExploreView(
+  markets: MarketSnapshot[],
+  source: WorldCupExploreSource = createWorldCupExploreSource("local-sample", "sample")
+): WorldCupExploreView {
   const cards = markets.map(toExploreCard);
+  const updatedAt = new Date().toISOString();
 
   return {
     type: "world_cup_explore_view",
@@ -55,7 +71,34 @@ export function createWorldCupExploreView(markets: MarketSnapshot[]): WorldCupEx
       group_stage: cards.filter((card) => card.category === "group_stage"),
       upcoming_matches: cards.filter((card) => card.category === "upcoming_matches")
     },
-    updatedAt: new Date().toISOString()
+    source: { ...source, updatedAt },
+    updatedAt
+  };
+}
+
+export function createWorldCupExploreSource(
+  provider: WorldCupExploreSourceProvider,
+  mode: WorldCupExploreSource["mode"],
+  warning?: string
+): WorldCupExploreSource {
+  const labelByProvider: Record<WorldCupExploreSourceProvider, string> = {
+    "okx-outcomes": "OKX 实时同步",
+    "polymarket-plugin": "插件数据同步",
+    "local-sample": "赛事样例"
+  };
+  const messageByProvider: Record<WorldCupExploreSourceProvider, string> = {
+    "okx-outcomes": "数据已从 OKX Outcomes 同步，Agent 会按最新市场继续观察。",
+    "polymarket-plugin": "先用插件数据展示赛事机会，OKX 数据同步后会自动切换。",
+    "local-sample": "先展示世界杯样例数据，真实赛事数据接入后自动替换。"
+  };
+
+  return {
+    provider,
+    mode,
+    label: labelByProvider[provider],
+    message: messageByProvider[provider],
+    updatedAt: new Date().toISOString(),
+    warning
   };
 }
 
@@ -63,12 +106,12 @@ export function inferWorldCupCategory(market: MarketSnapshot): WorldCupExploreCa
   const question = market.question.toLowerCase();
   if (/(golden boot|金靴|top scorer|最佳射手)/i.test(question)) return "golden_boot";
   if (/(win the .*world cup|world cup winner|世界杯冠军|赢得.*世界杯|夺冠)/i.test(question)) return "champion";
-  if (/( vs | v |\bdraw\b|平局|match|比赛)/i.test(question)) return "upcoming_matches";
+  if (/( vs | v |\bdraw\b|beat|战胜|平局|match|比赛)/i.test(question)) return "upcoming_matches";
 
   const text = `${question} ${market.raw ? JSON.stringify(market.raw).slice(0, 500) : ""}`.toLowerCase();
   if (/(golden boot|金靴|top scorer|最佳射手)/i.test(text)) return "golden_boot";
   if (/(group|组第一|小组|小组赛)/i.test(text)) return "group_stage";
-  if (/( vs | v |\\bdraw\\b|平局|近期|match|比赛)/i.test(text)) return "upcoming_matches";
+  if (/( vs | v |\\bdraw\\b|beat|战胜|平局|近期|match|比赛)/i.test(text)) return "upcoming_matches";
   return "champion";
 }
 

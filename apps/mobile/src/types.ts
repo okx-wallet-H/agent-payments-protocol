@@ -290,6 +290,17 @@ export interface V2WorldCupExploreMarketCard {
   options: V2WorldCupExploreOption[];
 }
 
+export type V2WorldCupExploreSourceProvider = "okx-outcomes" | "polymarket-plugin" | "local-sample";
+
+export interface V2WorldCupExploreSource {
+  provider: V2WorldCupExploreSourceProvider;
+  mode: "live" | "fallback" | "sample";
+  label: string;
+  message: string;
+  updatedAt: string;
+  warning?: string;
+}
+
 export interface V2WorldCupExploreView {
   type: "world_cup_explore_view";
   categories: Array<{
@@ -297,6 +308,7 @@ export interface V2WorldCupExploreView {
     label: string;
   }>;
   cards: Record<V2WorldCupExploreCategory, V2WorldCupExploreMarketCard[]>;
+  source: V2WorldCupExploreSource;
   updatedAt: string;
 }
 

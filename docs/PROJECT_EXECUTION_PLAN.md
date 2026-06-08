@@ -53,6 +53,7 @@ Acceptance:
 - `[x]` Support dry-run simulation without submitting orders.
 - `[x]` Add OKX Outcomes adapter foundation: Event -> Market -> Outcome -> assetId normalization, X Layer chain id, market status, and watch-only handling when assetId is missing.
 - `[x]` Add World Cup Explore view model so real Outcomes data can feed champion, golden boot, group stage, and upcoming match cards.
+- `[x]` Add World Cup data source status and fallback mode: OKX Outcomes live data, plugin fallback, or local sample data with user-friendly copy.
 - `[~]` Real execution remains gated until TEE signing, production policy, and release approvals are complete.
 - `[!]` Live trading requires a final decision on supported market venues, execution account model, and compliance boundaries.
 

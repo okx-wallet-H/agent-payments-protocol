@@ -679,6 +679,8 @@ function ExploreWorldCupPage({
   const activeExploreCategory = exploreCategoryByTab[activeCategory];
   const activeCards = explore?.cards[activeExploreCategory] || [];
   const hasDynamicCards = activeCards.length > 0;
+  const sourceText = explore?.source?.label || "赛事数据";
+  const sourceMessage = explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
 
   return (
     <ScrollView contentContainerStyle={styles.explorePage} showsVerticalScrollIndicator={false}>
@@ -709,7 +711,12 @@ function ExploreWorldCupPage({
         </View>
       ) : null}
 
-      {!exploreLoading && exploreError ? <Text style={styles.exploreStatusText}>展示本地样稿，数据稍后自动更新</Text> : null}
+      {!exploreLoading ? (
+        <View style={styles.exploreSourceCard}>
+          <Text style={styles.exploreSourceLabel}>{sourceText}</Text>
+          <Text style={styles.exploreSourceText}>{exploreError ? "先展示赛事样例，数据稍后自动更新。" : sourceMessage}</Text>
+        </View>
+      ) : null}
 
       {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} onSelectCard={onSelectCard} /> : null}
       {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
@@ -2887,6 +2894,24 @@ const styles = StyleSheet.create({
   exploreStatusText: {
     color: "#716b65",
     fontSize: 12,
+    fontWeight: "700"
+  },
+  exploreSourceCard: {
+    borderRadius: 18,
+    backgroundColor: "#f2f2f1",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4
+  },
+  exploreSourceLabel: {
+    color: "#050505",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exploreSourceText: {
+    color: "#716b65",
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "700"
   },
   exploreSection: {
