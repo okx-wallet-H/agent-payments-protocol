@@ -8,7 +8,7 @@ import {
   sendV2AgentWalletText,
   type V2AgentWalletSession
 } from "./v2-session";
-import type { V2ConversationCard } from "./types";
+import type { V2ConversationCard, V2MarketSnapshot } from "./types";
 
 type GetAccessToken = () => Promise<string | null | undefined>;
 
@@ -58,6 +58,15 @@ export function useV2AgentWallet(input: {
     updateSession(next);
   }, [api, input.userId, input.walletAddress, patchSession, updateSession]);
 
+  const analyzeMarket = useCallback(async (text: string, market: V2MarketSnapshot) => {
+    patchSession({
+      busy: true,
+      error: undefined
+    });
+    const next = await sendV2AgentWalletText(api, sessionRef.current, text, input.userId, input.walletAddress, market);
+    updateSession(next);
+  }, [api, input.userId, input.walletAddress, patchSession, updateSession]);
+
   const runCardAction = useCallback(async (params: {
     action: "simulate" | "track" | "build_strategy";
     card?: V2ConversationCard;
@@ -103,6 +112,7 @@ export function useV2AgentWallet(input: {
     session,
     refreshHome,
     sendText,
+    analyzeMarket,
     runCardAction,
     latestCard: getLatestV2Card(session)
   };

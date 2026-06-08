@@ -17,6 +17,8 @@ const explore = await getJson("/api/v2/world-cup/explore");
 assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");
 assert(Array.isArray(explore.explore?.categories), "world cup explore has categories");
 assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
+const selectedWorldCupMarket = explore.explore?.cards?.champion?.[0]?.market;
+assert(Boolean(selectedWorldCupMarket?.marketId), "world cup explore exposes selectable market");
 
 const recharge = await postJson("/api/v2/phase-one", {
   text: "我要充值500U",
@@ -35,6 +37,17 @@ const prediction = await postJson("/api/v2/phase-one", {
 assert(prediction.mobileTurn?.goalType === "prediction_market_research", "prediction returns research turn");
 const predictionCard = prediction.mobileTurn.cards.find((card) => card.type === "prediction_card");
 assert(Boolean(predictionCard?.market), "prediction returns a market card");
+
+const selectedPrediction = await postJson("/api/v2/phase-one", {
+  text: `帮我继续分析：${selectedWorldCupMarket.question}`,
+  candidateMarket: selectedWorldCupMarket,
+  userId
+});
+const selectedPredictionCard = selectedPrediction.mobileTurn.cards.find((card) => card.type === "prediction_card");
+assert(
+  selectedPredictionCard?.market?.marketId === selectedWorldCupMarket.marketId,
+  "prediction can analyze selected world cup market"
+);
 
 const trackIdempotencyKey = `track-${userId}-${predictionCard.market.marketId}`;
 const track = await postJson("/api/v2/phase-one/actions", {

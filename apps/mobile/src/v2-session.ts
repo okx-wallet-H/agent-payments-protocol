@@ -8,7 +8,7 @@ import type {
 
 export interface V2AgentWalletApi {
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeView>;
-  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileChatTurn>;
+  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<V2MobileChatTurn>;
   runV2Action(input: {
     action: "simulate" | "track" | "build_strategy";
     market: V2MarketSnapshot;
@@ -55,7 +55,8 @@ export async function sendV2AgentWalletText(
   session: V2AgentWalletSession,
   text: string,
   userId?: string,
-  walletAddress?: `0x${string}`
+  walletAddress?: `0x${string}`,
+  candidateMarket?: V2MarketSnapshot
 ): Promise<V2AgentWalletSession> {
   if (!text.trim()) return session;
 
@@ -66,7 +67,7 @@ export async function sendV2AgentWalletText(
   };
 
   try {
-    const turn = await api.sendV2Chat(text.trim(), userId, walletAddress);
+    const turn = await api.sendV2Chat(text.trim(), userId, walletAddress, candidateMarket);
     return appendTurn(working, turn);
   } catch (error) {
     return withSessionError(working, error);

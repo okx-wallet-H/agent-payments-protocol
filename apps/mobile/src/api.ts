@@ -33,7 +33,7 @@ export interface ApiClient {
   listAudit(agentId: string): Promise<AuditEvent[]>;
   listPredictionMarkets(keyword?: string): Promise<{ router?: PredictionRouterInfo; markets: PredictionMarket[] }>;
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeView>;
-  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileChatTurn>;
+  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<V2MobileChatTurn>;
   runV2Action(input: {
     action: "simulate" | "track" | "build_strategy";
     market: V2MarketSnapshot;
@@ -187,10 +187,10 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       const data = await request<{ home: V2MobileHomeView }>(cleanBaseUrl, path, undefined, getAccessToken);
       return data.home;
     },
-    async sendV2Chat(text, userId, walletAddress) {
+    async sendV2Chat(text, userId, walletAddress, candidateMarket) {
       const data = await request<{ mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/phase-one", {
         method: "POST",
-        body: JSON.stringify({ text, userId, walletAddress })
+        body: JSON.stringify({ text, userId, walletAddress, candidateMarket })
       }, getAccessToken);
       return data.mobileTurn;
     },

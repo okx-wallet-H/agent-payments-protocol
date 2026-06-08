@@ -18,6 +18,7 @@ import { useV2AgentWallet } from "./use-v2-agent-wallet";
 import { createApi } from "./api";
 import type {
   V2ConversationCard,
+  V2MarketSnapshot,
   V2MobileChatMessage,
   V2WorldCupExploreCategory,
   V2WorldCupExploreMarketCard,
@@ -251,6 +252,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             exploreLoading={worldCupExploreLoading}
             items={agent.session.home?.panels.topLeft.items || []}
             onAsk={(text) => run(() => send(text))}
+            onAnalyzeMarket={(text, market) => run(() => agent.analyzeMarket(text, market))}
             onHome={() => setActiveTab("agent")}
           />
         ) : null}
@@ -415,6 +417,7 @@ function WorldCupTab({
   exploreLoading,
   items,
   onAsk,
+  onAnalyzeMarket,
   onHome
 }: {
   explore?: V2WorldCupExploreView;
@@ -422,6 +425,7 @@ function WorldCupTab({
   exploreLoading: boolean;
   items: { id: string; title: string; subtitle?: string; value?: string }[];
   onAsk: (text: string) => void;
+  onAnalyzeMarket: (text: string, market: V2MarketSnapshot) => void;
   onHome: () => void;
 }) {
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
@@ -451,7 +455,7 @@ function WorldCupTab({
         card={selectedMarket}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
-          onAsk(`帮我继续分析：${card.displayTitle || card.title}`);
+          onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
           onHome();
         }}
       />

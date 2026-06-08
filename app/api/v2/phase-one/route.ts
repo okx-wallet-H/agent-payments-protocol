@@ -6,6 +6,7 @@ import { createUserConsolePanel } from "@/v2/app/user-console";
 import { createWorldCupInfoPanel } from "@/v2/app/world-cup-info";
 import { listWorldCupMarkets, getWorldCupCandidateMarket } from "@/v2/execution/polymarket-cli";
 import { readWalletAddressFromUrl, resolveReceiveWalletAddress } from "@/v2/wallet/receive-wallet";
+import type { MarketSnapshot } from "@/v2/domain/types";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,7 @@ interface PhaseOneBody {
   xLayerAddress?: `0x${string}`;
   polygonAddress?: `0x${string}`;
   walletAddress?: `0x${string}`;
+  candidateMarket?: unknown;
 }
 
 export async function GET(request: Request) {
@@ -38,9 +40,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "text is required" }, { status: 400 });
   }
 
-  const candidateMarket = /世界杯|world cup|预测|机会/i.test(text)
+  const suppliedMarket = readCandidateMarket(body.candidateMarket);
+  const candidateMarket = suppliedMarket || (/世界杯|world cup|预测|机会/i.test(text)
     ? await getWorldCupCandidateSafely()
-    : undefined;
+    : undefined);
   const walletAddress = resolveReceiveWalletAddress(body.walletAddress || body.xLayerAddress);
 
   const turn = handlePhaseOneUserText({
@@ -70,4 +73,31 @@ async function getWorldCupCandidateSafely() {
   } catch {
     return undefined;
   }
+}
+
+function readCandidateMarket(input: unknown): MarketSnapshot | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const market = input as Partial<MarketSnapshot>;
+  if (!market.marketId || !market.question || !market.provider || !market.chainId) return undefined;
+  if (market.provider !== "okx-outcomes" && market.provider !== "polymarket-plugin") return undefined;
+  if (market.chainId !== 137 && market.chainId !== 196) return undefined;
+  return {
+    provider: market.provider,
+    chainId: market.chainId,
+    eventId: market.eventId,
+    marketId: market.marketId,
+    question: market.question,
+    status: market.status,
+    marketType: market.marketType,
+    yesAssetId: market.yesAssetId,
+    noAssetId: market.noAssetId,
+    yesPrice: market.yesPrice,
+    noPrice: market.noPrice,
+    acceptingOrders: Boolean(market.acceptingOrders),
+    liquidity: market.liquidity,
+    volume24h: market.volume24h,
+    volume: market.volume,
+    endDate: market.endDate,
+    raw: market.raw
+  };
 }
