@@ -48,6 +48,9 @@ assert(
   selectedPredictionCard?.market?.marketId === selectedWorldCupMarket.marketId,
   "prediction can analyze selected world cup market"
 );
+assert(selectedPredictionCard?.title?.includes("世界杯"), "selected prediction card uses friendly world cup title");
+assert(!/^Will /i.test(selectedPredictionCard?.title || ""), "selected prediction card title is not raw English");
+assert(selectedPredictionCard?.metrics?.priceLabel?.includes("会"), "selected prediction card uses friendly price labels");
 
 const trackIdempotencyKey = `track-${userId}-${predictionCard.market.marketId}`;
 const track = await postJson("/api/v2/phase-one/actions", {

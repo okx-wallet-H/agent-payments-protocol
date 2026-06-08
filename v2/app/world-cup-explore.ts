@@ -85,7 +85,7 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
     displayTitle: display.title,
     displayName: display.name,
     subtitle: market.endDate ? `结束时间 ${market.endDate}` : undefined,
-    agentNote: createAgentNote(category, market),
+    agentNote: createWorldCupAgentNote(category, market),
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
     volumeLabel: formatVolume(market.volume24h || market.volume),
     status: market.acceptingOrders ? "tradeable" : "watch_only",
@@ -111,7 +111,7 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
   };
 }
 
-function createAgentNote(category: WorldCupExploreCategory, market: MarketSnapshot): string {
+export function createWorldCupAgentNote(category: WorldCupExploreCategory, market: MarketSnapshot): string {
   const price = market.yesPrice ?? 0;
   const volume = market.volume24h || market.volume || 0;
   const isHot = volume >= 100_000 || price >= 0.45;
@@ -145,7 +145,7 @@ function formatVolume(volume?: number): string | undefined {
   return `${Math.round(volume)} 交易额`;
 }
 
-function friendlyWorldCupDisplay(question: string): { title: string; name: string } {
+export function friendlyWorldCupDisplay(question: string): { title: string; name: string } {
   const normalized = question.trim().replace(/\s+/g, " ");
 
   const goldenBoot = normalized.match(/^Will (.+) win the 2026 World Cup Golden Boot\??$/i);
