@@ -679,6 +679,7 @@ function ExploreWorldCupPage({
   const activeExploreCategory = exploreCategoryByTab[activeCategory];
   const activeCards = explore?.cards[activeExploreCategory] || [];
   const hasDynamicCards = activeCards.length > 0;
+  const hasExploreData = Boolean(explore);
   const sourceText = explore?.source?.label || "赛事数据";
   const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
   const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
@@ -725,11 +726,28 @@ function ExploreWorldCupPage({
       {hasDynamicCards && activeCategory === "小组赛" ? <DynamicGroupMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
       {hasDynamicCards && activeCategory === "近期比赛" ? <DynamicMatchMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
 
-      {!hasDynamicCards && activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
-      {!hasDynamicCards && activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
-      {!hasDynamicCards && activeCategory === "小组赛" ? <GroupMarketList /> : null}
-      {!hasDynamicCards && activeCategory === "近期比赛" ? <MatchMarketList /> : null}
+      {hasExploreData && !hasDynamicCards && !exploreLoading ? <ExploreEmptyState category={activeCategory} /> : null}
+      {!hasExploreData && !hasDynamicCards && activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
+      {!hasExploreData && !hasDynamicCards && activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
+      {!hasExploreData && !hasDynamicCards && activeCategory === "小组赛" ? <GroupMarketList /> : null}
+      {!hasExploreData && !hasDynamicCards && activeCategory === "近期比赛" ? <MatchMarketList /> : null}
     </ScrollView>
+  );
+}
+
+function ExploreEmptyState({ category }: { category: MarketCategory }) {
+  const textByCategory: Record<MarketCategory, string> = {
+    "冠军": "冠军市场暂时没有可展示数据。",
+    "金靴奖得主": "金靴市场暂时没有可展示数据。",
+    "小组赛": "小组赛市场暂时没有可展示数据。",
+    "近期比赛": "近期比赛还没同步出来，先看冠军和金靴市场。"
+  };
+
+  return (
+    <View style={styles.exploreEmptyCard}>
+      <Text style={styles.exploreEmptyTitle}>{category}</Text>
+      <Text style={styles.exploreEmptyText}>{textByCategory[category]}</Text>
+    </View>
   );
 }
 
@@ -2963,6 +2981,25 @@ const styles = StyleSheet.create({
   exploreSourceTime: {
     color: "#9a948e",
     fontSize: 11,
+    fontWeight: "700"
+  },
+  exploreEmptyCard: {
+    minHeight: 142,
+    borderRadius: 24,
+    backgroundColor: "#f3f3f2",
+    padding: 20,
+    justifyContent: "center",
+    gap: 8
+  },
+  exploreEmptyTitle: {
+    color: "#050505",
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  exploreEmptyText: {
+    color: "#716b65",
+    fontSize: 14,
+    lineHeight: 21,
     fontWeight: "700"
   },
   exploreSection: {
