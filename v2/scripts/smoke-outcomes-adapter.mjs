@@ -43,6 +43,7 @@ assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 
 assert(explore.cards.champion.some((card) => card.displayName === "西班牙"), "renders short display name");
 assert(explore.cards.champion.every((card) => card.displayTitle), "renders display title");
 assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds friendly agent notes");
+assert(isSortedByVolume(explore.cards.champion), "sorts champion cards by market volume");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
 
 console.log(JSON.stringify({
@@ -56,4 +57,15 @@ console.log(JSON.stringify({
 function assert(condition, label) {
   if (!condition) throw new Error(`Outcomes adapter smoke failed: ${label}`);
   checks.push(label);
+}
+
+function isSortedByVolume(cards) {
+  return cards.every((card, index) => {
+    if (index === 0) return true;
+    return volumeScore(cards[index - 1].market) >= volumeScore(card.market);
+  });
+}
+
+function volumeScore(market) {
+  return market.volume24h || market.volume || market.liquidity || 0;
 }

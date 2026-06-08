@@ -66,14 +66,30 @@ export function createWorldCupExploreView(
     type: "world_cup_explore_view",
     categories,
     cards: {
-      champion: cards.filter((card) => card.category === "champion"),
-      golden_boot: cards.filter((card) => card.category === "golden_boot"),
-      group_stage: cards.filter((card) => card.category === "group_stage"),
-      upcoming_matches: cards.filter((card) => card.category === "upcoming_matches")
+      champion: sortExploreCards(cards.filter((card) => card.category === "champion")),
+      golden_boot: sortExploreCards(cards.filter((card) => card.category === "golden_boot")),
+      group_stage: sortExploreCards(cards.filter((card) => card.category === "group_stage")),
+      upcoming_matches: sortExploreCards(cards.filter((card) => card.category === "upcoming_matches"))
     },
     source: { ...source, updatedAt },
     updatedAt
   };
+}
+
+function sortExploreCards(cards: WorldCupExploreMarketCard[]): WorldCupExploreMarketCard[] {
+  return cards.slice().sort((a, b) => {
+    const volumeDelta = marketVolumeScore(b.market) - marketVolumeScore(a.market);
+    if (volumeDelta !== 0) return volumeDelta;
+
+    const statusDelta = Number(b.market.acceptingOrders) - Number(a.market.acceptingOrders);
+    if (statusDelta !== 0) return statusDelta;
+
+    return (b.market.yesPrice || 0) - (a.market.yesPrice || 0);
+  });
+}
+
+function marketVolumeScore(market: MarketSnapshot): number {
+  return market.volume24h || market.volume || market.liquidity || 0;
 }
 
 export function createWorldCupExploreSource(
