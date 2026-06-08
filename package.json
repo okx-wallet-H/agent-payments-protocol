@@ -11,6 +11,7 @@
     "smoke:mvp": "node scripts/smoke-mvp.mjs",
     "smoke:v2": "node v2/scripts/smoke-v2.mjs",
     "smoke:v2:auth": "node v2/scripts/smoke-v2-auth.mjs",
+    "smoke:outcomes": "node --no-warnings --experimental-strip-types v2/scripts/smoke-outcomes-adapter.mjs",
     "typecheck": "tsc --noEmit",
     "mobile:dev": "npm --prefix apps/mobile run start",
     "mobile:dev:v2": "npm --prefix apps/mobile run start:v2",

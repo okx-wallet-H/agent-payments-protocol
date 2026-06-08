@@ -51,12 +51,15 @@ Acceptance:
 - `[x]` Use installed OKX Onchain OS skills and Polymarket plugin for prediction market discovery.
 - `[x]` Read real market information for World Cup-related prompts when the plugin is available.
 - `[x]` Support dry-run simulation without submitting orders.
+- `[x]` Add OKX Outcomes adapter foundation: Event -> Market -> Outcome -> assetId normalization, X Layer chain id, market status, and watch-only handling when assetId is missing.
+- `[x]` Add World Cup Explore view model so real Outcomes data can feed champion, golden boot, group stage, and upcoming match cards.
 - `[~]` Real execution remains gated until TEE signing, production policy, and release approvals are complete.
 - `[!]` Live trading requires a final decision on supported market venues, execution account model, and compliance boundaries.
 
 Acceptance:
 - The Agent can generate prediction cards from live plugin data.
 - Simulation cannot move funds or submit an order.
+- `npm run smoke:outcomes`
 
 ## Phase 4 - Mobile App Functional Skeleton
 

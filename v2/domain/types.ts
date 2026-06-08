@@ -11,7 +11,7 @@ export type BusinessGoalType =
 
 export type ExecutionMode = "observe" | "dry_run" | "live";
 
-export type ExecutionProvider = "onchainos" | "polymarket-plugin";
+export type ExecutionProvider = "onchainos" | "polymarket-plugin" | "okx-outcomes";
 
 export type PolicyDecisionStatus = "allow" | "block" | "needs_user_confirmation";
 
@@ -51,16 +51,23 @@ export interface BusinessGoal {
 }
 
 export interface MarketSnapshot {
-  provider: "polymarket-plugin";
-  chainId: 137;
+  provider: "polymarket-plugin" | "okx-outcomes";
+  chainId: ChainId;
+  eventId?: string;
   marketId: string;
   question: string;
+  status?: "active" | "paused" | "settling" | "resolved" | string;
+  marketType?: "binary" | "neg_risk" | string;
+  yesAssetId?: string;
+  noAssetId?: string;
   yesPrice?: number;
   noPrice?: number;
   acceptingOrders: boolean;
   liquidity?: number;
   volume24h?: number;
+  volume?: number;
   endDate?: string;
+  raw?: unknown;
 }
 
 export interface ReceiveAddress {

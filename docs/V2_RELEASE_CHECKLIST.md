@@ -19,6 +19,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Mobile v2 has the first visual baseline: Agent chat, World Cup campaign page, Mine page, poster hero, fixed World Cup actions, hidden bottom nav inside the campaign page, and a fixed Home return button.
 - World Cup Explore subpage exists with four market categories: champion, golden boot, group stage, and upcoming matches.
 - Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
+- OKX Outcomes adapter smoke currently passes: `npm run smoke:outcomes`.
 
 ## Before TestFlight / Internal Android Testing
 
@@ -42,6 +43,7 @@ Local v2 smoke commands:
 ```sh
 npm run smoke:v2
 npm run smoke:v2:auth
+npm run smoke:outcomes
 npm run mobile:typecheck
 ```
 

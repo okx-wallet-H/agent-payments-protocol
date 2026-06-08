@@ -245,16 +245,23 @@ export type V2BusinessGoalType =
   | "unknown";
 
 export interface V2MarketSnapshot {
-  provider: "polymarket-plugin";
-  chainId: 137;
+  provider: "polymarket-plugin" | "okx-outcomes";
+  chainId: 137 | 196;
+  eventId?: string;
   marketId: string;
   question: string;
+  status?: "active" | "paused" | "settling" | "resolved" | string;
+  marketType?: "binary" | "neg_risk" | string;
+  yesAssetId?: string;
+  noAssetId?: string;
   yesPrice?: number;
   noPrice?: number;
   acceptingOrders: boolean;
   liquidity?: number;
   volume24h?: number;
+  volume?: number;
   endDate?: string;
+  raw?: unknown;
 }
 
 export interface V2ReceiveAddress {
