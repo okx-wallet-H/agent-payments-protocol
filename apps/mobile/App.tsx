@@ -22,6 +22,7 @@ import {
 import { createApi } from "./src/api";
 import type { Agent, AuditEvent, PredictionMarket, PredictionRouterInfo } from "./src/types";
 import { V2AgentWalletScreen } from "./src/V2AgentWalletScreen";
+import { V2AgentWalletPreview } from "./src/V2AgentWalletPreview";
 
 const defaultApiBaseUrl =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
@@ -44,6 +45,10 @@ const xLayerChain = {
 };
 
 export default function App() {
+  if (process.env.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true") {
+    return <V2AgentWalletPreview />;
+  }
+
   if (!privyAppId || !privyClientId) return <MissingPrivyConfig />;
 
   return (

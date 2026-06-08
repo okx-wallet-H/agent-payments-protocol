@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "mobile:dev": "npm --prefix apps/mobile run start",
     "mobile:dev:v2": "npm --prefix apps/mobile run start:v2",
+    "mobile:preview:v2": "npm --prefix apps/mobile run start:v2:preview",
     "mobile:ios": "npm --prefix apps/mobile run ios",
     "mobile:ios:v2": "npm --prefix apps/mobile run ios:v2",
     "mobile:android": "npm --prefix apps/mobile run android",

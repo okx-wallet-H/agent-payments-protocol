@@ -1,25 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Clipboard from "expo-clipboard";
-import { useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy } from "@privy-io/expo";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ImageBackground,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
-} from "react-native";
-import { useV2AgentWallet } from "./use-v2-agent-wallet";
-import type { V2ConversationCard, V2MobileChatMessage } from "./types";
+import { ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 const worldCupPoster = require("../assets/world-cup-poster.png");
 
-type MainTab = "agent" | "worldcup" | "mine";
+type Tab = "agent" | "worldcup" | "mine";
 type WorldCupView = "home" | "explore";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 
@@ -93,470 +78,333 @@ const matchMarkets = [
   }
 ];
 
-export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
-  const { getAccessToken, isReady, logout, user } = usePrivy();
-  const { sendCode, loginWithCode, state } = useLoginWithEmail();
-  const { wallets } = useEmbeddedEthereumWallet();
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+export function V2AgentWalletPreview() {
+  const [tab, setTab] = useState<Tab>("agent");
   const [input, setInput] = useState("");
-  const [activeTab, setActiveTab] = useState<MainTab>("agent");
-  const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
-  const agent = useV2AgentWallet({
-    apiBaseUrl,
-    getAccessToken,
-    isReady,
-    userId: user?.id,
-    walletAddress
-  });
-
-  async function run(action: () => Promise<unknown>) {
-    try {
-      await action();
-    } catch (error) {
-      Alert.alert("Agent Wallet", error instanceof Error ? error.message : "请求失败");
-    }
-  }
-
-  async function send(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    setActiveTab("agent");
-    await agent.sendText(trimmed);
-  }
-
-  if (!isReady) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <ActivityIndicator />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!user) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.login}>
-          <Text style={styles.loginBrand}>海豚社区</Text>
-          <Text style={styles.loginTitle}>一句话，交给 Agent</Text>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            inputMode="email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="邮箱"
-            placeholderTextColor="#9f9992"
-            style={styles.loginInput}
-          />
-          <Pressable style={styles.loginButton} onPress={() => run(() => sendCode({ email }))}>
-            <Text style={styles.loginButtonText}>发送验证码</Text>
-          </Pressable>
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            value={code}
-            onChangeText={setCode}
-            placeholder="验证码"
-            placeholderTextColor="#9f9992"
-            style={styles.loginInput}
-          />
-          <Pressable
-            style={styles.loginButton}
-            onPress={() =>
-              run(async () => {
-                await loginWithCode({ email, code });
-                setCode("");
-              })
-            }
-          >
-            <Text style={styles.loginButtonText}>进入海豚社区</Text>
-          </Pressable>
-          <Text style={styles.loginState}>{state.status}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
+  const [marketCategory, setMarketCategory] = useState<MarketCategory>("冠军");
+  const showBottomDock = tab !== "worldcup";
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.shell}>
-        <TopBar
-          onLeft={() => setActiveTab("worldcup")}
-          onRight={() => setActiveTab("mine")}
-          rightActive={activeTab === "mine"}
-        />
+        <View style={styles.topbar}>
+          <Pressable style={styles.roundButton} onPress={() => setTab("worldcup")}>
+            <Ionicons name="menu" size={24} color={colors.ink} />
+          </Pressable>
+          <Pressable style={styles.roundButton} onPress={() => setTab("mine")}>
+            <Ionicons name="person-outline" size={21} color={colors.ink} />
+          </Pressable>
+        </View>
 
-        {activeTab === "agent" ? (
-          <AgentTab
-            busy={agent.session.busy}
-            error={agent.session.error}
-            input={input}
-            messages={agent.session.messages}
-            quickPrompts={agent.session.home?.quickPrompts || []}
-            setInput={setInput}
-            onSend={(text) => run(() => send(text))}
-            onAction={(action, card) => run(() => agent.runCardAction({ action, card }))}
-          />
+        {tab === "agent" ? (
+          <View style={styles.agentScreen}>
+            <ScrollView contentContainerStyle={styles.agentContent} showsVerticalScrollIndicator={false}>
+              <Text style={styles.heroTitle}>海豚，一切可好？</Text>
+            </ScrollView>
+            <View style={styles.composerWrap}>
+              <View style={styles.composer}>
+                <Pressable style={styles.plusButton}>
+                  <Ionicons name="add" size={24} color={colors.ink} />
+                </Pressable>
+                <TextInput
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="向 Agent 发送消息"
+                  placeholderTextColor="#817a72"
+                  style={styles.composerInput}
+                />
+                <Pressable style={styles.voiceButton}>
+                  <Ionicons name={input.trim() ? "arrow-up" : "options-outline"} size={21} color={colors.ink} />
+                </Pressable>
+              </View>
+            </View>
+          </View>
         ) : null}
 
-        {activeTab === "worldcup" ? (
-          <WorldCupTab
-            items={agent.session.home?.panels.topLeft.items || []}
-            onAsk={(text) => run(() => send(text))}
-            onHome={() => setActiveTab("agent")}
-          />
+        {tab === "worldcup" ? (
+          <View style={styles.worldCupShell}>
+            {worldCupView === "explore" ? (
+              <ExploreWorldCupPage
+                activeCategory={marketCategory}
+                onBack={() => setWorldCupView("home")}
+                onCategoryChange={setMarketCategory}
+              />
+            ) : (
+              <>
+            <ScrollView contentContainerStyle={styles.worldCupPage} showsVerticalScrollIndicator={false}>
+              <ImageBackground
+                source={worldCupPoster}
+                resizeMode="cover"
+                style={styles.eventHero}
+                imageStyle={styles.eventHeroImage}
+              >
+                <Text style={styles.worldCupLabel}>世界杯狂欢季</Text>
+                <Text style={styles.worldCupTitle}>跟着 Agent 看世界杯，瓜分 USDT 奖池</Text>
+                <Text style={styles.worldCupNote}>距离结束 42天 03时 46分 08秒</Text>
+              </ImageBackground>
+
+              <View style={styles.rewardCard}>
+                <View style={styles.rewardTop}>
+                  <View style={styles.rewardCol}>
+                    <Text style={styles.rewardLabel}>社区奖池</Text>
+                    <Text style={styles.rewardValue}>5,000 USDT</Text>
+                  </View>
+                  <View style={styles.rewardCol}>
+                    <Text style={styles.rewardLabel}>已跟随 Agent</Text>
+                    <Text style={styles.rewardValue}>6,896 人</Text>
+                  </View>
+                </View>
+                <View style={styles.rewardScale}>
+                  <Text style={styles.scaleText}>奖池</Text>
+                  <Text style={styles.scaleText}>1k</Text>
+                  <Text style={styles.scaleText}>3k</Text>
+                  <Text style={styles.scaleText}>5k</Text>
+                  <Text style={styles.scaleText}>8k</Text>
+                  <Text style={styles.scaleText}>12k</Text>
+                  <Text style={styles.scaleText}>20k</Text>
+                </View>
+                <View style={styles.rewardTrack}>
+                  <View style={styles.rewardFill} />
+                  {[0, 1, 2, 3, 4, 5].map((dot) => (
+                    <View key={dot} style={styles.rewardDot} />
+                  ))}
+                </View>
+                <View style={styles.rewardScale}>
+                  <Text style={styles.scaleMuted}>Agent</Text>
+                  <Text style={styles.scaleMuted}>1千</Text>
+                  <Text style={styles.scaleMuted}>3千</Text>
+                  <Text style={styles.scaleMuted}>5千</Text>
+                  <Text style={styles.scaleMuted}>1万</Text>
+                  <Text style={styles.scaleMuted}>2万</Text>
+                  <Text style={styles.scaleMuted}>5万</Text>
+                </View>
+              </View>
+
+              <View style={styles.scoreSection}>
+                <View style={styles.sectionTitleRow}>
+                  <View>
+                    <Text style={styles.bigSectionTitle}>我的 Agent 战绩</Text>
+                    <Text style={styles.sectionSub}>Agent 预测、跟踪和执行都会累计积分</Text>
+                  </View>
+                  <Pressable style={styles.helpPill}>
+                    <Ionicons name="help-circle-outline" size={15} color={colors.ink} />
+                    <Text style={styles.helpPillText}>规则</Text>
+                  </Pressable>
+                </View>
+
+                <View style={styles.scoreCard}>
+                  <View style={styles.scoreTopRow}>
+                    <View>
+                      <Text style={styles.scoreLabel}>海豚积分 (xp)</Text>
+                      <Text style={styles.scoreValue}>64.22</Text>
+                    </View>
+                    <Pressable style={styles.smallPill}>
+                      <Text style={styles.smallPillText}>查看</Text>
+                    </Pressable>
+                  </View>
+                  <View style={styles.scoreDivider} />
+                  <Text style={styles.scoreLabel}>预计可瓜分</Text>
+                  <Text style={styles.rewardAmount}>3.62 USDT</Text>
+                  <Text style={styles.rewardUsd}>按最终排名结算</Text>
+                </View>
+              </View>
+
+              <Pressable style={styles.agentInsightCard} onPress={() => setTab("agent")}>
+                <View style={styles.agentInsightTop}>
+                  <Text style={styles.agentInsightLabel}>今日 Agent 观点</Text>
+                  <Text style={styles.agentInsightStatus}>已更新</Text>
+                </View>
+                <Text style={styles.agentInsightTitle}>先观察西班牙冠军盘，优先跟踪墨西哥 A 组排名。</Text>
+                <Text style={styles.agentInsightText}>热度在上升，但部分价格已经不便宜。让 Agent 继续看盘口、资金和新闻，再决定是否出手。</Text>
+                <View style={styles.agentInsightAction}>
+                  <Text style={styles.agentInsightActionText}>让 Agent 继续分析</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#fff" />
+                </View>
+              </Pressable>
+
+              <View style={styles.taskSection}>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={styles.bigSectionTitle}>Agent 任务</Text>
+                  <Pressable style={styles.helpPill}>
+                    <Ionicons name="receipt-outline" size={15} color={colors.ink} />
+                    <Text style={styles.helpPillText}>任务记录</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.taskCard}>
+                  <Text style={styles.taskTitle}>让 Agent 看一场</Text>
+                  <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；执行或分享会额外加成</Text>
+                  <View style={styles.checkRow}>
+                    {["周一", "周二", "周三", "周四", "周五", "周六", "周日"].map((day, index) => (
+                      <View key={day} style={styles.checkDay}>
+                        <View style={[styles.checkCircle, index === 0 ? styles.checkCircleActive : null]}>
+                          {index === 0 ? <Ionicons name="checkmark" size={20} color="#fff" /> : null}
+                        </View>
+                        <Text style={styles.checkText}>{day}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={styles.taskBottom}>
+                    <Text style={styles.taskReward}>+20 xp</Text>
+                    <Text style={styles.streakTag}>今日已分析 1 场</Text>
+                    <Text style={styles.disabledPill}>已完成</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.rankSection}>
+                <View style={styles.sectionTitleRow}>
+                  <View>
+                    <Text style={styles.bigSectionTitle}>排行榜</Text>
+                    <Text style={styles.sectionSub}>最近更新于 2026/06/08 18:50</Text>
+                  </View>
+                  <Pressable style={styles.helpPill}>
+                    <Ionicons name="trophy-outline" size={15} color={colors.ink} />
+                    <Text style={styles.helpPillText}>榜单规则</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.rankPodium}>
+                  {[
+                    ["海***风", "3,084.44 xp", "158 USDT"],
+                    ["XD***", "3,679.98 xp", "240 USDT"],
+                    ["阿***森", "3,075.83 xp", "120 USDT"]
+                  ].map(([name, xp, btc], index) => (
+                    <View key={name} style={styles.rankTopCard}>
+                      <Text style={styles.rankWatermark}>{index === 1 ? "1" : index === 0 ? "2" : "3"}</Text>
+                      <View style={styles.rankAvatar}>
+                        <Text style={styles.rankAvatarText}>{index === 1 ? "VIP" : "海"}</Text>
+                      </View>
+                      <Text style={styles.rankName}>{name}</Text>
+                      <Text style={styles.rankXp}>{xp}</Text>
+                      <Text style={styles.rankBtc}>{btc}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+            <View style={styles.fixedActionRow}>
+              <Pressable style={styles.campaignNavItem} onPress={() => setTab("agent")}>
+                <Ionicons name="home" size={19} color={colors.ink} />
+                <Text style={styles.campaignNavText}>首页</Text>
+              </Pressable>
+              <Pressable style={styles.campaignNavItem}>
+                <Ionicons name="share-outline" size={19} color={colors.ink} />
+                <Text style={styles.campaignNavText}>分享</Text>
+              </Pressable>
+              <Pressable style={[styles.campaignNavItem, styles.campaignNavItemActive]} onPress={() => setWorldCupView("explore")}>
+                <Ionicons name="football-outline" size={19} color={colors.ink} />
+                <Text style={styles.campaignNavText}>赛事</Text>
+              </Pressable>
+              <Pressable style={styles.campaignNavItem} onPress={() => setTab("agent")}>
+                <Ionicons name="chatbubble-ellipses-outline" size={19} color={colors.ink} />
+                <Text style={styles.campaignNavText}>新对话</Text>
+              </Pressable>
+            </View>
+              </>
+            )}
+          </View>
         ) : null}
 
-        {activeTab === "mine" ? (
-          <MineTab
-            walletAddress={walletAddress}
-            trackingCount={agent.session.home?.state.trackingCount || 0}
-            strategyCount={agent.session.home?.state.strategyCount || 0}
-            recordCount={agent.session.home?.state.recordCount || 0}
-            onRefresh={() => run(() => agent.refreshHome())}
-            onLogout={() => run(logout)}
-          />
+        {tab === "mine" ? (
+          <ScrollView contentContainerStyle={styles.minePage} showsVerticalScrollIndicator={false}>
+            <View style={styles.assetHeader}>
+              <Text style={styles.assetLabel}>资产</Text>
+              <Text style={styles.assetValue}>
+                64.22 <Text style={styles.assetUnit}>xp</Text>
+              </Text>
+              <Text style={styles.assetProfit}>+0 (0.00%) 今日收益</Text>
+            </View>
+
+            <View style={styles.assetSplit}>
+              <View>
+                <Text style={styles.assetSmallLabel}>持仓价值</Text>
+                <Text style={styles.assetSmallValue}>54.22 xp</Text>
+              </View>
+              <View>
+                <Text style={styles.assetSmallLabel}>可用资产</Text>
+                <Text style={styles.assetSmallValue}>10 xp</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.greenButton}>
+              <Text style={styles.greenButtonText}>赚取积分</Text>
+            </Pressable>
+
+            <View style={styles.mineTabs}>
+              <Text style={styles.mineTabActive}>持仓</Text>
+              <Text style={styles.mineTabMuted}>未成交订单</Text>
+              <Text style={styles.mineTabMuted}>历史记录</Text>
+            </View>
+
+            <View style={styles.positionToolbar}>
+              <Text style={styles.positionChipActive}>当前仓位</Text>
+              <Text style={styles.positionChip}>历史仓位</Text>
+              <Text style={styles.positionSort}>持仓成本</Text>
+              <Ionicons name="chevron-down" size={14} color={colors.ink} />
+            </View>
+
+            <PositionCard
+              flag="🇲🇽"
+              title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
+              value="20.57 xp"
+              change="+0.57 (+2.86%)"
+              changeTone="green"
+              side="Yes 52.4¢"
+              shares="38.1 份额"
+            />
+            <PositionCard
+              flag="🇲🇽"
+              title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
+              value="13.77 xp"
+              change="-1.22 (-8.16%)"
+              changeTone="red"
+              side="No 49¢"
+              shares="30.61 份额"
+            />
+            <PositionCard
+              flag="🇰🇷"
+              title="韩国会在 2026 年世界杯 A 组中排名第一吗？"
+              value="9.99 xp"
+              change="+0 (0.00%)"
+              changeTone="green"
+              side="No 78¢"
+              shares="12.82 份额"
+            />
+            <PositionCard
+              flag="🇪🇸"
+              title="西班牙会赢得 2026 年世界杯冠军吗？"
+              value="9.87 xp"
+              change="-0.11 (-1.19%)"
+              changeTone="red"
+              side="Yes 61¢"
+              shares="16.18 份额"
+            />
+          </ScrollView>
         ) : null}
 
-        {activeTab !== "worldcup" ? (
-          <BottomNav
-            activeTab={activeTab}
-            onChange={setActiveTab}
-            onNewChat={() => {
-              setInput("");
-              setActiveTab("agent");
-            }}
-          />
+        {showBottomDock ? (
+          <View style={styles.bottomDockWrap}>
+            <View style={styles.bottomScrim} />
+            <View style={styles.bottomDock}>
+              <View style={styles.tabPill}>
+                <TabButton active={tab === "agent"} icon="chatbubble-ellipses" label="Agent" onPress={() => setTab("agent")} />
+                <TabButton active={false} icon="football-outline" label="世界杯" onPress={() => setTab("worldcup")} />
+                <TabButton active={tab === "mine"} icon="person-outline" label="我的" onPress={() => setTab("mine")} />
+              </View>
+              <Pressable
+                style={styles.newChatButton}
+                onPress={() => {
+                  setInput("");
+                  setTab("agent");
+                }}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={24} color={colors.ink} />
+              </Pressable>
+            </View>
+          </View>
         ) : null}
       </View>
     </SafeAreaView>
-  );
-}
-
-function TopBar({
-  onLeft,
-  onRight,
-  rightActive
-}: {
-  onLeft: () => void;
-  onRight: () => void;
-  rightActive: boolean;
-}) {
-  return (
-    <View style={styles.topbar}>
-      <Pressable style={styles.roundButton} onPress={onLeft}>
-        <Ionicons name="menu" size={24} color="#1c1a17" />
-      </Pressable>
-      <Pressable style={[styles.roundButton, rightActive ? styles.roundButtonActive : null]} onPress={onRight}>
-        <Ionicons name="person-outline" size={21} color="#1c1a17" />
-      </Pressable>
-    </View>
-  );
-}
-
-function AgentTab({
-  busy,
-  error,
-  input,
-  messages,
-  quickPrompts,
-  setInput,
-  onSend,
-  onAction
-}: {
-  busy: boolean;
-  error?: string;
-  input: string;
-  messages: V2MobileChatMessage[];
-  quickPrompts: { id: string; text: string }[];
-  setInput: (value: string) => void;
-  onSend: (text: string) => void;
-  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
-}) {
-  const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
-  const [category, setCategory] = useState<MarketCategory>("冠军");
-
-  if (worldCupView === "explore") {
-    return (
-      <ExploreWorldCupPage
-        activeCategory={category}
-        onBack={() => setWorldCupView("home")}
-        onCategoryChange={setCategory}
-      />
-    );
-  }
-
-  return (
-    <View style={styles.agentScreen}>
-      <ScrollView
-        contentContainerStyle={[styles.messages, messages.length === 0 ? styles.messagesEmpty : null]}
-        showsVerticalScrollIndicator={false}
-      >
-        {messages.length === 0 ? (
-          <View style={styles.hero}>
-            <Text style={styles.heroTitle}>海豚，一切可好？</Text>
-            <View style={styles.promptStack}>
-              {quickPrompts.slice(0, 2).map((prompt) => (
-                <Pressable key={prompt.id} style={styles.prompt} onPress={() => onSend(prompt.text)}>
-                  <Text style={styles.promptText}>{prompt.text}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} onAction={onAction} />
-        ))}
-      </ScrollView>
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <View style={styles.composerWrap}>
-        <View style={styles.composer}>
-          <Pressable style={styles.plusButton}>
-            <Ionicons name="add" size={24} color="#1f1d1a" />
-          </Pressable>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder="向 Agent 发送消息"
-            placeholderTextColor="#817a72"
-            style={styles.composerInput}
-            returnKeyType="send"
-            onSubmitEditing={() => onSend(input)}
-          />
-          <Pressable
-            style={styles.voiceButton}
-            disabled={busy || !input.trim()}
-            onPress={() => {
-              const text = input;
-              setInput("");
-              onSend(text);
-            }}
-          >
-            {busy ? <ActivityIndicator /> : <Ionicons name={input.trim() ? "arrow-up" : "options-outline"} size={21} color="#1f1d1a" />}
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function WorldCupTab({
-  items,
-  onAsk,
-  onHome
-}: {
-  items: { id: string; title: string; subtitle?: string; value?: string }[];
-  onAsk: (text: string) => void;
-  onHome: () => void;
-}) {
-  const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
-  const [category, setCategory] = useState<MarketCategory>("冠军");
-
-  if (worldCupView === "explore") {
-    return (
-      <ExploreWorldCupPage
-        activeCategory={category}
-        onBack={() => setWorldCupView("home")}
-        onCategoryChange={setCategory}
-      />
-    );
-  }
-
-  return (
-    <View style={styles.worldCupShell}>
-      <ScrollView contentContainerStyle={styles.worldCupPage} showsVerticalScrollIndicator={false}>
-        <ImageBackground
-          source={worldCupPoster}
-          resizeMode="cover"
-          style={styles.eventHero}
-          imageStyle={styles.eventHeroImage}
-        >
-          <Text style={styles.worldCupLabel}>世界杯狂欢季</Text>
-          <Text style={styles.worldCupTitle}>跟着 Agent 看世界杯，瓜分 USDT 奖池</Text>
-          <Text style={styles.worldCupNote}>距离结束 42天 03时 46分 08秒</Text>
-        </ImageBackground>
-
-        <View style={styles.rewardCard}>
-          <View style={styles.rewardTop}>
-            <View style={styles.rewardCol}>
-              <Text style={styles.rewardLabel}>社区奖池</Text>
-              <Text style={styles.rewardValue}>5,000 USDT</Text>
-            </View>
-            <View style={styles.rewardCol}>
-              <Text style={styles.rewardLabel}>已跟随 Agent</Text>
-              <Text style={styles.rewardValue}>6,896 人</Text>
-            </View>
-          </View>
-          <View style={styles.rewardScale}>
-            <Text style={styles.scaleText}>奖池</Text>
-            <Text style={styles.scaleText}>1k</Text>
-            <Text style={styles.scaleText}>3k</Text>
-            <Text style={styles.scaleText}>5k</Text>
-            <Text style={styles.scaleText}>8k</Text>
-            <Text style={styles.scaleText}>12k</Text>
-            <Text style={styles.scaleText}>20k</Text>
-          </View>
-          <View style={styles.rewardTrack}>
-            <View style={styles.rewardFill} />
-            {[0, 1, 2, 3, 4, 5].map((dot) => (
-              <View key={dot} style={styles.rewardDot} />
-            ))}
-          </View>
-          <View style={styles.rewardScale}>
-            <Text style={styles.scaleMuted}>Agent</Text>
-            <Text style={styles.scaleMuted}>1千</Text>
-            <Text style={styles.scaleMuted}>3千</Text>
-            <Text style={styles.scaleMuted}>5千</Text>
-            <Text style={styles.scaleMuted}>1万</Text>
-            <Text style={styles.scaleMuted}>2万</Text>
-            <Text style={styles.scaleMuted}>5万</Text>
-          </View>
-        </View>
-
-        <View style={styles.scoreSection}>
-          <View style={styles.sectionTitleRow}>
-            <View>
-              <Text style={styles.bigSectionTitle}>我的 Agent 战绩</Text>
-              <Text style={styles.sectionSub}>Agent 预测、跟踪和执行都会累计积分</Text>
-            </View>
-            <Pressable style={styles.helpPill}>
-              <Ionicons name="help-circle-outline" size={15} color={colors.ink} />
-              <Text style={styles.helpPillText}>规则</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.scoreCard}>
-            <View style={styles.scoreTopRow}>
-              <View>
-                <Text style={styles.scoreLabel}>海豚积分 (xp)</Text>
-                <Text style={styles.scoreValue}>64.22</Text>
-              </View>
-              <Pressable style={styles.smallPill}>
-                <Text style={styles.smallPillText}>查看</Text>
-              </Pressable>
-            </View>
-            <View style={styles.scoreDivider} />
-            <Text style={styles.scoreLabel}>预计可瓜分</Text>
-            <Text style={styles.rewardAmount}>3.62 USDT</Text>
-            <Text style={styles.rewardUsd}>按最终排名结算</Text>
-          </View>
-        </View>
-
-        <Pressable style={styles.agentInsightCard} onPress={() => onAsk("继续分析今天的世界杯机会")}>
-          <View style={styles.agentInsightTop}>
-            <Text style={styles.agentInsightLabel}>今日 Agent 观点</Text>
-            <Text style={styles.agentInsightStatus}>已更新</Text>
-          </View>
-          <Text style={styles.agentInsightTitle}>先观察西班牙冠军盘，优先跟踪墨西哥 A 组排名。</Text>
-          <Text style={styles.agentInsightText}>热度在上升，但部分价格已经不便宜。让 Agent 继续看盘口、资金和新闻，再决定是否出手。</Text>
-          <View style={styles.agentInsightAction}>
-            <Text style={styles.agentInsightActionText}>让 Agent 继续分析</Text>
-            <Ionicons name="arrow-forward" size={16} color="#fff" />
-          </View>
-        </Pressable>
-
-        <View style={styles.taskSection}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.bigSectionTitle}>Agent 任务</Text>
-            <Pressable style={styles.helpPill}>
-              <Ionicons name="receipt-outline" size={15} color={colors.ink} />
-              <Text style={styles.helpPillText}>任务记录</Text>
-            </Pressable>
-          </View>
-          <View style={styles.taskCard}>
-            <Text style={styles.taskTitle}>让 Agent 看一场</Text>
-            <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；执行或分享会额外加成</Text>
-            <View style={styles.checkRow}>
-              {["周一", "周二", "周三", "周四", "周五", "周六", "周日"].map((day, index) => (
-                <View key={day} style={styles.checkDay}>
-                  <View style={[styles.checkCircle, index === 0 ? styles.checkCircleActive : null]}>
-                    {index === 0 ? <Ionicons name="checkmark" size={20} color="#fff" /> : null}
-                  </View>
-                  <Text style={styles.checkText}>{day}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.taskBottom}>
-              <Text style={styles.taskReward}>+20 xp</Text>
-              <Text style={styles.streakTag}>今日已分析 1 场</Text>
-              <Text style={styles.disabledPill}>已完成</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.rankSection}>
-          <View style={styles.sectionTitleRow}>
-            <View>
-              <Text style={styles.bigSectionTitle}>排行榜</Text>
-              <Text style={styles.sectionSub}>最近更新于 2026/06/08 18:50</Text>
-            </View>
-            <Pressable style={styles.helpPill}>
-              <Ionicons name="trophy-outline" size={15} color={colors.ink} />
-              <Text style={styles.helpPillText}>榜单规则</Text>
-            </Pressable>
-          </View>
-          <View style={styles.rankPodium}>
-            {[
-              ["海***风", "3,084.44 xp", "158 USDT"],
-              ["XD***", "3,679.98 xp", "240 USDT"],
-              ["阿***森", "3,075.83 xp", "120 USDT"]
-            ].map(([name, xp, btc], index) => (
-              <View key={name} style={styles.rankTopCard}>
-                <Text style={styles.rankWatermark}>{index === 1 ? "1" : index === 0 ? "2" : "3"}</Text>
-                <View style={styles.rankAvatar}>
-                  <Text style={styles.rankAvatarText}>{index === 1 ? "VIP" : "海"}</Text>
-                </View>
-                <Text style={styles.rankName}>{name}</Text>
-                <Text style={styles.rankXp}>{xp}</Text>
-                <Text style={styles.rankBtc}>{btc}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>探索赛事</Text>
-          <Text style={styles.sectionHint}>Agent 实时看</Text>
-        </View>
-
-        {items.slice(0, 2).map((item) => (
-          <Pressable key={item.id} style={styles.watchCard} onPress={() => onAsk(item.title)}>
-            <Text style={styles.watchFlag}>⚽</Text>
-            <View style={styles.watchBody}>
-              <Text style={styles.watchTitle}>{item.title}</Text>
-              <Text style={styles.watchMeta}>{item.subtitle || "实时市场"}</Text>
-            </View>
-            <Text style={styles.watchPrice}>{item.value || "查看"}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
-      <View style={styles.fixedActionRow}>
-        <Pressable style={styles.campaignNavItem} onPress={onHome}>
-          <Ionicons name="home" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>首页</Text>
-        </Pressable>
-        <Pressable style={styles.campaignNavItem}>
-          <Ionicons name="share-outline" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>分享</Text>
-        </Pressable>
-        <Pressable style={[styles.campaignNavItem, styles.campaignNavItemActive]} onPress={() => setWorldCupView("explore")}>
-          <Ionicons name="football-outline" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>赛事</Text>
-        </Pressable>
-        <Pressable style={styles.campaignNavItem} onPress={onHome}>
-          <Ionicons name="chatbubble-ellipses-outline" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>新对话</Text>
-        </Pressable>
-      </View>
-    </View>
   );
 }
 
@@ -696,109 +544,6 @@ function MatchMarketList() {
   );
 }
 
-function MineTab({
-  walletAddress,
-  trackingCount,
-  strategyCount,
-  recordCount,
-  onRefresh,
-  onLogout
-}: {
-  walletAddress?: string;
-  trackingCount: number;
-  strategyCount: number;
-  recordCount: number;
-  onRefresh: () => void;
-  onLogout: () => void;
-}) {
-  return (
-    <ScrollView contentContainerStyle={styles.minePage} showsVerticalScrollIndicator={false}>
-      <View style={styles.assetHeader}>
-        <Text style={styles.assetLabel}>资产</Text>
-        <Text style={styles.assetValue}>
-          {64.22 + trackingCount + strategyCount}
-          <Text style={styles.assetUnit}> xp</Text>
-        </Text>
-        <Text style={styles.assetProfit}>+0 (0.00%) 今日收益</Text>
-      </View>
-
-      <View style={styles.assetSplit}>
-        <View>
-          <Text style={styles.assetSmallLabel}>持仓价值</Text>
-          <Text style={styles.assetSmallValue}>{54.22 + trackingCount} xp</Text>
-        </View>
-        <View>
-          <Text style={styles.assetSmallLabel}>可用资产</Text>
-          <Text style={styles.assetSmallValue}>10 xp</Text>
-        </View>
-      </View>
-
-      <Pressable style={styles.greenButton} onPress={onRefresh}>
-        <Text style={styles.greenButtonText}>赚取积分</Text>
-      </Pressable>
-
-      <View style={styles.mineTabs}>
-        <Text style={styles.mineTabActive}>持仓</Text>
-        <Text style={styles.mineTabMuted}>未成交订单</Text>
-        <Text style={styles.mineTabMuted}>历史记录</Text>
-      </View>
-
-      <View style={styles.positionToolbar}>
-        <Text style={styles.positionChipActive}>当前仓位</Text>
-        <Text style={styles.positionChip}>历史仓位</Text>
-        <Text style={styles.positionSort}>持仓成本</Text>
-        <Ionicons name="chevron-down" size={14} color="#1c1a17" />
-      </View>
-
-      <PositionCard
-        flag="🇲🇽"
-        title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
-        value="20.57 xp"
-        change="+0.57 (+2.86%)"
-        changeTone="green"
-        side="Yes 52.4¢"
-        shares="38.1 份额"
-      />
-      <PositionCard
-        flag="🇲🇽"
-        title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
-        value="13.77 xp"
-        change="-1.22 (-8.16%)"
-        changeTone="red"
-        side="No 49¢"
-        shares="30.61 份额"
-      />
-      <PositionCard
-        flag="🇰🇷"
-        title="韩国会在 2026 年世界杯 A 组中排名第一吗？"
-        value="9.99 xp"
-        change="+0 (0.00%)"
-        changeTone="green"
-        side="No 78¢"
-        shares="12.82 份额"
-      />
-      <PositionCard
-        flag="🇪🇸"
-        title="西班牙会赢得 2026 年世界杯冠军吗？"
-        value="9.87 xp"
-        change="-0.11 (-1.19%)"
-        changeTone="red"
-        side="Yes 61¢"
-        shares="16.18 份额"
-      />
-
-      <View style={styles.actionRow}>
-        <Pressable style={styles.secondaryButton} onPress={onRefresh}>
-          <Text style={styles.secondaryButtonText}>刷新</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={onLogout}>
-          <Text style={styles.secondaryButtonText}>退出</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
-  );
-}
-
 function HistoryCard({
   icon,
   title,
@@ -818,7 +563,7 @@ function HistoryCard({
     <View style={styles.historyCard}>
       <View style={styles.historyTop}>
         <View style={[styles.historyIcon, icon === "gift" ? styles.giftIcon : styles.flagIcon]}>
-          <Ionicons name={icon === "gift" ? "gift-outline" : "flag-outline"} size={20} color={icon === "gift" ? "#1c1a17" : "#c92450"} />
+          <Ionicons name={icon === "gift" ? "gift-outline" : "flag-outline"} size={20} color={icon === "gift" ? colors.ink : "#c92450"} />
         </View>
         <Text style={styles.historyTitle}>{title}</Text>
         <Text style={[styles.historyValue, valueTone === "green" ? styles.valueGreen : styles.valueRed]}>{value}</Text>
@@ -865,38 +610,12 @@ function PositionCard({
         </View>
         <View style={styles.positionActions}>
           <Pressable style={styles.positionIconButton}>
-            <Ionicons name="share-outline" size={15} color="#1c1a17" />
+            <Ionicons name="share-outline" size={15} color={colors.ink} />
           </Pressable>
           <Pressable style={styles.sellButton}>
             <Text style={styles.sellButtonText}>卖出</Text>
           </Pressable>
         </View>
-      </View>
-    </View>
-  );
-}
-
-function BottomNav({
-  activeTab,
-  onChange,
-  onNewChat
-}: {
-  activeTab: MainTab;
-  onChange: (tab: MainTab) => void;
-  onNewChat: () => void;
-}) {
-  return (
-    <View style={styles.bottomDockWrap}>
-      <View style={styles.bottomScrim} />
-      <View style={styles.bottomDock}>
-        <View style={styles.tabPill}>
-          <TabButton active={activeTab === "agent"} icon="chatbubble-ellipses" label="Agent" onPress={() => onChange("agent")} />
-          <TabButton active={activeTab === "worldcup"} icon="football-outline" label="世界杯" onPress={() => onChange("worldcup")} />
-          <TabButton active={activeTab === "mine"} icon="person-outline" label="我的" onPress={() => onChange("mine")} />
-        </View>
-        <Pressable style={styles.newChatButton} onPress={onNewChat}>
-          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#171512" />
-        </Pressable>
       </View>
     </View>
   );
@@ -915,104 +634,10 @@ function TabButton({
 }) {
   return (
     <Pressable style={[styles.tabButton, active ? styles.tabButtonActive : null]} onPress={onPress}>
-      <Ionicons name={icon} size={21} color={active ? "#171512" : "#77716a"} />
+      <Ionicons name={icon} size={21} color={active ? colors.ink : "#77716a"} />
       <Text style={[styles.tabText, active ? styles.tabTextActive : null]}>{label}</Text>
     </Pressable>
   );
-}
-
-function ConsoleStat({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={styles.consoleStat}>
-      <Text style={styles.consoleStatValue}>{value}</Text>
-      <Text style={styles.consoleLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function MessageBubble({
-  message,
-  onAction
-}: {
-  message: V2MobileChatMessage;
-  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
-}) {
-  if (message.kind === "card" && message.card) {
-    return <CardMessage card={message.card} onAction={onAction} />;
-  }
-
-  const isUser = message.role === "user";
-
-  return (
-    <View style={[styles.bubble, isUser ? styles.userBubble : styles.agentBubble]}>
-      <Text style={[styles.bubbleText, isUser ? styles.userBubbleText : null]}>{message.text}</Text>
-    </View>
-  );
-}
-
-function CardMessage({
-  card,
-  onAction
-}: {
-  card: V2ConversationCard;
-  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
-}) {
-  if (card.type === "receive_card") {
-    const address = card.addresses[0];
-    async function copyAddress() {
-      if (!address?.address) return;
-      await Clipboard.setStringAsync(address.address);
-      Alert.alert("已复制", "充值地址已复制。");
-    }
-
-    return (
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{card.title}</Text>
-        <Text style={styles.cardBody}>{address?.network}</Text>
-        <Text style={styles.address}>{address?.address}</Text>
-        <Pressable style={styles.copyButton} onPress={() => copyAddress()}>
-          <Ionicons name="copy-outline" size={17} color="#171512" />
-          <Text style={styles.secondaryButtonText}>复制地址</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  if (card.type === "prediction_card") {
-    return (
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{card.title}</Text>
-        <Text style={styles.cardBody}>{card.agentNote}</Text>
-        <View style={styles.metricRow}>
-          {card.metrics.probabilityLabel ? <Text style={styles.metric}>{card.metrics.probabilityLabel}</Text> : null}
-          {card.metrics.priceLabel ? <Text style={styles.metric}>{card.metrics.priceLabel}</Text> : null}
-        </View>
-        <View style={styles.actionRow}>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("simulate", card)}>
-            <Text style={styles.secondaryButtonText}>先模拟</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("track", card)}>
-            <Text style={styles.secondaryButtonText}>跟踪</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={() => onAction("build_strategy", card)}>
-            <Text style={styles.secondaryButtonText}>策略</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{card.title}</Text>
-      <Text style={styles.cardBody}>{card.agentNote}</Text>
-    </View>
-  );
-}
-
-function shortAddress(address?: string): string | undefined {
-  if (!address) return undefined;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 const colors = {
@@ -1032,50 +657,6 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.shell
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  login: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 28,
-    gap: 12
-  },
-  loginBrand: {
-    fontSize: 14,
-    color: colors.muted
-  },
-  loginTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 10
-  },
-  loginInput: {
-    minHeight: 52,
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    backgroundColor: colors.paper,
-    color: colors.ink,
-    fontSize: 16
-  },
-  loginButton: {
-    minHeight: 52,
-    borderRadius: 18,
-    backgroundColor: colors.ink,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontWeight: "700"
-  },
-  loginState: {
-    color: colors.muted,
-    fontSize: 12
   },
   topbar: {
     height: 72,
@@ -1097,27 +678,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 4
   },
-  roundButtonActive: {
-    backgroundColor: "#efe7df"
-  },
   agentScreen: {
     flex: 1
   },
-  messages: {
-    paddingHorizontal: 18,
-    paddingTop: 8,
-    paddingBottom: 192,
-    gap: 12
-  },
-  messagesEmpty: {
+  agentContent: {
     flexGrow: 1,
-    justifyContent: "center"
-  },
-  hero: {
-    minHeight: 420,
-    alignItems: "center",
     justifyContent: "center",
-    gap: 22
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 192
   },
   heroTitle: {
     fontSize: 25,
@@ -1125,121 +694,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.ink,
     textAlign: "center"
-  },
-  promptStack: {
-    width: "100%",
-    gap: 9,
-    paddingHorizontal: 18
-  },
-  prompt: {
-    minHeight: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255, 253, 250, 0.75)",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16
-  },
-  promptText: {
-    color: colors.ink,
-    fontSize: 14
-  },
-  bubble: {
-    maxWidth: "88%",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 20
-  },
-  userBubble: {
-    alignSelf: "flex-end",
-    backgroundColor: colors.ink
-  },
-  agentBubble: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255, 253, 250, 0.88)"
-  },
-  bubbleText: {
-    color: colors.ink,
-    fontSize: 15,
-    lineHeight: 21
-  },
-  userBubbleText: {
-    color: "#fff"
-  },
-  card: {
-    borderRadius: 22,
-    padding: 16,
-    backgroundColor: "rgba(255, 253, 250, 0.96)",
-    gap: 10,
-    shadowColor: "#ddd1c7",
-    shadowOpacity: 0.65,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 3
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.ink,
-    lineHeight: 23
-  },
-  cardBody: {
-    color: "#413c36",
-    lineHeight: 21,
-    fontSize: 14
-  },
-  cardLabel: {
-    color: colors.muted,
-    fontSize: 12
-  },
-  address: {
-    color: colors.ink,
-    fontSize: 13,
-    lineHeight: 19
-  },
-  metricRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
-  },
-  metric: {
-    color: "#5f5850",
-    fontSize: 12,
-    borderRadius: 14,
-    backgroundColor: colors.soft,
-    paddingHorizontal: 10,
-    paddingVertical: 6
-  },
-  actionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 9
-  },
-  secondaryButton: {
-    minHeight: 38,
-    paddingHorizontal: 14,
-    borderRadius: 19,
-    backgroundColor: colors.soft,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  copyButton: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: colors.soft,
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7
-  },
-  secondaryButtonText: {
-    color: colors.ink,
-    fontWeight: "700"
-  },
-  error: {
-    paddingHorizontal: 22,
-    paddingVertical: 6,
-    color: "#b3261e"
   },
   composerWrap: {
     position: "absolute",
@@ -2470,7 +1924,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900"
   },
-  sectionEyebrow: {
+  eyebrow: {
     fontSize: 13,
     color: colors.muted,
     fontWeight: "700"
@@ -2501,21 +1955,21 @@ const styles = StyleSheet.create({
     color: "#efe8df",
     lineHeight: 21
   },
-  marketCard: {
+  card: {
     borderRadius: 22,
-    backgroundColor: "rgba(255, 253, 250, 0.9)",
     padding: 16,
-    gap: 7
+    backgroundColor: "rgba(255, 253, 250, 0.96)",
+    gap: 8
   },
-  marketTitle: {
-    color: colors.ink,
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "700"
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.ink
   },
-  marketMeta: {
-    color: colors.muted,
-    fontSize: 13
+  cardBody: {
+    color: "#413c36",
+    lineHeight: 21,
+    fontSize: 14
   },
   walletCard: {
     borderRadius: 24,
@@ -2532,7 +1986,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10
   },
-  consoleStat: {
+  stat: {
     flex: 1,
     minHeight: 78,
     borderRadius: 22,
@@ -2540,12 +1994,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
-  consoleStatValue: {
+  statValue: {
     color: colors.ink,
     fontSize: 22,
     fontWeight: "800"
   },
-  consoleLabel: {
+  statLabel: {
     color: colors.muted,
     fontSize: 12
   },

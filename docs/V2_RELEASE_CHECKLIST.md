@@ -16,6 +16,9 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - `track`, `build_strategy`, and `simulate` write user-scoped records.
 - Records can be read through tracking, strategies, and records endpoints.
 - Mobile has v2 types, API client, session helper, and hook.
+- Mobile v2 has the first visual baseline: Agent chat, World Cup campaign page, Mine page, poster hero, fixed World Cup actions, hidden bottom nav inside the campaign page, and a fixed Home return button.
+- World Cup Explore subpage exists with four market categories: champion, golden boot, group stage, and upcoming matches.
+- Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
 
 ## Before TestFlight / Internal Android Testing
 
@@ -32,6 +35,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Add rate limiting for chat and action endpoints.
 - Add request logging without private keys, access tokens, or raw secrets.
 - Run a full fresh-user test: login, home load, recharge prompt, World Cup prompt, track, strategy, simulate, records.
+- Run a mobile visual pass in 390x844 and simulator sizes: Agent empty chat, World Cup campaign page, World Cup Explore categories, Mine page, bottom fixed CTA behavior, and World Cup Home return behavior.
 
 Local v2 smoke commands:
 
@@ -57,7 +61,7 @@ npm run mobile:typecheck
 
 ## Can Wait
 
-- Final UI visual polish.
+- Secondary UI visual polish after the current mobile baseline is committed.
 - Rich card design system.
 - Advanced memory and retrieval.
 - Push notifications for tracked markets.

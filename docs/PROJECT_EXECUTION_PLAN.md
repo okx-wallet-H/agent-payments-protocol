@@ -66,7 +66,11 @@ Acceptance:
 - `[x]` Add top-left World Cup panel and top-right user console panel.
 - `[x]` Add receive-address card with copy button.
 - `[x]` Add prediction card actions: simulate, track, and build strategy.
-- `[~]` UI is intentionally structural; final human-grade visual design is pending user direction.
+- `[x]` Lock the first mobile navigation shape: bottom tabs for Agent, World Cup, and Mine.
+- `[x]` Build the World Cup activity page as a standalone campaign surface with a poster hero, Agent score, task, leaderboard, and fixed bottom actions.
+- `[x]` Hide the bottom tab bar on the World Cup campaign page so the activity CTA owns the bottom area, with a fixed Home button for returning to Agent.
+- `[x]` Add the World Cup Explore subpage with category tabs for champion, golden boot, group stage, and upcoming matches.
+- `[~]` UI visual direction is now user-led and being polished screen by screen before repository upload.
 
 Acceptance:
 - `npm run mobile:typecheck`
@@ -101,6 +105,7 @@ Acceptance:
 ## Phase 7 - Upload And Release Preparation
 
 - `[~]` Complete first local Git commit with safe project files.
+- `[~]` Freeze the mobile visual baseline before pushing to GitHub.
 - `[ ]` Push `main` to GitHub.
 - `[ ]` Create release branch for simulator and mobile QA.
 - `[ ]` Run iOS and Android simulator smoke tests.
