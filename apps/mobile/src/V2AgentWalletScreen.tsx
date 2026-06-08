@@ -21,6 +21,7 @@ import type {
   V2MarketSnapshot,
   V2MobileChatMessage,
   V2PredictionCard,
+  V2SimulationCard,
   V2StrategyCard,
   V2TrackingCard,
   V2WorldCupExploreCategory,
@@ -1314,10 +1315,51 @@ function CardMessage({
     return <StrategyCardMessage card={card} onAction={onAction} />;
   }
 
+  if (card.type === "simulation_card") {
+    return <SimulationCardMessage card={card} />;
+  }
+
+  return null;
+}
+
+function SimulationCardMessage({ card }: { card: V2SimulationCard }) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{card.title}</Text>
-      <Text style={styles.cardBody}>{card.agentNote}</Text>
+    <View style={styles.simulationCard}>
+      <View style={styles.predictionHeaderRow}>
+        <View style={styles.simulationFlagBadge}>
+          <Ionicons name="flask-outline" size={24} color="#102015" />
+        </View>
+        <View style={styles.predictionHeaderText}>
+          <Text style={styles.simulationEyebrow}>Agent 模拟结果</Text>
+          <Text style={styles.trackingStatus}>{card.statusText}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.trackingTitle}>{card.title}</Text>
+      <Text style={styles.trackingNote}>{card.agentNote}</Text>
+
+      <View style={styles.simulationMetricRow}>
+        <View style={styles.simulationMetricBox}>
+          <Text style={styles.trackingWatchLabel}>模拟金额</Text>
+          <Text style={styles.simulationMetricValue}>{card.amountLabel}</Text>
+        </View>
+        <View style={styles.simulationMetricBox}>
+          <Text style={styles.trackingWatchLabel}>份额</Text>
+          <Text style={styles.simulationMetricValue}>{card.sharesLabel || "待估算"}</Text>
+        </View>
+      </View>
+
+      {card.priceLabel ? (
+        <View style={styles.strategyRiskBox}>
+          <Text style={styles.trackingWatchLabel}>参考价格</Text>
+          <Text style={styles.strategyRiskText}>{card.priceLabel}</Text>
+        </View>
+      ) : null}
+
+      <View style={styles.simulationSafeBox}>
+        <Ionicons name="shield-checkmark-outline" size={18} color="#aaff35" />
+        <Text style={styles.simulationSafeText}>这一步只是模拟，没有提交订单。</Text>
+      </View>
     </View>
   );
 }
@@ -2025,6 +2067,62 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.82)",
     fontSize: 14,
     lineHeight: 20,
+    fontWeight: "800"
+  },
+  simulationCard: {
+    borderRadius: 26,
+    backgroundColor: "#101f1b",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  simulationFlagBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "#aaff35",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  simulationEyebrow: {
+    color: "#aaff35",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  simulationMetricRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  simulationMetricBox: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 14,
+    gap: 7
+  },
+  simulationMetricValue: {
+    color: "#fff",
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  simulationSafeBox: {
+    borderRadius: 18,
+    backgroundColor: "rgba(170, 255, 53, 0.1)",
+    padding: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9
+  },
+  simulationSafeText: {
+    flex: 1,
+    color: "rgba(255, 255, 255, 0.86)",
+    fontSize: 13,
+    lineHeight: 19,
     fontWeight: "800"
   },
   error: {

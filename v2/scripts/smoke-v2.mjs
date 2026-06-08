@@ -89,6 +89,7 @@ const simulate = await postJson("/api/v2/phase-one/actions", {
 });
 assert(simulate.record?.type === "simulation.saved", "simulate writes simulation record");
 assert(simulate.result?.status === "dry_run_completed", "simulate completes dry-run");
+assert(simulate.card?.agentNote?.includes("订单没有提交"), "simulation card keeps no-order boundary");
 
 const [ownRecords, otherRecords, tracking, strategies] = await Promise.all([
   getJson(`/api/v2/phase-one/records?userId=${encodeURIComponent(userId)}`),
