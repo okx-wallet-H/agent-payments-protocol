@@ -4,7 +4,7 @@ import {
   runV2AgentWalletCardAction,
   sendV2AgentWalletText
 } from "./v2-session";
-import type { V2MobileChatTurn } from "./types";
+import type { V2MarketSnapshot, V2MobileChatTurn } from "./types";
 
 const predictionTurn: V2MobileChatTurn = {
   type: "mobile_chat_turn",
@@ -87,11 +87,16 @@ const actionTurn: V2MobileChatTurn = {
   ]
 };
 
+let receivedCandidateMarketId: string | undefined;
+
 const api = {
   getV2Home: async () => {
     throw new Error("Not used in this smoke test.");
   },
-  sendV2Chat: async () => predictionTurn,
+  sendV2Chat: async (_text: string, _userId?: string, _walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot) => {
+    receivedCandidateMarketId = candidateMarket?.marketId;
+    return predictionTurn;
+  },
   runV2Action: async (input: { idempotencyKey?: string }) => {
     if (!input.idempotencyKey) throw new Error("Expected idempotency key.");
     return actionTurn;
@@ -99,9 +104,25 @@ const api = {
 };
 
 async function main() {
-  const afterChat = await sendV2AgentWalletText(api, initialV2AgentWalletSession, "世界杯预测", "demo-user");
+  const selectedMarket = {
+    provider: "okx-outcomes" as const,
+    chainId: 196 as const,
+    marketId: "selected-world-cup-market",
+    question: "Will Spain win the 2026 FIFA World Cup?",
+    acceptingOrders: true,
+    yesPrice: 0.17
+  };
+  const afterChat = await sendV2AgentWalletText(
+    api,
+    initialV2AgentWalletSession,
+    "帮我继续分析：西班牙会赢得 2026 年世界杯冠军吗？",
+    "demo-user",
+    undefined,
+    selectedMarket
+  );
   const latestCard = getLatestV2Card(afterChat);
   if (!latestCard) throw new Error("Expected latest card.");
+  if (receivedCandidateMarketId !== selectedMarket.marketId) throw new Error("Expected selected market to be passed to chat API.");
 
   const afterAction = await runV2AgentWalletCardAction(api, afterChat, {
     action: "simulate",
@@ -113,6 +134,7 @@ async function main() {
     chatMessages: afterChat.messages.length,
     finalMessages: afterAction.messages.length,
     latestCardType: latestCard.type,
+    receivedCandidateMarketId,
     error: afterAction.error
   }, null, 2));
 }
