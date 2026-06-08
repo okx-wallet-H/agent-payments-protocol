@@ -15,6 +15,8 @@ export interface WorldCupExploreMarketCard {
   id: string;
   category: WorldCupExploreCategory;
   title: string;
+  displayTitle: string;
+  displayName: string;
   subtitle?: string;
   agentNote?: string;
   probabilityLabel?: string;
@@ -74,11 +76,14 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
   const yesPrice = market.yesPrice;
   const noPrice = market.noPrice;
   const category = inferWorldCupCategory(market);
+  const display = friendlyWorldCupDisplay(market.question);
 
   return {
     id: market.marketId,
     category,
-    title: friendlyWorldCupTitle(market.question),
+    title: display.title,
+    displayTitle: display.title,
+    displayName: display.name,
     subtitle: market.endDate ? `结束时间 ${market.endDate}` : undefined,
     agentNote: createAgentNote(category, market),
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
@@ -140,22 +145,34 @@ function formatVolume(volume?: number): string | undefined {
   return `${Math.round(volume)} 交易额`;
 }
 
-function friendlyWorldCupTitle(question: string): string {
+function friendlyWorldCupDisplay(question: string): { title: string; name: string } {
   const normalized = question.trim().replace(/\s+/g, " ");
 
   const goldenBoot = normalized.match(/^Will (.+) win the 2026 World Cup Golden Boot\??$/i);
-  if (goldenBoot) return `${friendlyName(goldenBoot[1])}会拿到 2026 年世界杯金靴吗？`;
+  if (goldenBoot) {
+    const name = friendlyName(goldenBoot[1]);
+    return { title: `${name}会拿到 2026 年世界杯金靴吗？`, name };
+  }
 
   const champion = normalized.match(/^Will (.+) win the 2026 (?:FIFA )?World Cup\??$/i);
-  if (champion) return `${friendlyName(champion[1])}会赢得 2026 年世界杯冠军吗？`;
+  if (champion) {
+    const name = friendlyName(champion[1]);
+    return { title: `${name}会赢得 2026 年世界杯冠军吗？`, name };
+  }
 
   const groupFirst = normalized.match(/^Will (.+) finish first in Group ([A-Z]) at the 2026 World Cup\??$/i);
-  if (groupFirst) return `${friendlyName(groupFirst[1])}会在 2026 年世界杯 ${groupFirst[2]} 组排名第一吗？`;
+  if (groupFirst) {
+    const name = friendlyName(groupFirst[1]);
+    return { title: `${name}会在 2026 年世界杯 ${groupFirst[2]} 组排名第一吗？`, name };
+  }
 
   const matchWinner = normalized.match(/^Will (.+) beat (.+) at the 2026 World Cup\??$/i);
-  if (matchWinner) return `${friendlyName(matchWinner[1])}会在 2026 年世界杯战胜${friendlyName(matchWinner[2])}吗？`;
+  if (matchWinner) {
+    const name = friendlyName(matchWinner[1]);
+    return { title: `${name}会在 2026 年世界杯战胜${friendlyName(matchWinner[2])}吗？`, name };
+  }
 
-  return question;
+  return { title: question, name: question.replace(/\?$/, "").slice(0, 18) || "世界杯" };
 }
 
 function friendlyName(name: string): string {

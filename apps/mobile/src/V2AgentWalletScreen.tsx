@@ -664,7 +664,9 @@ function ExploreWorldCupPage({
       {!exploreLoading && exploreError ? <Text style={styles.exploreStatusText}>展示本地样稿，数据稍后自动更新</Text> : null}
 
       {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} /> : null}
-      {hasDynamicCards && activeCategory !== "冠军" ? <DynamicExploreMarketList cards={activeCards} /> : null}
+      {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} /> : null}
+      {hasDynamicCards && activeCategory === "小组赛" ? <DynamicGroupMarketList cards={activeCards} /> : null}
+      {hasDynamicCards && activeCategory === "近期比赛" ? <DynamicMatchMarketList cards={activeCards} /> : null}
 
       {!hasDynamicCards && activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
       {!hasDynamicCards && activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
@@ -688,10 +690,10 @@ function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCa
         {cards.slice(0, 12).map((card, index) => (
           <View key={card.id} style={styles.championItem}>
             <View style={[styles.championFlagCard, { backgroundColor: championCardColor(index) }]}>
-              <Text style={styles.championFlag}>{flagForMarket(card.title)}</Text>
+              <Text style={styles.championFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
               <Text style={styles.championPercent}>{card.probabilityLabel || optionPriceLabel(card) || "观察"}</Text>
             </View>
-            <Text style={styles.championName}>{shortMarketTitle(card.title)}</Text>
+            <Text style={styles.championName}>{card.displayName || shortMarketTitle(card.title)}</Text>
             <Text style={styles.championVolume}>{card.volumeLabel || card.subtitle || "实时市场"}</Text>
             {card.agentNote ? <Text style={styles.championNote} numberOfLines={2}>{card.agentNote}</Text> : null}
           </View>
@@ -701,14 +703,17 @@ function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCa
   );
 }
 
-function DynamicExploreMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+function DynamicGoldenBootMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
   return (
     <View style={styles.exploreCardList}>
       {cards.slice(0, 16).map((card) => (
         <View key={card.id} style={styles.playerMarketCard}>
           <View style={styles.playerTopRow}>
-            <Text style={styles.playerFlag}>{flagForMarket(card.title)}</Text>
-            <Text style={styles.playerName}>{card.title}</Text>
+            <Text style={styles.playerFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
+            <View style={styles.playerTextStack}>
+              <Text style={styles.playerName}>{card.displayName || shortMarketTitle(card.title)}</Text>
+              <Text style={styles.marketQuestion} numberOfLines={2}>{card.displayTitle || card.title}</Text>
+            </View>
             <Text style={styles.playerPercent}>{card.probabilityLabel || optionPriceLabel(card) || "观察"}</Text>
           </View>
           <View style={styles.playerTrack}>
@@ -720,6 +725,62 @@ function DynamicExploreMarketList({ cards }: { cards: V2WorldCupExploreMarketCar
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
           <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function DynamicGroupMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+  return (
+    <View style={styles.exploreCardList}>
+      {cards.slice(0, 16).map((card) => (
+        <View key={card.id} style={styles.groupMarketCard}>
+          <Text style={styles.groupTitle}>{groupTitleFromCard(card)}</Text>
+          <View style={styles.groupTeamList}>
+            <View style={styles.groupTeamRow}>
+              <Text style={styles.groupFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
+              <View style={styles.groupTeamStack}>
+                <Text style={styles.groupTeamName}>{card.displayName || shortMarketTitle(card.title)}</Text>
+                {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
+              </View>
+              <Text style={styles.groupPrice}>{optionPriceLabel(card) || card.probabilityLabel || "观察"}</Text>
+            </View>
+          </View>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function DynamicMatchMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+  return (
+    <View style={styles.exploreCardList}>
+      {cards.slice(0, 16).map((card) => (
+        <View key={card.id} style={styles.matchMarketCard}>
+          <Text style={styles.matchMarketTime}>{card.subtitle || "赛程更新中"}</Text>
+          <View style={styles.groupTeamList}>
+            <View style={styles.groupTeamRow}>
+              <Text style={styles.groupFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
+              <View style={styles.groupTeamStack}>
+                <Text style={styles.groupTeamName}>{card.displayName || shortMarketTitle(card.title)}</Text>
+                <Text style={styles.marketQuestion} numberOfLines={2}>{card.displayTitle || card.title}</Text>
+              </View>
+              <Text style={[styles.matchPrice, { backgroundColor: "#00866a" }]}>{optionPriceLabel(card) || card.probabilityLabel || "观察"}</Text>
+            </View>
+            {card.options.find((option) => option.side === "no")?.priceLabel ? (
+              <View style={styles.groupTeamRow}>
+                <Text style={styles.groupFlag}>◐</Text>
+                <Text style={styles.groupTeamName}>另一边</Text>
+                <Text style={[styles.matchPrice, { backgroundColor: "#696969" }]}>
+                  {card.options.find((option) => option.side === "no")?.priceLabel}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
+          <Text style={styles.marketVolume}>{card.volumeLabel || "世界杯数据展示"}</Text>
         </View>
       ))}
     </View>
@@ -1150,12 +1211,26 @@ function flagForMarket(title: string): string {
   if (/portugal|葡萄牙/.test(text)) return "🇵🇹";
   if (/argentina|阿根廷/.test(text)) return "🇦🇷";
   if (/brazil|巴西/.test(text)) return "🇧🇷";
+  if (/united states|美国/.test(text)) return "🇺🇸";
   if (/mexico|墨西哥/.test(text)) return "🇲🇽";
   if (/korea|韩国/.test(text)) return "🇰🇷";
   if (/belgium|比利时/.test(text)) return "🇧🇪";
   if (/canada|加拿大/.test(text)) return "🇨🇦";
   if (/norway|挪威|haaland|哈兰德/.test(text)) return "🇳🇴";
+  if (/mbappe|姆巴佩|griezmann|格列兹曼/.test(text)) return "🇫🇷";
+  if (/saka|萨卡|bellingham|贝林厄姆|foden|福登/.test(text)) return "🏴";
+  if (/ronaldo|c 罗/.test(text)) return "🇵🇹";
+  if (/messi|梅西|alvarez|阿尔瓦雷斯|lautaro|劳塔罗/.test(text)) return "🇦🇷";
+  if (/raphinha|拉菲尼亚|vinicius|维尼修斯/.test(text)) return "🇧🇷";
+  if (/yamal|亚马尔|oyarzabal|奥亚萨瓦尔/.test(text)) return "🇪🇸";
   return "⚽";
+}
+
+function groupTitleFromCard(card: V2WorldCupExploreMarketCard): string {
+  const text = card.displayTitle || card.title;
+  const group = text.match(/世界杯\s*([A-Z])\s*组/);
+  if (group) return `2026 年世界杯 ${group[1]} 组第一`;
+  return "2026 年世界杯小组赛";
 }
 
 function shortMarketTitle(title: string): string {
@@ -2331,8 +2406,11 @@ const styles = StyleSheet.create({
     width: 42,
     fontSize: 34
   },
-  playerName: {
+  playerTextStack: {
     flex: 1,
+    gap: 4
+  },
+  playerName: {
     color: "#050505",
     fontSize: 18,
     fontWeight: "900"
@@ -2383,6 +2461,12 @@ const styles = StyleSheet.create({
     color: "#8b8782",
     fontSize: 13
   },
+  marketQuestion: {
+    color: "#7f7972",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700"
+  },
   marketAgentNote: {
     color: "#5f5b55",
     fontSize: 13,
@@ -2428,6 +2512,10 @@ const styles = StyleSheet.create({
     color: "#050505",
     fontSize: 17,
     fontWeight: "800"
+  },
+  groupTeamStack: {
+    flex: 1,
+    gap: 4
   },
   groupPrice: {
     minWidth: 66,

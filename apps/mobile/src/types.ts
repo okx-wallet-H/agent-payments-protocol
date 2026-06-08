@@ -279,6 +279,8 @@ export interface V2WorldCupExploreMarketCard {
   id: string;
   category: V2WorldCupExploreCategory;
   title: string;
+  displayTitle: string;
+  displayName: string;
   subtitle?: string;
   agentNote?: string;
   probabilityLabel?: string;
