@@ -1,12 +1,14 @@
 import type { MarketSnapshot, StrategyCard } from "../domain/types";
+import { friendlyWorldCupDisplay } from "../app/world-cup-explore";
 
 export function createStrategyCard(market: MarketSnapshot): StrategyCard {
   const isLongShot = market.yesPrice !== undefined && market.yesPrice < 0.03;
+  const title = isWorldCupMarket(market) ? `策略：${friendlyWorldCupDisplay(market.question).title}` : "策略草案";
 
   return {
     type: "strategy_card",
     id: crypto.randomUUID(),
-    title: "策略草案",
+    title,
     statusText: isLongShot ? "冷门观察" : "可以模拟",
     agentNote: isLongShot
       ? "这个方向赔率很高，但不能冲动。我会把它当成冷门机会，先做小额模拟和跟踪。"
@@ -19,4 +21,8 @@ export function createStrategyCard(market: MarketSnapshot): StrategyCard {
     market,
     createdAt: new Date().toISOString()
   };
+}
+
+function isWorldCupMarket(market: MarketSnapshot): boolean {
+  return market.provider === "okx-outcomes" || /world cup|世界杯|fifa/i.test(market.question);
 }

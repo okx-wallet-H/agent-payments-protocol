@@ -79,6 +79,7 @@ const strategy = await postJson("/api/v2/phase-one/actions", {
 });
 assert(strategy.record?.type === "strategy.saved", "build_strategy writes strategy record");
 assert(strategy.mobileTurn?.messages?.some((message) => message.card?.type === "strategy_card"), "build_strategy returns strategy mobile card");
+assert(strategy.card?.title?.includes("世界杯") || strategy.card?.market?.provider !== "okx-outcomes", "strategy card keeps friendly world cup title");
 
 const simulate = await postJson("/api/v2/phase-one/actions", {
   action: "simulate",

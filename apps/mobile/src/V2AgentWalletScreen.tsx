@@ -21,6 +21,7 @@ import type {
   V2MarketSnapshot,
   V2MobileChatMessage,
   V2PredictionCard,
+  V2StrategyCard,
   V2TrackingCard,
   V2WorldCupExploreCategory,
   V2WorldCupExploreMarketCard,
@@ -1309,10 +1310,62 @@ function CardMessage({
     return <TrackingCardMessage card={card} onAction={onAction} />;
   }
 
+  if (card.type === "strategy_card") {
+    return <StrategyCardMessage card={card} onAction={onAction} />;
+  }
+
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{card.title}</Text>
       <Text style={styles.cardBody}>{card.agentNote}</Text>
+    </View>
+  );
+}
+
+function StrategyCardMessage({
+  card,
+  onAction
+}: {
+  card: V2StrategyCard;
+  onAction: (action: "simulate" | "track" | "build_strategy", card: V2ConversationCard) => void;
+}) {
+  return (
+    <View style={styles.strategyCard}>
+      <View style={styles.predictionHeaderRow}>
+        <View style={styles.strategyFlagBadge}>
+          <Ionicons name="git-branch-outline" size={24} color="#102015" />
+        </View>
+        <View style={styles.predictionHeaderText}>
+          <Text style={styles.strategyEyebrow}>Agent 策略草案</Text>
+          <Text style={styles.trackingStatus}>{card.statusText}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.trackingTitle}>{card.title.replace(/^策略：/, "")}</Text>
+      <Text style={styles.trackingNote}>{card.agentNote}</Text>
+
+      <View style={styles.strategyStepList}>
+        {card.steps.map((step, index) => (
+          <View key={`${card.id}-${index}`} style={styles.strategyStepRow}>
+            <Text style={styles.strategyStepIndex}>{index + 1}</Text>
+            <Text style={styles.strategyStepText}>{step}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.strategyRiskBox}>
+        <Text style={styles.trackingWatchLabel}>注意</Text>
+        <Text style={styles.strategyRiskText}>{card.riskText}</Text>
+      </View>
+
+      <View style={styles.predictionActionRow}>
+        <Pressable style={styles.predictionPrimaryAction} onPress={() => onAction("simulate", card)}>
+          <Text style={styles.predictionPrimaryActionText}>先模拟</Text>
+        </Pressable>
+        <Pressable style={styles.predictionGhostAction} onPress={() => onAction("track", card)}>
+          <Text style={styles.predictionGhostActionText}>跟踪</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1905,6 +1958,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     fontWeight: "700"
+  },
+  strategyCard: {
+    borderRadius: 26,
+    backgroundColor: "#102015",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  strategyFlagBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "#aaff35",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  strategyEyebrow: {
+    color: "#aaff35",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  strategyStepList: {
+    gap: 9
+  },
+  strategyStepRow: {
+    minHeight: 42,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  strategyStepIndex: {
+    width: 24,
+    height: 24,
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: "rgba(170, 255, 53, 0.18)",
+    color: "#aaff35",
+    textAlign: "center",
+    lineHeight: 24,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  strategyStepText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  strategyRiskBox: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    padding: 14,
+    gap: 6
+  },
+  strategyRiskText: {
+    color: "rgba(255, 255, 255, 0.82)",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
   },
   error: {
     paddingHorizontal: 22,
