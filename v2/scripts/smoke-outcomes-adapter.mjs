@@ -8,7 +8,7 @@ const sample = {
       markets: [
         {
           marketId: "spain-champion",
-          question: "西班牙会赢得 2026 年世界杯冠军吗？",
+          question: "Will Spain win the 2026 FIFA World Cup?",
           status: "active",
           marketType: "neg_risk",
           volume24h: "786700",
@@ -82,6 +82,7 @@ assert(Boolean(best?.marketId), "picks a best tradeable market");
 const explore = createWorldCupExploreView(normalized.markets);
 assert(explore.type === "world_cup_explore_view", "creates explore view");
 assert(explore.cards.champion.length >= 1, "maps champion category");
+assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 2026 年世界杯冠军吗？"), "renders friendly Chinese title");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
 
 console.log(JSON.stringify({
