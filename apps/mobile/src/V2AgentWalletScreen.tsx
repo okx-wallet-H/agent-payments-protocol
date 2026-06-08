@@ -27,7 +27,7 @@ import type {
 const worldCupPoster = require("../assets/world-cup-poster.png");
 
 type MainTab = "agent" | "worldcup" | "mine";
-type WorldCupView = "home" | "explore";
+type WorldCupView = "home" | "explore" | "detail";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 
 const marketCategories: MarketCategory[] = ["冠军", "金靴奖得主", "小组赛", "近期比赛"];
@@ -323,6 +323,7 @@ function AgentTab({
 }) {
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
+  const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
 
   if (worldCupView === "explore") {
     return (
@@ -330,6 +331,23 @@ function AgentTab({
         activeCategory={category}
         onBack={() => setWorldCupView("home")}
         onCategoryChange={setCategory}
+        onSelectCard={(card) => {
+          setSelectedMarket(card);
+          setWorldCupView("detail");
+        }}
+      />
+    );
+  }
+
+  if (worldCupView === "detail" && selectedMarket) {
+    return (
+      <WorldCupMarketDetailPage
+        card={selectedMarket}
+        onBack={() => setWorldCupView("explore")}
+        onAskAgent={(card) => {
+          onSend(`帮我继续分析：${card.displayTitle || card.title}`);
+          setWorldCupView("home");
+        }}
       />
     );
   }
@@ -408,6 +426,7 @@ function WorldCupTab({
 }) {
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
+  const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
 
   if (worldCupView === "explore") {
     return (
@@ -418,6 +437,23 @@ function WorldCupTab({
         exploreLoading={exploreLoading}
         onBack={() => setWorldCupView("home")}
         onCategoryChange={setCategory}
+        onSelectCard={(card) => {
+          setSelectedMarket(card);
+          setWorldCupView("detail");
+        }}
+      />
+    );
+  }
+
+  if (worldCupView === "detail" && selectedMarket) {
+    return (
+      <WorldCupMarketDetailPage
+        card={selectedMarket}
+        onBack={() => setWorldCupView("explore")}
+        onAskAgent={(card) => {
+          onAsk(`帮我继续分析：${card.displayTitle || card.title}`);
+          onHome();
+        }}
       />
     );
   }
@@ -619,7 +655,8 @@ function ExploreWorldCupPage({
   exploreError,
   exploreLoading,
   onBack,
-  onCategoryChange
+  onCategoryChange,
+  onSelectCard
 }: {
   activeCategory: MarketCategory;
   explore?: V2WorldCupExploreView;
@@ -627,6 +664,7 @@ function ExploreWorldCupPage({
   exploreLoading?: boolean;
   onBack: () => void;
   onCategoryChange: (category: MarketCategory) => void;
+  onSelectCard: (card: V2WorldCupExploreMarketCard) => void;
 }) {
   const activeExploreCategory = exploreCategoryByTab[activeCategory];
   const activeCards = explore?.cards[activeExploreCategory] || [];
@@ -663,10 +701,10 @@ function ExploreWorldCupPage({
 
       {!exploreLoading && exploreError ? <Text style={styles.exploreStatusText}>展示本地样稿，数据稍后自动更新</Text> : null}
 
-      {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} /> : null}
-      {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} /> : null}
-      {hasDynamicCards && activeCategory === "小组赛" ? <DynamicGroupMarketList cards={activeCards} /> : null}
-      {hasDynamicCards && activeCategory === "近期比赛" ? <DynamicMatchMarketList cards={activeCards} /> : null}
+      {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} onSelectCard={onSelectCard} /> : null}
+      {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
+      {hasDynamicCards && activeCategory === "小组赛" ? <DynamicGroupMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
+      {hasDynamicCards && activeCategory === "近期比赛" ? <DynamicMatchMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
 
       {!hasDynamicCards && activeCategory === "冠军" ? <ChampionMarketGrid /> : null}
       {!hasDynamicCards && activeCategory === "金靴奖得主" ? <GoldenBootMarketList /> : null}
@@ -676,7 +714,13 @@ function ExploreWorldCupPage({
   );
 }
 
-function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+function DynamicChampionMarketGrid({
+  cards,
+  onSelectCard
+}: {
+  cards: V2WorldCupExploreMarketCard[];
+  onSelectCard: (card: V2WorldCupExploreMarketCard) => void;
+}) {
   return (
     <View style={styles.exploreSection}>
       <View style={styles.marketSectionTitleRow}>
@@ -688,7 +732,7 @@ function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCa
       </View>
       <View style={styles.championGrid}>
         {cards.slice(0, 12).map((card, index) => (
-          <View key={card.id} style={styles.championItem}>
+          <Pressable key={card.id} style={styles.championItem} onPress={() => onSelectCard(card)}>
             <View style={[styles.championFlagCard, { backgroundColor: championCardColor(index) }]}>
               <Text style={styles.championFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
               <Text style={styles.championPercent}>{card.probabilityLabel || optionPriceLabel(card) || "观察"}</Text>
@@ -696,18 +740,24 @@ function DynamicChampionMarketGrid({ cards }: { cards: V2WorldCupExploreMarketCa
             <Text style={styles.championName}>{card.displayName || shortMarketTitle(card.title)}</Text>
             <Text style={styles.championVolume}>{card.volumeLabel || card.subtitle || "实时市场"}</Text>
             {card.agentNote ? <Text style={styles.championNote} numberOfLines={2}>{card.agentNote}</Text> : null}
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
   );
 }
 
-function DynamicGoldenBootMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+function DynamicGoldenBootMarketList({
+  cards,
+  onSelectCard
+}: {
+  cards: V2WorldCupExploreMarketCard[];
+  onSelectCard: (card: V2WorldCupExploreMarketCard) => void;
+}) {
   return (
     <View style={styles.exploreCardList}>
       {cards.slice(0, 16).map((card) => (
-        <View key={card.id} style={styles.playerMarketCard}>
+        <Pressable key={card.id} style={styles.playerMarketCard} onPress={() => onSelectCard(card)}>
           <View style={styles.playerTopRow}>
             <Text style={styles.playerFlag}>{flagForMarket(card.displayTitle || card.title)}</Text>
             <View style={styles.playerTextStack}>
@@ -725,17 +775,23 @@ function DynamicGoldenBootMarketList({ cards }: { cards: V2WorldCupExploreMarket
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
           <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
-        </View>
+        </Pressable>
       ))}
     </View>
   );
 }
 
-function DynamicGroupMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+function DynamicGroupMarketList({
+  cards,
+  onSelectCard
+}: {
+  cards: V2WorldCupExploreMarketCard[];
+  onSelectCard: (card: V2WorldCupExploreMarketCard) => void;
+}) {
   return (
     <View style={styles.exploreCardList}>
       {cards.slice(0, 16).map((card) => (
-        <View key={card.id} style={styles.groupMarketCard}>
+        <Pressable key={card.id} style={styles.groupMarketCard} onPress={() => onSelectCard(card)}>
           <Text style={styles.groupTitle}>{groupTitleFromCard(card)}</Text>
           <View style={styles.groupTeamList}>
             <View style={styles.groupTeamRow}>
@@ -748,17 +804,23 @@ function DynamicGroupMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[
             </View>
           </View>
           <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
-        </View>
+        </Pressable>
       ))}
     </View>
   );
 }
 
-function DynamicMatchMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[] }) {
+function DynamicMatchMarketList({
+  cards,
+  onSelectCard
+}: {
+  cards: V2WorldCupExploreMarketCard[];
+  onSelectCard: (card: V2WorldCupExploreMarketCard) => void;
+}) {
   return (
     <View style={styles.exploreCardList}>
       {cards.slice(0, 16).map((card) => (
-        <View key={card.id} style={styles.matchMarketCard}>
+        <Pressable key={card.id} style={styles.matchMarketCard} onPress={() => onSelectCard(card)}>
           <Text style={styles.matchMarketTime}>{card.subtitle || "赛程更新中"}</Text>
           <View style={styles.groupTeamList}>
             <View style={styles.groupTeamRow}>
@@ -781,9 +843,74 @@ function DynamicMatchMarketList({ cards }: { cards: V2WorldCupExploreMarketCard[
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
           <Text style={styles.marketVolume}>{card.volumeLabel || "世界杯数据展示"}</Text>
-        </View>
+        </Pressable>
       ))}
     </View>
+  );
+}
+
+function WorldCupMarketDetailPage({
+  card,
+  onBack,
+  onAskAgent
+}: {
+  card: V2WorldCupExploreMarketCard;
+  onBack: () => void;
+  onAskAgent: (card: V2WorldCupExploreMarketCard) => void;
+}) {
+  const yesOption = card.options.find((option) => option.side === "yes") || card.options[0];
+  const noOption = card.options.find((option) => option.side === "no") || card.options[1];
+
+  return (
+    <ScrollView contentContainerStyle={styles.marketDetailPage} showsVerticalScrollIndicator={false}>
+      <View style={styles.exploreHeader}>
+        <Pressable style={styles.exploreBackButton} onPress={onBack}>
+          <Ionicons name="chevron-back" size={24} color={colors.ink} />
+        </Pressable>
+        <Text style={styles.exploreTitle}>市场详情</Text>
+        <View style={styles.exploreHeaderGhost} />
+      </View>
+
+      <View style={styles.marketDetailHero}>
+        <View style={styles.marketDetailFlag}>
+          <Text style={styles.marketDetailFlagText}>{flagForMarket(card.displayTitle || card.title)}</Text>
+        </View>
+        <Text style={styles.marketDetailName}>{card.displayName || shortMarketTitle(card.title)}</Text>
+        <Text style={styles.marketDetailTitle}>{card.displayTitle || card.title}</Text>
+        <View style={styles.playerTrack}>
+          <View style={[styles.playerTrackFill, { width: probabilityWidth(card) }]} />
+        </View>
+      </View>
+
+      <View style={styles.marketDetailOddsRow}>
+        <View style={styles.marketDetailOddCard}>
+          <Text style={styles.marketDetailOddLabel}>会</Text>
+          <Text style={styles.marketDetailOddValue}>{card.probabilityLabel || yesOption?.priceLabel || "观察"}</Text>
+        </View>
+        <View style={styles.marketDetailOddCard}>
+          <Text style={styles.marketDetailOddLabel}>不会</Text>
+          <Text style={styles.marketDetailOddValue}>{noOption?.priceLabel || "观察"}</Text>
+        </View>
+      </View>
+
+      <View style={styles.marketDetailInfoCard}>
+        <Text style={styles.marketDetailSectionTitle}>Agent 观察</Text>
+        <Text style={styles.marketDetailNote}>{card.agentNote || "数据已经同步，先观察热度和资金变化。"}</Text>
+        <View style={styles.marketDetailMetaRow}>
+          <Text style={styles.marketDetailMeta}>交易额</Text>
+          <Text style={styles.marketDetailMetaValue}>{card.volumeLabel || "实时更新"}</Text>
+        </View>
+        <View style={styles.marketDetailMetaRow}>
+          <Text style={styles.marketDetailMeta}>状态</Text>
+          <Text style={styles.marketDetailMetaValue}>{card.status === "tradeable" ? "可观察" : "观察中"}</Text>
+        </View>
+      </View>
+
+      <Pressable style={styles.marketDetailPrimaryButton} onPress={() => onAskAgent(card)}>
+        <Text style={styles.marketDetailPrimaryText}>让 Agent 继续分析</Text>
+        <Ionicons name="arrow-forward" size={20} color="#fff" />
+      </Pressable>
+    </ScrollView>
   );
 }
 
@@ -2262,6 +2389,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     gap: 18
   },
+  marketDetailPage: {
+    paddingHorizontal: 22,
+    paddingTop: 4,
+    paddingBottom: 34,
+    backgroundColor: "#fff",
+    gap: 18
+  },
   exploreHeader: {
     minHeight: 44,
     flexDirection: "row",
@@ -2471,6 +2605,108 @@ const styles = StyleSheet.create({
     color: "#5f5b55",
     fontSize: 13,
     lineHeight: 18
+  },
+  marketDetailHero: {
+    borderRadius: 28,
+    backgroundColor: "#0c2113",
+    padding: 24,
+    gap: 14
+  },
+  marketDetailFlag: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  marketDetailFlagText: {
+    fontSize: 40
+  },
+  marketDetailName: {
+    color: "#fff",
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: "900"
+  },
+  marketDetailTitle: {
+    color: "rgba(255, 255, 255, 0.76)",
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "800"
+  },
+  marketDetailOddsRow: {
+    flexDirection: "row",
+    gap: 12
+  },
+  marketDetailOddCard: {
+    flex: 1,
+    borderRadius: 22,
+    backgroundColor: "#f3f3f2",
+    padding: 18,
+    gap: 8
+  },
+  marketDetailOddLabel: {
+    color: "#77716b",
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  marketDetailOddValue: {
+    color: "#050505",
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: "900"
+  },
+  marketDetailInfoCard: {
+    borderRadius: 24,
+    backgroundColor: "#f3f3f2",
+    padding: 18,
+    gap: 14
+  },
+  marketDetailSectionTitle: {
+    color: "#050505",
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  marketDetailNote: {
+    color: "#4d4741",
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "700"
+  },
+  marketDetailMetaRow: {
+    minHeight: 28,
+    borderTopWidth: 1,
+    borderTopColor: "#dfdfdd",
+    paddingTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  marketDetailMeta: {
+    color: "#7d766e",
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  marketDetailMetaValue: {
+    color: "#050505",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  marketDetailPrimaryButton: {
+    minHeight: 58,
+    borderRadius: 29,
+    backgroundColor: "#217d1a",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  marketDetailPrimaryText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "900"
   },
   detailButton: {
     minHeight: 48,
