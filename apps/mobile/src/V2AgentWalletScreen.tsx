@@ -914,12 +914,24 @@ function WorldCupMarketDetailPage({
         <Text style={styles.marketDetailSectionTitle}>Agent 观察</Text>
         <Text style={styles.marketDetailNote}>{card.agentNote || "数据已经同步，先观察热度和资金变化。"}</Text>
         <View style={styles.marketDetailMetaRow}>
+          <Text style={styles.marketDetailMeta}>数据来源</Text>
+          <Text style={styles.marketDetailMetaValue}>{marketProviderLabel(card.market.provider)}</Text>
+        </View>
+        <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>交易额</Text>
           <Text style={styles.marketDetailMetaValue}>{card.volumeLabel || "实时更新"}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
+          <Text style={styles.marketDetailMeta}>结束时间</Text>
+          <Text style={styles.marketDetailMetaValue}>{formatMarketEndTime(card.market.endDate) || "待同步"}</Text>
+        </View>
+        <View style={styles.marketDetailMetaRow}>
+          <Text style={styles.marketDetailMeta}>市场类型</Text>
+          <Text style={styles.marketDetailMetaValue}>{marketTypeLabel(card.market.marketType)}</Text>
+        </View>
+        <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>状态</Text>
-          <Text style={styles.marketDetailMetaValue}>{card.status === "tradeable" ? "可观察" : "观察中"}</Text>
+          <Text style={styles.marketDetailMetaValue}>{marketStatusLabel(card)}</Text>
         </View>
       </View>
 
@@ -1563,6 +1575,31 @@ function probabilityWidth(card: V2WorldCupExploreMarketCard): `${number}%` {
   const price = card.options.find((option) => option.side === "yes")?.price || card.options[0]?.price || 0.1;
   const percent = Math.max(3, Math.min(100, Math.round(price * 100)));
   return `${percent}%`;
+}
+
+function marketProviderLabel(provider: V2WorldCupExploreMarketCard["market"]["provider"]): string {
+  if (provider === "okx-outcomes") return "OKX Outcomes";
+  return "插件数据";
+}
+
+function marketTypeLabel(type?: string): string {
+  if (type === "neg_risk") return "冠军组合盘";
+  if (type === "binary") return "单场二选一";
+  return type || "标准预测盘";
+}
+
+function marketStatusLabel(card: V2WorldCupExploreMarketCard): string {
+  if (card.status === "tradeable" && card.market.acceptingOrders) return "可观察";
+  if (card.market.status === "resolved") return "已结算";
+  if (card.market.status === "settling") return "结算中";
+  return "观察中";
+}
+
+function formatMarketEndTime(value?: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function shortAddress(address?: string): string | undefined {
