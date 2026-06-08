@@ -12,6 +12,9 @@ assert(home.home?.type === "mobile_home_view", "home returns mobile_home_view");
 assert(home.home?.shell?.main === "premium_ai_conversation", "home shell is AI conversation");
 assert(Array.isArray(home.home?.quickPrompts) && home.home.quickPrompts.length > 0, "home has quick prompts");
 assert(home.home?.panels?.topRight?.walletLabel === "0x1111...1111", "home uses provided wallet address");
+assert(Array.isArray(home.home?.recent?.tracking), "home returns recent tracking list");
+assert(Array.isArray(home.home?.recent?.strategies), "home returns recent strategy list");
+assert(Array.isArray(home.home?.recent?.records), "home returns recent record list");
 
 const explore = await getJson("/api/v2/world-cup/explore");
 assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");

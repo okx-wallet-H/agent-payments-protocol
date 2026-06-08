@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy } from "@privy-io/expo";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +20,7 @@ import type {
   V2ConversationCard,
   V2MarketSnapshot,
   V2MobileChatMessage,
+  V2MobileHomeView,
   V2PredictionCard,
   V2SimulationCard,
   V2StrategyCard,
@@ -267,6 +268,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             trackingCount={agent.session.home?.state.trackingCount || 0}
             strategyCount={agent.session.home?.state.strategyCount || 0}
             recordCount={agent.session.home?.state.recordCount || 0}
+            recent={agent.session.home?.recent}
             onRefresh={() => run(() => agent.refreshHome())}
             onLogout={() => run(logout)}
           />
@@ -1024,6 +1026,7 @@ function MineTab({
   trackingCount,
   strategyCount,
   recordCount,
+  recent,
   onRefresh,
   onLogout
 }: {
@@ -1031,9 +1034,14 @@ function MineTab({
   trackingCount: number;
   strategyCount: number;
   recordCount: number;
+  recent?: V2MobileHomeView["recent"];
   onRefresh: () => void;
   onLogout: () => void;
 }) {
+  const tracking = recent?.tracking || [];
+  const strategies = recent?.strategies || [];
+  const records = recent?.records || [];
+
   return (
     <ScrollView contentContainerStyle={styles.minePage} showsVerticalScrollIndicator={false}>
       <View style={styles.assetHeader}>
@@ -1061,54 +1069,28 @@ function MineTab({
       </Pressable>
 
       <View style={styles.mineTabs}>
-        <Text style={styles.mineTabActive}>持仓</Text>
-        <Text style={styles.mineTabMuted}>未成交订单</Text>
-        <Text style={styles.mineTabMuted}>历史记录</Text>
+        <Text style={styles.mineTabActive}>Agent 记录</Text>
+        <Text style={styles.mineTabMuted}>跟踪</Text>
+        <Text style={styles.mineTabMuted}>策略</Text>
       </View>
 
-      <View style={styles.positionToolbar}>
-        <Text style={styles.positionChipActive}>当前仓位</Text>
-        <Text style={styles.positionChip}>历史仓位</Text>
-        <Text style={styles.positionSort}>持仓成本</Text>
-        <Ionicons name="chevron-down" size={14} color="#1c1a17" />
-      </View>
+      <MineSection title="跟踪中" count={trackingCount}>
+        {tracking.length > 0 ? tracking.slice(0, 2).map((card) => <MineTrackingItem key={card.id} card={card} />) : (
+          <MineEmptyState text="还没有跟踪中的机会。" />
+        )}
+      </MineSection>
 
-      <PositionCard
-        flag="🇲🇽"
-        title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
-        value="20.57 xp"
-        change="+0.57 (+2.86%)"
-        changeTone="green"
-        side="Yes 52.4¢"
-        shares="38.1 份额"
-      />
-      <PositionCard
-        flag="🇲🇽"
-        title="墨西哥会在 2026 年世界杯 A 组中排名第一吗？"
-        value="13.77 xp"
-        change="-1.22 (-8.16%)"
-        changeTone="red"
-        side="No 49¢"
-        shares="30.61 份额"
-      />
-      <PositionCard
-        flag="🇰🇷"
-        title="韩国会在 2026 年世界杯 A 组中排名第一吗？"
-        value="9.99 xp"
-        change="+0 (0.00%)"
-        changeTone="green"
-        side="No 78¢"
-        shares="12.82 份额"
-      />
-      <PositionCard
-        flag="🇪🇸"
-        title="西班牙会赢得 2026 年世界杯冠军吗？"
-        value="9.87 xp"
-        change="-0.11 (-1.19%)"
-        changeTone="red"
-        side="Yes 61¢"
-        shares="16.18 份额"
-      />
+      <MineSection title="策略" count={strategyCount}>
+        {strategies.length > 0 ? strategies.slice(0, 2).map((card) => <MineStrategyItem key={card.id} card={card} />) : (
+          <MineEmptyState text="策略生成后会出现在这里。" />
+        )}
+      </MineSection>
+
+      <MineSection title="最近记录" count={recordCount}>
+        {records.length > 0 ? records.slice(0, 3).map((record) => <MineRecordItem key={record.id} record={record} />) : (
+          <MineEmptyState text="最近操作会保存在这里。" />
+        )}
+      </MineSection>
 
       <View style={styles.actionRow}>
         <Pressable style={styles.secondaryButton} onPress={onRefresh}>
@@ -1122,81 +1104,78 @@ function MineTab({
   );
 }
 
-function HistoryCard({
-  icon,
-  title,
-  value,
-  valueTone,
-  subtitle,
-  time
-}: {
-  icon: "gift" | "flag";
-  title: string;
-  value: string;
-  valueTone: "green" | "red";
-  subtitle: string;
-  time: string;
-}) {
+function MineSection({ children, count, title }: { children: ReactNode; count: number; title: string }) {
   return (
-    <View style={styles.historyCard}>
-      <View style={styles.historyTop}>
-        <View style={[styles.historyIcon, icon === "gift" ? styles.giftIcon : styles.flagIcon]}>
-          <Ionicons name={icon === "gift" ? "gift-outline" : "flag-outline"} size={20} color={icon === "gift" ? "#1c1a17" : "#c92450"} />
-        </View>
-        <Text style={styles.historyTitle}>{title}</Text>
-        <Text style={[styles.historyValue, valueTone === "green" ? styles.valueGreen : styles.valueRed]}>{value}</Text>
+    <View style={styles.mineSection}>
+      <View style={styles.mineSectionHeader}>
+        <Text style={styles.mineSectionTitle}>{title}</Text>
+        <Text style={styles.mineSectionCount}>{count}</Text>
       </View>
-      <View style={styles.historyBottom}>
-        <Text style={styles.historySubtitle}>{subtitle}</Text>
-        <Text style={styles.historyTime}>{time}</Text>
-      </View>
+      <View style={styles.mineSectionBody}>{children}</View>
     </View>
   );
 }
 
-function PositionCard({
-  flag,
-  title,
-  value,
-  change,
-  changeTone,
-  side,
-  shares
-}: {
-  flag: string;
-  title: string;
-  value: string;
-  change: string;
-  changeTone: "green" | "red";
-  side: string;
-  shares: string;
-}) {
+function MineTrackingItem({ card }: { card: V2TrackingCard }) {
+  const title = card.title.replace(/^已跟踪：/, "");
   return (
-    <View style={styles.positionCard}>
-      <View style={styles.positionTop}>
-        <Text style={styles.positionFlag}>{flag}</Text>
-        <Text style={styles.positionTitle}>{title}</Text>
-        <View style={styles.positionValueBlock}>
-          <Text style={styles.positionValue}>{value}</Text>
-          <Text style={[styles.positionChange, changeTone === "green" ? styles.valueGreen : styles.valueRed]}>{change}</Text>
-        </View>
+    <View style={styles.mineRecordCard}>
+      <Text style={styles.mineRecordIcon}>{flagForMarket(title)}</Text>
+      <View style={styles.mineRecordText}>
+        <Text style={styles.mineRecordTitle} numberOfLines={2}>{title}</Text>
+        <Text style={styles.mineRecordNote} numberOfLines={2}>{card.watchText}</Text>
       </View>
-      <View style={styles.positionBottom}>
-        <View style={styles.positionMeta}>
-          <Text style={styles.sidePill}>{side}</Text>
-          <Text style={styles.positionShares}>{shares}</Text>
-        </View>
-        <View style={styles.positionActions}>
-          <Pressable style={styles.positionIconButton}>
-            <Ionicons name="share-outline" size={15} color="#1c1a17" />
-          </Pressable>
-          <Pressable style={styles.sellButton}>
-            <Text style={styles.sellButtonText}>卖出</Text>
-          </Pressable>
-        </View>
-      </View>
+      <Text style={styles.mineRecordStatus}>{card.statusText}</Text>
     </View>
   );
+}
+
+function MineStrategyItem({ card }: { card: V2StrategyCard }) {
+  const title = card.title.replace(/^策略：/, "");
+  return (
+    <View style={styles.mineRecordCard}>
+      <View style={styles.mineRecordIconBadge}>
+        <Ionicons name="git-branch-outline" size={18} color="#102015" />
+      </View>
+      <View style={styles.mineRecordText}>
+        <Text style={styles.mineRecordTitle} numberOfLines={2}>{title}</Text>
+        <Text style={styles.mineRecordNote} numberOfLines={2}>{card.steps[0] || card.agentNote}</Text>
+      </View>
+      <Text style={styles.mineRecordStatus}>{card.statusText}</Text>
+    </View>
+  );
+}
+
+function MineRecordItem({ record }: { record: V2MobileHomeView["recent"]["records"][number] }) {
+  return (
+    <View style={styles.mineTimelineRow}>
+      <View style={styles.mineTimelineDot} />
+      <View style={styles.mineTimelineText}>
+        <Text style={styles.mineTimelineTitle} numberOfLines={1}>{friendlyRecordTitle(record.title)}</Text>
+        <Text style={styles.mineTimelineNote} numberOfLines={2}>{record.note}</Text>
+      </View>
+      <Text style={styles.mineTimelineType}>{friendlyRecordType(record.type)}</Text>
+    </View>
+  );
+}
+
+function MineEmptyState({ text }: { text: string }) {
+  return (
+    <View style={styles.mineEmptyState}>
+      <Text style={styles.mineEmptyText}>{text}</Text>
+    </View>
+  );
+}
+
+function friendlyRecordTitle(title: string): string {
+  return title.replace(/^已跟踪：/, "").replace(/^策略：/, "");
+}
+
+function friendlyRecordType(type: string): string {
+  if (type === "tracking.saved") return "跟踪";
+  if (type === "strategy.saved") return "策略";
+  if (type === "simulation.saved") return "模拟";
+  return "记录";
 }
 
 function BottomNav({
@@ -2290,184 +2269,127 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.ink,
     paddingBottom: 8
   },
-  positionToolbar: {
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: -4
-  },
-  positionChipActive: {
-    overflow: "hidden",
-    borderRadius: 19,
-    backgroundColor: "#050505",
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "800",
-    paddingHorizontal: 13,
-    paddingVertical: 8
-  },
-  positionChip: {
-    overflow: "hidden",
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    color: colors.ink,
-    fontSize: 13,
-    fontWeight: "700",
-    paddingHorizontal: 13,
-    paddingVertical: 8
-  },
-  positionSort: {
-    marginLeft: "auto",
-    color: colors.ink,
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  positionCard: {
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
-    padding: 12,
-    gap: 12
-  },
-  positionTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+  mineSection: {
     gap: 10
   },
-  positionFlag: {
-    width: 34,
-    fontSize: 26,
-    lineHeight: 30
+  mineSectionHeader: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
   },
-  positionTitle: {
-    flex: 1,
-    color: colors.ink,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800"
-  },
-  positionValueBlock: {
-    minWidth: 76,
-    alignItems: "flex-end",
-    gap: 3
-  },
-  positionValue: {
+  mineSectionTitle: {
     color: "#050505",
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: "900"
   },
-  positionChange: {
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  positionBottom: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  positionMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8
-  },
-  sidePill: {
+  mineSectionCount: {
     overflow: "hidden",
-    borderRadius: 7,
-    backgroundColor: "rgba(241, 235, 229, 0.78)",
-    color: colors.ink,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.78)",
+    color: "#5f5a55",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     fontSize: 12,
-    fontWeight: "700",
-    paddingHorizontal: 6,
-    paddingVertical: 4
+    fontWeight: "900"
   },
-  positionShares: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "600"
+  mineSectionBody: {
+    gap: 10
   },
-  positionActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8
-  },
-  positionIconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(241, 235, 229, 0.76)",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  sellButton: {
-    minWidth: 60,
-    minHeight: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(241, 235, 229, 0.86)",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  sellButtonText: {
-    color: colors.ink,
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  historyCard: {
+  mineRecordCard: {
     borderRadius: 18,
-    backgroundColor: "rgba(255, 253, 250, 0.92)",
-    padding: 16,
-    gap: 16
-  },
-  historyTop: {
+    backgroundColor: "rgba(255, 255, 255, 0.78)",
+    padding: 13,
     flexDirection: "row",
     alignItems: "center",
     gap: 10
   },
-  historyIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
+  mineRecordIcon: {
+    width: 38,
+    fontSize: 27,
+    lineHeight: 32
+  },
+  mineRecordIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: "#aaff35",
     alignItems: "center",
     justifyContent: "center"
   },
-  giftIcon: {
-    backgroundColor: "#b5ff2a"
-  },
-  flagIcon: {
-    backgroundColor: "#fff1f3"
-  },
-  historyTitle: {
+  mineRecordText: {
     flex: 1,
-    color: colors.ink,
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "800"
+    gap: 4
   },
-  historyValue: {
-    fontSize: 15,
-    fontWeight: "800"
-  },
-  valueGreen: {
-    color: "#19a76a"
-  },
-  valueRed: {
-    color: "#d43f67"
-  },
-  historyBottom: {
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    paddingTop: 12,
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  historySubtitle: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: "800"
-  },
-  historyTime: {
-    color: colors.muted,
+  mineRecordTitle: {
+    color: "#050505",
     fontSize: 14,
-    fontWeight: "600"
+    lineHeight: 19,
+    fontWeight: "900"
+  },
+  mineRecordNote: {
+    color: "#746e67",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
+  },
+  mineRecordStatus: {
+    overflow: "hidden",
+    borderRadius: 14,
+    backgroundColor: "#f1ebe5",
+    color: "#1f1d1a",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  mineTimelineRow: {
+    minHeight: 56,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.68)",
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  mineTimelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#26751b"
+  },
+  mineTimelineText: {
+    flex: 1,
+    gap: 3
+  },
+  mineTimelineTitle: {
+    color: "#050505",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  mineTimelineNote: {
+    color: "#746e67",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700"
+  },
+  mineTimelineType: {
+    color: "#1f1d1a",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  mineEmptyState: {
+    minHeight: 56,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.62)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14
+  },
+  mineEmptyText: {
+    color: "#746e67",
+    fontSize: 13,
+    fontWeight: "800"
   },
   eventHero: {
     minHeight: 372,
