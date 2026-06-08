@@ -711,6 +711,7 @@ function ExploreWorldCupPage({
   const sourceText = explore?.source?.label || "赛事数据";
   const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
   const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
+  const sourceSummary = explore?.summary ? `已同步 ${explore.summary.totalMarkets} 个市场` : undefined;
 
   return (
     <ScrollView contentContainerStyle={styles.explorePage} showsVerticalScrollIndicator={false}>
@@ -745,6 +746,7 @@ function ExploreWorldCupPage({
         <View style={styles.exploreSourceCard}>
           <Text style={styles.exploreSourceLabel}>{sourceText}</Text>
           <Text style={styles.exploreSourceText}>{exploreError ? "先展示赛事样例，数据稍后自动更新。" : sourceMessage}</Text>
+          {sourceSummary ? <Text style={styles.exploreSourceText}>{sourceSummary}</Text> : null}
           {sourceUpdatedAt ? <Text style={styles.exploreSourceTime}>更新于 {sourceUpdatedAt}</Text> : null}
         </View>
       ) : null}

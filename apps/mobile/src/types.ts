@@ -308,6 +308,10 @@ export interface V2WorldCupExploreView {
     label: string;
   }>;
   cards: Record<V2WorldCupExploreCategory, V2WorldCupExploreMarketCard[]>;
+  summary: {
+    totalMarkets: number;
+    categoryCounts: Record<V2WorldCupExploreCategory, number>;
+  };
   source: V2WorldCupExploreSource;
   updatedAt: string;
 }

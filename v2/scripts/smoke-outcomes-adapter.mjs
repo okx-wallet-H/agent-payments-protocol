@@ -38,6 +38,8 @@ assert(Boolean(best?.marketId), "picks a best observable market");
 const explore = createWorldCupExploreView(normalized.markets);
 assert(explore.type === "world_cup_explore_view", "creates explore view");
 assert(Boolean(explore.source.label), "adds source label");
+assert(explore.summary.totalMarkets === normalized.markets.length, "summarizes total market count");
+assert(explore.summary.categoryCounts.champion === explore.cards.champion.length, "summarizes champion count");
 assert(explore.cards.champion.length >= 1, "maps champion category");
 assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 2026 年世界杯冠军吗？"), "renders friendly Chinese title");
 assert(explore.cards.champion.some((card) => card.displayName === "西班牙"), "renders short display name");

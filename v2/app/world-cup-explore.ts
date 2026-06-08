@@ -44,6 +44,10 @@ export interface WorldCupExploreView {
     label: string;
   }>;
   cards: Record<WorldCupExploreCategory, WorldCupExploreMarketCard[]>;
+  summary: {
+    totalMarkets: number;
+    categoryCounts: Record<WorldCupExploreCategory, number>;
+  };
   source: WorldCupExploreSource;
   updatedAt: string;
 }
@@ -61,15 +65,25 @@ export function createWorldCupExploreView(
 ): WorldCupExploreView {
   const cards = markets.map(toExploreCard);
   const updatedAt = new Date().toISOString();
+  const groupedCards = {
+    champion: sortExploreCards(cards.filter((card) => card.category === "champion")),
+    golden_boot: sortExploreCards(cards.filter((card) => card.category === "golden_boot")),
+    group_stage: sortExploreCards(cards.filter((card) => card.category === "group_stage")),
+    upcoming_matches: sortExploreCards(cards.filter((card) => card.category === "upcoming_matches"))
+  };
 
   return {
     type: "world_cup_explore_view",
     categories,
-    cards: {
-      champion: sortExploreCards(cards.filter((card) => card.category === "champion")),
-      golden_boot: sortExploreCards(cards.filter((card) => card.category === "golden_boot")),
-      group_stage: sortExploreCards(cards.filter((card) => card.category === "group_stage")),
-      upcoming_matches: sortExploreCards(cards.filter((card) => card.category === "upcoming_matches"))
+    cards: groupedCards,
+    summary: {
+      totalMarkets: cards.length,
+      categoryCounts: {
+        champion: groupedCards.champion.length,
+        golden_boot: groupedCards.golden_boot.length,
+        group_stage: groupedCards.group_stage.length,
+        upcoming_matches: groupedCards.upcoming_matches.length
+      }
     },
     source: { ...source, updatedAt },
     updatedAt
