@@ -241,20 +241,86 @@ export type V2BusinessGoalType =
   | "prediction_market_execute"
   | "wallet_receive"
   | "agent_fund_prepare"
+  | "wallet_tx_verify"
   | "wallet_status"
   | "unknown";
 
 export interface V2MarketSnapshot {
-  provider: "polymarket-plugin";
-  chainId: 137;
+  provider: "polymarket-plugin" | "okx-outcomes";
+  chainId: 137 | 196;
+  eventId?: string;
   marketId: string;
   question: string;
+  status?: "active" | "paused" | "settling" | "resolved" | string;
+  marketType?: "binary" | "neg_risk" | string;
+  yesAssetId?: string;
+  noAssetId?: string;
   yesPrice?: number;
   noPrice?: number;
   acceptingOrders: boolean;
   liquidity?: number;
   volume24h?: number;
+  volume?: number;
+  startTime?: string;
   endDate?: string;
+  raw?: unknown;
+}
+
+export type V2WorldCupExploreCategory = "champion" | "golden_boot" | "group_stage" | "upcoming_matches";
+
+export interface V2WorldCupExploreOption {
+  id: string;
+  label: string;
+  price?: number;
+  priceLabel?: string;
+  assetId?: string;
+  side?: "yes" | "no";
+}
+
+export interface V2WorldCupExploreMarketCard {
+  id: string;
+  category: V2WorldCupExploreCategory;
+  title: string;
+  displayTitle: string;
+  displayName: string;
+  subtitle?: string;
+  agentNote?: string;
+  timing?: {
+    status: "live" | "soon" | "today" | "upcoming" | "ended" | "unknown";
+    label: string;
+    startTime?: string;
+  };
+  probabilityLabel?: string;
+  volumeLabel?: string;
+  status: "observable" | "watch_only";
+  market: V2MarketSnapshot;
+  options: V2WorldCupExploreOption[];
+}
+
+export type V2WorldCupExploreSourceProvider = "okx-outcomes" | "polymarket-plugin" | "local-sample";
+
+export interface V2WorldCupExploreSource {
+  provider: V2WorldCupExploreSourceProvider;
+  mode: "live" | "fallback" | "sample";
+  label: string;
+  message: string;
+  updatedAt: string;
+  warning?: string;
+}
+
+export interface V2WorldCupExploreView {
+  type: "world_cup_explore_view";
+  categories: Array<{
+    id: V2WorldCupExploreCategory;
+    label: string;
+  }>;
+  cards: Record<V2WorldCupExploreCategory, V2WorldCupExploreMarketCard[]>;
+  summary: {
+    totalMarkets: number;
+    categoryCounts: Record<V2WorldCupExploreCategory, number>;
+  };
+  source: V2WorldCupExploreSource;
+  updatedAt: string;
 }
 
 export interface V2ReceiveAddress {
@@ -296,9 +362,13 @@ export interface V2SimulationCard {
   title: string;
   statusText: string;
   agentNote: string;
+  marketTitle?: string;
+  sideLabel?: string;
   amountLabel: string;
   sharesLabel?: string;
   priceLabel?: string;
+  moneyMoved: false;
+  market: V2MarketSnapshot;
   createdAt: string;
 }
 
@@ -356,6 +426,56 @@ export interface V2MobileChatTurn {
   cards: V2ConversationCard[];
   suggestedInput?: string;
   createdAt: string;
+}
+
+export type V2AgentOrchestratorAction =
+  | "show_receive_address"
+  | "check_wallet_funds"
+  | "verify_wallet_transaction"
+  | "analyze_worldcup_market"
+  | "simulate_prediction"
+  | "hold";
+
+export interface V2AgentPolicyDecision {
+  status: "allow" | "block";
+  action: "analyze" | "track" | "build_strategy" | "simulate" | "execute";
+  reason: string;
+  userText: string;
+  policy: {
+    id: string;
+    mode: "mvp_observe_only";
+    allowedActions: Array<"analyze" | "track" | "build_strategy" | "simulate" | "execute">;
+    liveExecutionEnabled: false;
+    maxSimulationUsd: number;
+    allowedProviders: Array<"polymarket-plugin" | "okx-outcomes">;
+    allowedChains: Array<137 | 196>;
+    policyText: string;
+  };
+}
+
+export interface V2AgentCapabilityGate {
+  walletReady: boolean;
+  fundsReady: boolean;
+  needsWallet: boolean;
+  needsFunds: boolean;
+  onchainSkill: {
+    status: "allowed" | "blocked" | "not_needed";
+    mode: "none" | "observe" | "dry_run";
+    capability: "none" | "okx-onchainos-skills";
+    reason: string;
+  };
+  liveExecution: {
+    enabled: false;
+    reason: string;
+  };
+  policyDecision?: V2AgentPolicyDecision;
+}
+
+export interface V2AgentOrchestration {
+  action: V2AgentOrchestratorAction;
+  goalType: V2BusinessGoalType;
+  progressHint: string;
+  capability: V2AgentCapabilityGate;
 }
 
 export interface V2WorldCupInfoPanel {
@@ -420,13 +540,146 @@ export interface V2MobileHomeView {
   updatedAt: string;
 }
 
+export interface V2WalletContext {
+  userId: string;
+  address: `0x${string}`;
+  chainId: 196;
+  network: "X Layer";
+  assets: Array<{
+    symbol: "USDT0" | "USDT" | "OKB";
+    name: string;
+    amountLabel: string;
+    amountValue?: string;
+    valueLabel: string;
+    syncStatus: "pending" | "synced" | "failed";
+  }>;
+  recentRecords: Array<{
+    id: string;
+    title: string;
+    note: string;
+    status: "pending" | "synced" | "failed";
+    createdAt: string;
+  }>;
+  status: "ready" | "demo_fallback";
+  statusText: string;
+  lifecycle?: Array<{
+    id: "identity" | "wallet" | "assets" | "agent";
+    title: string;
+    status: "done" | "active" | "waiting" | "failed";
+    note: string;
+  }>;
+  agent: {
+    mode: "observe_only";
+    fundsStatus: "ready" | "waiting" | "sync_failed";
+    availableText: string;
+    primaryAsset?: "USDT0" | "USDT" | "OKB";
+    nextActionText: string;
+  };
+  vault: {
+    id: string;
+    title: "Agent 资金池";
+    status: "ready" | "waiting" | "sync_failed";
+    displayText: string;
+    policyText: string;
+    sourceText: string;
+    userVisibleAddress: false;
+  };
+  policy: {
+    id: string;
+    mode: "mvp_observe_only";
+    allowedActions: Array<"analyze" | "track" | "build_strategy" | "simulate" | "execute">;
+    liveExecutionEnabled: false;
+    maxSimulationUsd: number;
+    allowedProviders: Array<"polymarket-plugin" | "okx-outcomes">;
+    allowedChains: Array<137 | 196>;
+    policyText: string;
+  };
+}
+
+export interface V2MobileAgentMemory {
+  type: "mobile_agent_memory";
+  userId: string;
+  source: "session_memory_v1";
+  counters: {
+    homeLoads: number;
+    chatTurns: number;
+  };
+  wallet?: {
+    address?: `0x${string}`;
+    chainId: 196;
+    network: "X Layer";
+    assetSnapshot?: {
+      USDT0?: string;
+      USDT?: string;
+      OKB?: string;
+    };
+    records: V2WalletContext["recentRecords"];
+    verifiedTransfers: Array<{
+      txHash: `0x${string}`;
+      status: "received" | "not_for_wallet" | "failed" | "not_found" | "unsupported_asset";
+      message: string;
+      explorerUrl?: string;
+      chainId: 196;
+      assetSymbol?: "USDT0" | "USDT" | "OKB";
+      amountLabel?: string;
+      tokenAddress?: `0x${string}`;
+      verifiedAt: string;
+    }>;
+  };
+  recentMessages: Array<{
+    role: "user" | "agent";
+    text: string;
+    createdAt: string;
+  }>;
+  knowledgeNotes: string[];
+  updatedAt?: string;
+}
+
+export interface V2AuditTimelineEvent {
+  id: string;
+  userId: string;
+  type:
+    | "wallet.refresh"
+    | "wallet.tx_verified"
+    | "prediction.analyzed"
+    | "tracking.saved"
+    | "strategy.saved"
+    | "simulation.completed"
+    | "policy.blocked";
+  title: string;
+  note: string;
+  status: "success" | "blocked" | "info";
+  moneyMoved: false;
+  marketId?: string;
+  marketTitle?: string;
+  txHash?: `0x${string}`;
+  explorerUrl?: string;
+  chainId?: number;
+  assetSymbol?: string;
+  amountLabel?: string;
+  tokenAddress?: `0x${string}`;
+  simulationSide?: string;
+  simulationShares?: string;
+  simulationPrice?: string;
+  recordId?: string;
+  walletRecordId?: string;
+  walletRecord?: V2WalletContext["recentRecords"][number];
+  card?: V2PredictionCard | V2TrackingCard | V2StrategyCard | V2SimulationCard;
+  createdAt: string;
+}
+
+export interface V2MobileHomeResponse {
+  home: V2MobileHomeView;
+  wallet?: V2WalletContext;
+}
+
 export interface V2PhaseOneRecord {
   id: string;
   userId: string;
   idempotencyKey?: string;
-  type: "tracking.saved" | "strategy.saved" | "simulation.saved";
+  type: "prediction.saved" | "tracking.saved" | "strategy.saved" | "simulation.saved";
   title: string;
   note: string;
-  card: V2TrackingCard | V2StrategyCard | V2SimulationCard;
+  card: V2PredictionCard | V2TrackingCard | V2StrategyCard | V2SimulationCard;
   createdAt: string;
 }

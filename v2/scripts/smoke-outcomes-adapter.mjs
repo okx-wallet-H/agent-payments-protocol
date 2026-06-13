@@ -1,0 +1,77 @@
+const checks = [];
+
+const { normalizeOkxOutcomes, pickBestOkxWorldCupMarket } = await import("../execution/okx-outcomes-output.ts");
+const { createWorldCupExploreView } = await import("../app/world-cup-explore.ts");
+const { sampleOkxWorldCupPayload } = await import("../execution/okx-world-cup-sample.ts");
+
+const normalized = normalizeOkxOutcomes(sampleOkxWorldCupPayload);
+assert(normalized.eventsSeen === 1, "reads event list");
+assert(normalized.marketsSeen >= 3, "reads nested markets");
+assert(normalized.markets.length >= 3, "normalizes markets");
+
+const champion = normalized.markets.find((market) => market.marketId === "sample-spain-champion");
+assert(champion?.provider === "okx-outcomes", "sets OKX provider");
+assert(champion?.chainId === 196, "sets X Layer chain id");
+assert(champion?.yesAssetId === "sample-esp-yes", "reads YES asset id");
+assert(champion?.noAssetId === "sample-esp-no", "reads NO asset id");
+assert(champion?.yesPrice === 0.17, "parses YES price");
+assert(champion?.acceptingOrders === true, "active market with asset is observable");
+
+const pending = normalizeOkxOutcomes({
+  markets: [
+    {
+      marketId: "asset-pending",
+      question: "暂未上链的市场",
+      status: "active",
+      yesOutcome: {
+        assetId: null,
+        price: 0.5
+      }
+    }
+  ]
+}).markets[0];
+assert(pending?.acceptingOrders === false, "assetId null is watch-only");
+
+const best = pickBestOkxWorldCupMarket(normalized.markets);
+assert(Boolean(best?.marketId), "picks a best observable market");
+
+const explore = createWorldCupExploreView(normalized.markets);
+assert(explore.type === "world_cup_explore_view", "creates explore view");
+assert(Boolean(explore.source.label), "adds source label");
+assert(explore.summary.totalMarkets === normalized.markets.length, "summarizes total market count");
+assert(explore.summary.categoryCounts.champion === explore.cards.champion.length, "summarizes champion count");
+assert(explore.cards.champion.length >= 1, "maps champion category");
+assert(explore.cards.champion.some((card) => card.title === "西班牙会赢得 2026 年世界杯冠军吗？"), "renders friendly Chinese title");
+assert(explore.cards.champion.some((card) => card.displayName === "西班牙"), "renders short display name");
+assert(explore.cards.champion.every((card) => card.displayTitle), "renders display title");
+assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds friendly agent notes");
+assert(explore.cards.champion.every((card) => card.status === "observable" || card.status === "watch_only"), "uses observe-first card status");
+assert(isSortedByVolume(explore.cards.champion), "sorts champion cards by market volume");
+assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
+assert(explore.cards.upcoming_matches.some((card) => Boolean(card.market.startTime)), "reads match start time");
+assert(explore.cards.upcoming_matches.some((card) => Boolean(card.timing?.label)), "adds match timing label");
+assert(explore.cards.upcoming_matches.some((card) => /开赛|进行中/.test(card.subtitle || "")), "uses timing as match subtitle");
+
+console.log(JSON.stringify({
+  ok: true,
+  checks,
+  markets: normalized.markets.length,
+  best: best?.marketId,
+  categories: Object.fromEntries(Object.entries(explore.cards).map(([key, cards]) => [key, cards.length]))
+}, null, 2));
+
+function assert(condition, label) {
+  if (!condition) throw new Error(`Outcomes adapter smoke failed: ${label}`);
+  checks.push(label);
+}
+
+function isSortedByVolume(cards) {
+  return cards.every((card, index) => {
+    if (index === 0) return true;
+    return volumeScore(cards[index - 1].market) >= volumeScore(card.market);
+  });
+}
+
+function volumeScore(market) {
+  return market.volume24h || market.volume || market.liquidity || 0;
+}

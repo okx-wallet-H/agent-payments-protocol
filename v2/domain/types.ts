@@ -6,12 +6,13 @@ export type BusinessGoalType =
   | "prediction_market_execute"
   | "wallet_receive"
   | "agent_fund_prepare"
+  | "wallet_tx_verify"
   | "wallet_status"
   | "unknown";
 
 export type ExecutionMode = "observe" | "dry_run" | "live";
 
-export type ExecutionProvider = "onchainos" | "polymarket-plugin";
+export type ExecutionProvider = "onchainos" | "polymarket-plugin" | "okx-outcomes";
 
 export type PolicyDecisionStatus = "allow" | "block" | "needs_user_confirmation";
 
@@ -51,16 +52,24 @@ export interface BusinessGoal {
 }
 
 export interface MarketSnapshot {
-  provider: "polymarket-plugin";
-  chainId: 137;
+  provider: "polymarket-plugin" | "okx-outcomes";
+  chainId: ChainId;
+  eventId?: string;
   marketId: string;
   question: string;
+  status?: "active" | "paused" | "settling" | "resolved" | string;
+  marketType?: "binary" | "neg_risk" | string;
+  yesAssetId?: string;
+  noAssetId?: string;
   yesPrice?: number;
   noPrice?: number;
   acceptingOrders: boolean;
   liquidity?: number;
   volume24h?: number;
+  volume?: number;
+  startTime?: string;
   endDate?: string;
+  raw?: unknown;
 }
 
 export interface ReceiveAddress {
@@ -122,9 +131,13 @@ export interface SimulationCard {
   title: string;
   statusText: string;
   agentNote: string;
+  marketTitle?: string;
+  sideLabel?: string;
   amountLabel: string;
   sharesLabel?: string;
   priceLabel?: string;
+  moneyMoved: false;
+  market: MarketSnapshot;
   createdAt: string;
 }
 

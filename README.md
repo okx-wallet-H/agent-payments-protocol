@@ -1,8 +1,10 @@
 # Agent Wallet X Layer MVP
 
-Conversation-first Agent Wallet for ordinary community users. The user talks to a dedicated AI Agent, the Agent reads market opportunities, prepares prediction cards, handles wallet-facing operations behind the scenes, and records the work.
+Conversation-first Agent Wallet for ordinary community users. The user talks to a dedicated AI Agent, HWallet handles the wallet boundary, the Agent reads market opportunities, prepares cards, handles wallet-facing operations behind the scenes, and records the work.
 
 The current product direction is locked in `docs/PROJECT_EXECUTION_PLAN.md`.
+
+First-stage consolidation status is recorded in `docs/PHASE_ONE_CLOSEOUT.md`.
 
 ## Current Stack
 
@@ -76,6 +78,12 @@ The chat layer cannot directly move funds. Every money-moving path must pass:
 ## Phase 1 Acceptance
 
 Phase 1 is considered complete when `npm run smoke:mvp`, `npm run typecheck`, `npm run mobile:typecheck`, and `npm run build` all pass.
+
+For the current mobile-first HWallet line, run the full merge gate before every commit or push:
+
+```bash
+npm run verify:merge
+```
 
 The current V2 upload gate is:
 

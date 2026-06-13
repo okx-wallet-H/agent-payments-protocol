@@ -20,7 +20,7 @@ export function createDefaultReceiveAddresses(input: {
       network: "X Layer",
       chainId: 196,
       address: input.xLayerAddress,
-      supportedAssets: ["USDT", "OKB"]
+      supportedAssets: ["USDT0", "USDT", "OKB"]
     },
     {
       id: "polymarket-strategy-wallet",

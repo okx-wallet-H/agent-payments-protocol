@@ -6,7 +6,7 @@ export const PHASE_ONE_APP_SHELL: PhaseOneAppShell = {
     {
       id: "world_cup_info",
       position: "top_left",
-      label: "世界杯"
+      label: "市场"
     },
     {
       id: "user_console",

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { createPostgresClientOptions } from "./postgres-client-options.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const schemaPath = path.join(rootDir, "database", "schema.sql");
@@ -25,7 +26,7 @@ if (dryRun) {
   process.exit(0);
 }
 
-const client = new pg.Client({ connectionString: databaseUrl });
+const client = new pg.Client(createPostgresClientOptions(databaseUrl));
 
 try {
   await client.connect();

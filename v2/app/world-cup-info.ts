@@ -9,8 +9,8 @@ export function createWorldCupInfoPanel(markets: MarketSnapshot[]): WorldCupInfo
 
   return {
     type: "world_cup_info_panel",
-    title: "世界杯",
-    summary: activeMarkets.length > 0 ? `我整理了 ${activeMarkets.length} 个可关注方向。` : "暂时没有可关注的世界杯方向。",
+    title: "市场机会",
+    summary: activeMarkets.length > 0 ? `我整理了 ${activeMarkets.length} 个可关注方向。` : "暂时没有可关注的市场方向。",
     items: hottest.map((market) => ({
       id: market.marketId,
       title: market.question,

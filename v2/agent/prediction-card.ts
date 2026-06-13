@@ -1,25 +1,40 @@
 import type { MarketSnapshot, PredictionCard } from "../domain/types";
+import { createWorldCupAgentNote, friendlyWorldCupDisplay, inferWorldCupCategory } from "../app/world-cup-explore";
 
 export function createPredictionCard(market: MarketSnapshot): PredictionCard {
   const yesPercent = market.yesPrice === undefined ? undefined : Math.round(market.yesPrice * 100);
   const heatLabel = formatHeat(market.volume24h, market.liquidity);
+  const isWorldCup = isWorldCupMarket(market);
+  const display = isWorldCup ? friendlyWorldCupDisplay(market.question) : undefined;
+  const noPercent = market.noPrice === undefined ? undefined : Math.round(market.noPrice * 100);
 
   return {
     type: "prediction_card",
     id: crypto.randomUUID(),
-    title: market.question,
+    title: display?.title || market.question,
     statusText: market.acceptingOrders ? "可以继续看" : "先观察",
-    agentNote: createAgentNote(market, heatLabel),
+    agentNote: isWorldCup ? createWorldCupAgentNote(inferWorldCupCategory(market), market) : createAgentNote(market, heatLabel),
     market,
     metrics: {
-      probabilityLabel: yesPercent === undefined ? undefined : `当前约 ${yesPercent}%`,
+      probabilityLabel: yesPercent === undefined ? undefined : `会 ${yesPercent}%`,
       heatLabel,
-      priceLabel: market.yesPrice === undefined ? undefined : `YES ${market.yesPrice.toFixed(3)}`
+      priceLabel: formatPriceMetric(market, yesPercent, noPercent)
     },
-    suggestedAction: "我建议先模拟一遍，看看这个策略跑出来是什么效果。",
+    suggestedAction: isWorldCup ? "我先把它放进观察，继续看热度和价格变化。" : "我建议先模拟一遍，看看这个策略跑出来是什么效果。",
     actions: ["simulate", "track", "build_strategy"],
     createdAt: new Date().toISOString()
   };
+}
+
+function isWorldCupMarket(market: MarketSnapshot): boolean {
+  return market.provider === "okx-outcomes" || /world cup|世界杯|fifa/i.test(market.question);
+}
+
+function formatPriceMetric(market: MarketSnapshot, yesPercent?: number, noPercent?: number): string | undefined {
+  if (yesPercent === undefined && noPercent === undefined) return undefined;
+  const yes = yesPercent === undefined ? "观察" : `${yesPercent}¢`;
+  const no = noPercent === undefined ? "观察" : `${noPercent}¢`;
+  return `会 ${yes} / 不会 ${no}`;
 }
 
 function createAgentNote(market: MarketSnapshot, heatLabel?: string): string {

@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -46,6 +47,10 @@ const xLayerChain = {
 
 export default function App() {
   if (process.env.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true") {
+    return <V2AgentWalletPreview />;
+  }
+
+  if (Platform.OS === "web" && process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true") {
     return <V2AgentWalletPreview />;
   }
 

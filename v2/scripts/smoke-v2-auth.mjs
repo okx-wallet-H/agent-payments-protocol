@@ -1,6 +1,20 @@
+import { resolvePhaseOneUser } from "../auth/request-user.ts";
+
 const baseUrl = process.env.AGENT_WALLET_BASE_URL || "http://localhost:3000";
 const userId = `auth-smoke-user-${Date.now()}`;
 const checks = [];
+
+const previousRequirePrivyToken = process.env.AGENT_REQUIRE_PRIVY_TOKEN;
+process.env.AGENT_REQUIRE_PRIVY_TOKEN = "true";
+const tokenRequiredUser = await resolvePhaseOneUser(
+  new Request(`http://localhost/api/v2/mobile/home?userId=${encodeURIComponent(userId)}`)
+);
+assert(tokenRequiredUser.ok === false && tokenRequiredUser.status === 401, "token-required mode rejects explicit userId fallback");
+if (previousRequirePrivyToken === undefined) {
+  delete process.env.AGENT_REQUIRE_PRIVY_TOKEN;
+} else {
+  process.env.AGENT_REQUIRE_PRIVY_TOKEN = previousRequirePrivyToken;
+}
 
 const invalidBearer = await fetch(`${baseUrl}/api/v2/mobile/home`, {
   headers: {
