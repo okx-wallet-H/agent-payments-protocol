@@ -69,6 +69,7 @@ export const sampleOkxWorldCupPayload = {
           question: "Will Mexico beat South Africa at the 2026 World Cup?",
           status: "active",
           marketType: "binary",
+          startTime: "2026-06-13T13:00:00.000Z",
           volume: "1212300",
           yesOutcome: {
             assetId: "sample-mex-yes",
@@ -77,6 +78,22 @@ export const sampleOkxWorldCupPayload = {
           noOutcome: {
             assetId: "sample-mex-no",
             price: "0.31"
+          }
+        },
+        {
+          marketId: "sample-korea-czechia",
+          question: "Will South Korea beat Czechia at the 2026 World Cup?",
+          status: "active",
+          marketType: "binary",
+          startTime: "2026-06-13T14:30:00.000Z",
+          volume: "385000",
+          yesOutcome: {
+            assetId: "sample-kor-yes",
+            price: "0.37"
+          },
+          noOutcome: {
+            assetId: "sample-kor-no",
+            price: "0.34"
           }
         },
         {

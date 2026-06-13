@@ -54,6 +54,27 @@ export function normalizeOkxOutcomeMarket(input: unknown, inheritedEvent?: Loose
     liquidity: parseNumber(readUnknown(input, ["liquidity", "liquidityUsd", "liquidity_usd"])),
     volume24h: parseNumber(readUnknown(input, ["volume24h", "volume_24h", "volume24Hr", "volume_24hr"])),
     volume: parseNumber(readUnknown(input, ["volume", "totalVolume", "total_volume"])),
+    startTime:
+      readString(input, [
+        "startTime",
+        "start_time",
+        "matchTime",
+        "match_time",
+        "gameTime",
+        "game_time",
+        "scheduledTime",
+        "scheduled_time"
+      ]) ||
+      readString(inheritedEvent, [
+        "startTime",
+        "start_time",
+        "matchTime",
+        "match_time",
+        "gameTime",
+        "game_time",
+        "scheduledTime",
+        "scheduled_time"
+      ]),
     endDate: readString(input, ["endDate", "end_date", "closeTime", "close_time", "endTime", "end_time"]),
     raw: input
   };

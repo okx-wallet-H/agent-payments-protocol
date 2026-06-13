@@ -23,3 +23,8 @@ apps/mobile/build
 *.keystore
 *.mobileprovision
 *.p8
+
+# Local product/reference materials; review explicitly before committing.
+世界杯
+Onchain Agent Wallet 开发需求文档 V0.1.pdf
+Onchain开发文档.txt

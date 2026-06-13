@@ -19,6 +19,11 @@ export interface WorldCupExploreMarketCard {
   displayName: string;
   subtitle?: string;
   agentNote?: string;
+  timing?: {
+    status: "live" | "soon" | "today" | "upcoming" | "ended" | "unknown";
+    label: string;
+    startTime?: string;
+  };
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "observable" | "watch_only";
@@ -92,6 +97,11 @@ export function createWorldCupExploreView(
 
 function sortExploreCards(cards: WorldCupExploreMarketCard[]): WorldCupExploreMarketCard[] {
   return cards.slice().sort((a, b) => {
+    if (a.category === "upcoming_matches" || b.category === "upcoming_matches") {
+      const timeDelta = upcomingSortScore(a) - upcomingSortScore(b);
+      if (timeDelta !== 0) return timeDelta;
+    }
+
     const volumeDelta = marketVolumeScore(b.market) - marketVolumeScore(a.market);
     if (volumeDelta !== 0) return volumeDelta;
 
@@ -100,6 +110,16 @@ function sortExploreCards(cards: WorldCupExploreMarketCard[]): WorldCupExploreMa
 
     return (b.market.yesPrice || 0) - (a.market.yesPrice || 0);
   });
+}
+
+function upcomingSortScore(card: WorldCupExploreMarketCard): number {
+  const time = parseMarketTime(card.market.startTime);
+  if (!time) return Number.MAX_SAFE_INTEGER;
+  const now = Date.now();
+  const diffMs = time.getTime() - now;
+  if (diffMs <= 0 && diffMs >= -3 * 60 * 60 * 1000) return -1;
+  if (diffMs > 0) return diffMs;
+  return Number.MAX_SAFE_INTEGER - Math.min(Math.abs(diffMs), 10_000_000_000);
 }
 
 function marketVolumeScore(market: MarketSnapshot): number {
@@ -150,6 +170,7 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
   const noPrice = market.noPrice;
   const category = inferWorldCupCategory(market);
   const display = friendlyWorldCupDisplay(market.question);
+  const timing = createWorldCupMarketTiming(market);
 
   return {
     id: market.marketId,
@@ -157,8 +178,9 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
     title: display.title,
     displayTitle: display.title,
     displayName: display.name,
-    subtitle: market.endDate ? `结束时间 ${market.endDate}` : undefined,
+    subtitle: timing?.label || (market.endDate ? `结束时间 ${market.endDate}` : undefined),
     agentNote: createWorldCupAgentNote(category, market),
+    timing,
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
     volumeLabel: formatVolume(market.volume24h || market.volume),
     status: market.acceptingOrders ? "observable" : "watch_only",
@@ -184,6 +206,35 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
   };
 }
 
+export function createWorldCupMarketTiming(market: MarketSnapshot): WorldCupExploreMarketCard["timing"] {
+  const start = parseMarketTime(market.startTime);
+  if (!start) return undefined;
+
+  const now = new Date();
+  const diffMs = start.getTime() - now.getTime();
+  const oneHour = 60 * 60 * 1000;
+  const threeHours = 3 * oneHour;
+  const sameDay =
+    start.getFullYear() === now.getFullYear() &&
+    start.getMonth() === now.getMonth() &&
+    start.getDate() === now.getDate();
+  const startLabel = formatStartTime(start);
+
+  if (diffMs <= 0 && diffMs >= -threeHours) {
+    return { status: "live", label: `进行中 · ${startLabel}`, startTime: start.toISOString() };
+  }
+  if (diffMs > 0 && diffMs <= oneHour) {
+    return { status: "soon", label: `马上开赛 · ${startLabel}`, startTime: start.toISOString() };
+  }
+  if (sameDay && diffMs > 0) {
+    return { status: "today", label: `今日开赛 · ${startLabel}`, startTime: start.toISOString() };
+  }
+  if (diffMs < -threeHours) {
+    return { status: "ended", label: `已开赛 · ${startLabel}`, startTime: start.toISOString() };
+  }
+  return { status: "upcoming", label: `即将开始 · ${startLabel}`, startTime: start.toISOString() };
+}
+
 export function createWorldCupAgentNote(category: WorldCupExploreCategory, market: MarketSnapshot): string {
   const price = market.yesPrice ?? 0;
   const volume = market.volume24h || market.volume || 0;
@@ -199,6 +250,10 @@ export function createWorldCupAgentNote(category: WorldCupExploreCategory, marke
   }
 
   if (category === "upcoming_matches") {
+    const timing = createWorldCupMarketTiming(market);
+    if (timing?.status === "live") return "比赛已经开始，Agent 优先看临场资金和价格变化。";
+    if (timing?.status === "soon") return "马上开赛，适合先让 Agent 做临场观察。";
+    if (timing?.status === "today") return "今日比赛，先看首发、热度和盘口变化。";
     return "比赛盘变化快，开赛前再看资金和赔率。";
   }
 
@@ -216,6 +271,25 @@ function formatVolume(volume?: number): string | undefined {
   if (!volume) return undefined;
   if (volume >= 10_000) return `${(volume / 10_000).toFixed(2)}万 交易额`;
   return `${Math.round(volume)} 交易额`;
+}
+
+function parseMarketTime(value?: string): Date | undefined {
+  if (!value) return undefined;
+  const numeric = Number(value);
+  const date = Number.isFinite(numeric)
+    ? new Date(numeric > 10_000_000_000 ? numeric : numeric * 1000)
+    : new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function formatStartTime(date: Date): string {
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(date);
 }
 
 export function friendlyWorldCupDisplay(question: string): { title: string; name: string } {
@@ -277,8 +351,11 @@ const nameMap: Record<string, string> = {
   paraguay: "巴拉圭",
   portugal: "葡萄牙",
   senegal: "塞内加尔",
+  "south africa": "南非",
+  "south korea": "韩国",
   spain: "西班牙",
   switzerland: "瑞士",
+  czechia: "捷克",
   türkiye: "土耳其",
   turkey: "土耳其",
   "united states": "美国",

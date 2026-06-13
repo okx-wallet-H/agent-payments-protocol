@@ -170,7 +170,7 @@ function getPredictionActionLabel(action: "simulate" | "track" | "build_strategy
 }
 
 function getSuggestedInput(turn: ConversationTurn): string | undefined {
-  if (turn.goal.type === "wallet_receive") return "帮我看看世界杯有没有机会";
+  if (turn.goal.type === "wallet_receive") return "帮我看看市场机会";
   if (turn.goal.type === "prediction_market_research") return "先模拟一下";
   return "我要充值";
 }

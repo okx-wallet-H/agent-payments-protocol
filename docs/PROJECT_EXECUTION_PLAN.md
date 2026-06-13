@@ -21,7 +21,7 @@ Acceptance:
 ## Phase 1 - Product Direction Lock
 
 - `[x]` Position the app as a conversation-first Agent experience, not a technical wallet dashboard.
-- `[x]` Main entry: simple AI chat. Top left opens World Cup information. Top right opens user console.
+- `[x]` Main entry: simple AI chat. HWallet is the wallet entry. Market opportunities are one Agent capability, not the app identity.
 - `[x]` Recharge UX: show only one polished receive-address card with a copy action.
 - `[x]` Keep strategy wallets, routing, conversion, plugin details, and low-level chain mechanics inside the Agent layer.
 - `[x]` Agent progress copy streams in short human-readable lines.
@@ -49,11 +49,11 @@ Acceptance:
 ## Phase 3 - OKX Onchain OS And Prediction Integration
 
 - `[x]` Use installed OKX Onchain OS skills and Polymarket plugin for prediction market discovery.
-- `[x]` Read real market information for World Cup-related prompts when the plugin is available.
+- `[x]` Read real market information for supported prediction prompts when the plugin/API is available.
 - `[x]` Support dry-run simulation without submitting orders.
 - `[x]` Add OKX Outcomes adapter foundation: Event -> Market -> Outcome -> assetId normalization, X Layer chain id, market status, and watch-only handling when assetId is missing.
-- `[x]` Add World Cup Explore view model so real Outcomes data can feed champion, golden boot, group stage, and upcoming match cards.
-- `[x]` Add World Cup data source status and fallback mode: OKX Outcomes live data, plugin fallback, or local sample data with user-friendly copy.
+- `[x]` Add prediction-market explore view model so real Outcomes data can feed example market cards.
+- `[x]` Add market data source status and fallback mode: OKX Outcomes live data, plugin fallback, or local sample data with user-friendly copy.
 - `[~]` Real execution remains gated until TEE signing, production policy, and release approvals are complete.
 - `[!]` Live trading requires a final decision on supported market venues, execution account model, and compliance boundaries.
 
@@ -67,13 +67,12 @@ Acceptance:
 - `[x]` Add isolated V2 mobile screen behind `EXPO_PUBLIC_AGENT_WALLET_V2_UI=true`.
 - `[x]` Add Privy email login and authenticated API calls.
 - `[x]` Add ChatGPT-like conversation shell structure.
-- `[x]` Add top-left World Cup panel and top-right user console panel.
+- `[x]` Add market-opportunity panel and user console panel.
 - `[x]` Add receive-address card with copy button.
 - `[x]` Add prediction card actions: simulate, track, and build strategy.
-- `[x]` Lock the first mobile navigation shape: bottom tabs for Agent, World Cup, and Mine.
-- `[x]` Build the World Cup activity page as a standalone campaign surface with a poster hero, Agent score, task, leaderboard, and fixed bottom actions.
-- `[x]` Hide the bottom tab bar on the World Cup campaign page so the activity CTA owns the bottom area, with a fixed Home button for returning to Agent.
-- `[x]` Add the World Cup Explore subpage with category tabs for champion, golden boot, group stage, and upcoming matches.
+- `[x]` Lock the first mobile navigation shape: bottom tabs for Agent, Market, Discover, and HWallet.
+- `[~]` Keep World Cup as a sample market campaign only; the app should not become a World Cup product.
+- `[~]` Market explore pages remain examples until the generic market taxonomy is finalized.
 - `[~]` UI visual direction is now user-led and being polished screen by screen before repository upload.
 
 Acceptance:
@@ -84,7 +83,7 @@ Acceptance:
 
 - `[x]` Document production architecture and storage migration direction.
 - `[x]` Keep JSON storage local-only and ignored for runtime data.
-- `[~]` Replace JSON storage with Postgres/Supabase for multi-user production.
+- `[~]` Replace JSON storage with Postgres/Supabase for multi-user production. Supabase schema is applied and verified; HWallet session/wallet and audit timeline stores now support staged `jsonl` / `dual` / `postgres` migration, and the mobile API has passed live `dual` write plus Postgres readback smoke.
 - `[~]` Add owner isolation to every persistent record path.
 - `[!]` TEE signing service contract, attestation flow, backup policy, and incident response need a dedicated security design pass.
 - `[!]` Final policy for real-fund execution limits, recovery, and customer support is not locked.

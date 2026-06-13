@@ -31,6 +31,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Confirm v2 endpoints reject invalid Bearer tokens with `401`.
 - Confirm v2 endpoints use Privy user id, not manual `userId`, in staging.
 - Verify Expo build profiles and bundle identifiers.
+- Run `npm run smoke:mobile-build-env` for local config, `MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env` for LAN device testing, and `MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env` before TestFlight/internal Android builds.
 - Verify Privy mobile redirect/deep-link settings.
 - Verify X Layer receive address shown in recharge card is the correct production address source.
 - Add a basic in-app error state for expired login/token.
@@ -43,11 +44,43 @@ Local v2 smoke commands:
 
 ```sh
 npm run verify:merge
+npm run smoke:production-readiness
+npm run smoke:mobile-build-env
 npm run smoke:v2
 npm run smoke:v2:auth
 npm run smoke:outcomes
 npm run mobile:typecheck
 ```
+
+Staging readiness gate:
+
+```sh
+STAGING_READINESS=true npm run smoke:production-readiness
+HWALLET_SESSION_STORE=postgres npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
+```
+
+The staging readiness smoke must not print secrets. It checks Privy token
+enforcement, owner guard, Postgres-only HWallet storage, table readiness, and
+that all live trading/broadcast switches remain closed for the MVP.
+
+For physical-device builds, set `EXPO_PUBLIC_API_BASE_URL` to the reachable
+backend URL, for example the LAN URL during local testing or the staging HTTPS
+API URL in EAS/TestFlight builds.
+The mobile build env smoke fails device mode if the API URL is still localhost,
+and fails staging mode unless the URL is HTTPS, Privy mobile client config is
+present, and EAS is initialized.
+Once the device-safe config gate passes and a backend is reachable on the same
+network, run:
+
+```sh
+MOBILE_DEVICE_API_BASE_URL=http://YOUR_LAN_IP:3000 npm run smoke:mobile-device-hwallet:live
+```
+
+This live smoke verifies the HWallet path that the phone will use: bind wallet,
+show one receive address, verify a transaction hash, write wallet records,
+update audit/memory, keep other users isolated, and continue into the Agent
+flow without enabling live execution.
 
 ## Before Any Live Order
 

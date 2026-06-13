@@ -36,7 +36,7 @@ export function createMobileHomeView(input: {
     quickPrompts: [
       {
         id: "world_cup",
-        text: "帮我看看世界杯有没有机会"
+        text: "帮我看看市场机会"
       },
       {
         id: "recharge",

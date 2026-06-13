@@ -48,6 +48,9 @@ assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds fr
 assert(explore.cards.champion.every((card) => card.status === "observable" || card.status === "watch_only"), "uses observe-first card status");
 assert(isSortedByVolume(explore.cards.champion), "sorts champion cards by market volume");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
+assert(explore.cards.upcoming_matches.some((card) => Boolean(card.market.startTime)), "reads match start time");
+assert(explore.cards.upcoming_matches.some((card) => Boolean(card.timing?.label)), "adds match timing label");
+assert(explore.cards.upcoming_matches.some((card) => /开赛|进行中/.test(card.subtitle || "")), "uses timing as match subtitle");
 
 console.log(JSON.stringify({
   ok: true,

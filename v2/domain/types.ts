@@ -6,6 +6,7 @@ export type BusinessGoalType =
   | "prediction_market_execute"
   | "wallet_receive"
   | "agent_fund_prepare"
+  | "wallet_tx_verify"
   | "wallet_status"
   | "unknown";
 
@@ -66,6 +67,7 @@ export interface MarketSnapshot {
   liquidity?: number;
   volume24h?: number;
   volume?: number;
+  startTime?: string;
   endDate?: string;
   raw?: unknown;
 }
@@ -129,9 +131,13 @@ export interface SimulationCard {
   title: string;
   statusText: string;
   agentNote: string;
+  marketTitle?: string;
+  sideLabel?: string;
   amountLabel: string;
   sharesLabel?: string;
   priceLabel?: string;
+  moneyMoved: false;
+  market: MarketSnapshot;
   createdAt: string;
 }
 

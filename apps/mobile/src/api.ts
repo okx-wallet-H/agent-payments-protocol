@@ -8,12 +8,17 @@ import type {
   PredictionMarket,
   PredictionRouterInfo,
   TradeIntent,
+  V2AuditTimelineEvent,
   V2MarketSnapshot,
+  V2AgentOrchestration,
+  V2MobileAgentMemory,
   V2MobileChatTurn,
+  V2MobileHomeResponse,
   V2MobileHomeView,
   V2PhaseOneRecord,
   V2StrategyCard,
   V2TrackingCard,
+  V2WalletContext,
   V2WorldCupExploreView
 } from "./types";
 
@@ -32,8 +37,16 @@ export interface ApiClient {
   updateStatus(agentId: string, status: "active" | "paused" | "revoked"): Promise<Agent>;
   listAudit(agentId: string): Promise<AuditEvent[]>;
   listPredictionMarkets(keyword?: string): Promise<{ router?: PredictionRouterInfo; markets: PredictionMarket[] }>;
-  getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeView>;
-  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<V2MobileChatTurn>;
+  getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeResponse>;
+  getV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<V2WalletContext>;
+  getV2Memory(userId?: string): Promise<V2MobileAgentMemory>;
+  refreshV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
+  verifyV2WalletTx(txHash: string, userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
+  sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<{
+    mobileTurn: V2MobileChatTurn;
+    wallet?: V2WalletContext;
+    orchestration?: V2AgentOrchestration;
+  }>;
   runV2Action(input: {
     action: "simulate" | "track" | "build_strategy";
     market: V2MarketSnapshot;
@@ -44,10 +57,25 @@ export interface ApiClient {
   listV2Tracking(userId?: string): Promise<V2TrackingCard[]>;
   listV2Strategies(userId?: string): Promise<V2StrategyCard[]>;
   listV2Records(userId?: string): Promise<V2PhaseOneRecord[]>;
+  listV2Audit(userId?: string): Promise<V2AuditTimelineEvent[]>;
   getWorldCupExplore(): Promise<V2WorldCupExploreView>;
 }
 
 type GetAccessToken = () => Promise<string | null | undefined>;
+
+export class ApiRequestError extends Error {
+  status: number;
+  code?: string;
+  path: string;
+
+  constructor(input: { status: number; path: string; code?: string; message: string }) {
+    super(input.message);
+    this.name = "ApiRequestError";
+    this.status = input.status;
+    this.code = input.code;
+    this.path = input.path;
+  }
+}
 
 async function request<T>(baseUrl: string, path: string, init?: RequestInit, getAccessToken?: GetAccessToken): Promise<T> {
   const accessToken = await getAccessToken?.();
@@ -59,8 +87,15 @@ async function request<T>(baseUrl: string, path: string, init?: RequestInit, get
       ...(init?.headers || {})
     }
   });
-  const data = (await response.json()) as T & { error?: string };
-  if (!response.ok) throw new Error(data.error || `${response.status} ${path}`);
+  const data = (await response.json()) as T & { error?: string; message?: string };
+  if (!response.ok) {
+    throw new ApiRequestError({
+      status: response.status,
+      path,
+      code: data.error,
+      message: data.message || data.error || `${response.status} ${path}`
+    });
+  }
   return data;
 }
 
@@ -184,15 +219,39 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
     },
     async getV2Home(userId, walletAddress) {
       const path = withQuery("/api/v2/mobile/home", { userId, walletAddress });
-      const data = await request<{ home: V2MobileHomeView }>(cleanBaseUrl, path, undefined, getAccessToken);
-      return data.home;
+      return request<V2MobileHomeResponse>(cleanBaseUrl, path, undefined, getAccessToken);
+    },
+    async getV2Wallet(userId, walletAddress) {
+      const path = withQuery("/api/v2/mobile/wallet", { userId, walletAddress });
+      const data = await request<{ wallet: V2WalletContext }>(cleanBaseUrl, path, undefined, getAccessToken);
+      return data.wallet;
+    },
+    async getV2Memory(userId) {
+      const data = await request<{ memory: V2MobileAgentMemory }>(
+        cleanBaseUrl,
+        withUserId("/api/v2/mobile/memory", userId),
+        undefined,
+        getAccessToken
+      );
+      return data.memory;
+    },
+    async refreshV2Wallet(userId, walletAddress) {
+      return request<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/mobile/wallet/refresh", {
+        method: "POST",
+        body: JSON.stringify({ userId, walletAddress })
+      }, getAccessToken);
+    },
+    async verifyV2WalletTx(txHash, userId, walletAddress) {
+      return request<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/mobile/wallet/verify-tx", {
+        method: "POST",
+        body: JSON.stringify({ txHash, userId, walletAddress })
+      }, getAccessToken);
     },
     async sendV2Chat(text, userId, walletAddress, candidateMarket) {
-      const data = await request<{ mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/phase-one", {
+      return request<{ mobileTurn: V2MobileChatTurn; wallet?: V2WalletContext; orchestration?: V2AgentOrchestration }>(cleanBaseUrl, "/api/v2/phase-one", {
         method: "POST",
         body: JSON.stringify({ text, userId, walletAddress, candidateMarket })
       }, getAccessToken);
-      return data.mobileTurn;
     },
     async runV2Action(input) {
       const data = await request<{ mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/phase-one/actions", {
@@ -227,6 +286,15 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         getAccessToken
       );
       return data.items;
+    },
+    async listV2Audit(userId) {
+      const data = await request<{ events: V2AuditTimelineEvent[] }>(
+        cleanBaseUrl,
+        withUserId("/api/v2/mobile/audit", userId),
+        undefined,
+        getAccessToken
+      );
+      return data.events;
     },
     async getWorldCupExplore() {
       const data = await request<{ explore: V2WorldCupExploreView }>(
