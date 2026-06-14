@@ -31,9 +31,11 @@ check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
 check(Boolean(expoConfig.ios?.bundleIdentifier), "iOS bundle identifier is configured");
 check(Boolean(expoConfig.android?.package), "Android package name is configured");
 check(Boolean(easConfig.build?.development), "EAS development profile exists");
+check(Boolean(easConfig.build?.["development-staging"]), "EAS staging development profile exists");
 check(Boolean(easConfig.build?.preview), "EAS preview profile exists");
 check(Boolean(easConfig.build?.production), "EAS production profile exists");
 check(Boolean(easConfig.build?.development?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS development API base URL is configured");
+check(Boolean(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS staging development API base URL is configured");
 check(Boolean(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS preview API base URL is configured");
 check(Boolean(easConfig.build?.production?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS production API base URL is configured");
 check(process.env.AGENT_WALLET_REAL_EXECUTION !== "true", "Agent real execution switch is closed");
@@ -52,6 +54,9 @@ if (!privyClientConfigured) warnings.push("Privy mobile client id is not configu
 if (isPlaceholderEasProject(easProjectId)) warnings.push("EAS project id is still a placeholder; run eas init before store builds.");
 if (usesExampleApi(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL)) warnings.push("EAS preview API URL still points to the example domain.");
 if (usesExampleApi(easConfig.build?.production?.env?.EXPO_PUBLIC_API_BASE_URL)) warnings.push("EAS production API URL still points to the example domain.");
+if (usesExampleApi(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_API_BASE_URL)) {
+  warnings.push("EAS staging development API URL still points to the example domain.");
+}
 
 if (mode === "device") {
   check(Boolean(apiBaseUrl), "physical-device API base URL is configured");
@@ -67,6 +72,7 @@ if (mode === "device") {
   check(privyAppConfigured, "Privy public app id is configured for native login");
   check(privyClientConfigured, "Privy mobile client id is configured for native login");
   check(!isPlaceholderEasProject(easProjectId), "EAS project id is initialized");
+  check(isHttpsPublicApi(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS staging development API URL is public HTTPS");
   check(!usesExampleApi(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS preview API URL is not the example domain");
   check(!usesExampleApi(easConfig.build?.production?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS production API URL is not the example domain");
 }
@@ -135,6 +141,11 @@ function isPlaceholderEasProject(value) {
 
 function usesExampleApi(value) {
   return !value || /api\.example\.com/i.test(value);
+}
+
+function isHttpsPublicApi(value) {
+  const url = parseUrl(value || "");
+  return url?.protocol === "https:" && classifyApiBaseUrl(url) === "https";
 }
 
 async function loadLocalEnv() {
