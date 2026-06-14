@@ -25,6 +25,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
 - HWallet mobile-device API smoke passes against the LAN backend: wallet bind, one receive address, tx verification, audit/memory writes, user isolation, and Agent follow-up.
 - Staging backend readiness passes locally when `EXPO_PUBLIC_API_BASE_URL` is set to an HTTPS URL and `HWALLET_SESSION_STORE=postgres`.
+- Current temporary staging API: `https://app.hwallet.vip`.
 
 ## Before TestFlight / Internal Android Testing
 
@@ -40,7 +41,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Run `npm run smoke:mobile-build-env` for local config, `MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env` for LAN device testing, and `MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env` before TestFlight/internal Android builds.
 - Log in to EAS from `apps/mobile` with `npm run eas:whoami`; if it returns `Not logged in`, run `npx eas-cli login`.
 - After EAS login, run `npm run eas:init` from `apps/mobile` and commit the generated `expo.extra.eas.projectId` if it is not already configured.
-- Replace `https://api.example.com` in `apps/mobile/eas.json` with the real preview and production HTTPS API URLs.
+- Keep `apps/mobile/eas.json` preview and production API URLs pointed at the verified HTTPS staging or production API.
 - Verify Privy mobile redirect/deep-link settings.
 - Verify X Layer receive address shown in recharge card is the correct production address source.
 - Add a basic in-app error state for expired login/token.
