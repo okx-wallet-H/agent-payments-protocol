@@ -25,6 +25,7 @@ const privyClientConfigured = Boolean(process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID ||
 
 check(Boolean(mobilePackage.dependencies?.expo), "Expo dependency is configured");
 check(String(mobilePackage.dependencies?.expo || "").includes("56."), "Expo SDK 56 dependency is pinned");
+check(Boolean(mobilePackage.devDependencies?.["eas-cli"] || mobilePackage.dependencies?.["eas-cli"]), "EAS CLI package is configured");
 check(expoConfig.orientation === "portrait", "mobile app is locked to portrait orientation");
 check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
 check(Boolean(expoConfig.ios?.bundleIdentifier), "iOS bundle identifier is configured");
