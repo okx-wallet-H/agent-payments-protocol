@@ -76,7 +76,8 @@ sudo systemctl enable --now agent-wallet-staging
 sudo systemctl status agent-wallet-staging --no-pager
 ```
 
-Point HTTPS to `127.0.0.1:3000`. If using Caddy, start from
+The staging service binds to `127.0.0.1:3102` so it is not exposed directly on
+the public IP. Point HTTPS to `127.0.0.1:3102`. If using Caddy, start from
 `deploy/Caddyfile.example`.
 
 ## Required Verification
