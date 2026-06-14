@@ -1,0 +1,18 @@
+[Unit]
+Description=Agent Wallet HWallet staging backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/agent-wallet
+EnvironmentFile=/etc/agent-wallet/staging.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+User=agentwallet
+Group=agentwallet
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
