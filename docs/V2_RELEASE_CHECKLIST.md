@@ -24,6 +24,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - EAS project is initialized as `@hongchen888/agent-wallet-xlayer-mvp`.
 - Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
 - HWallet mobile-device API smoke passes against the LAN backend: wallet bind, one receive address, tx verification, audit/memory writes, user isolation, and Agent follow-up.
+- Staging backend readiness passes locally when `EXPO_PUBLIC_API_BASE_URL` is set to an HTTPS URL and `HWALLET_SESSION_STORE=postgres`.
 
 ## Before TestFlight / Internal Android Testing
 
@@ -31,6 +32,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Start backend locally with `npm run dev`.
 - Start the v2 mobile shell with `npm run mobile:ios:v2` or `npm run mobile:android:v2`.
 - Replace local `.agent-wallet-data` storage with a durable store or a staging-safe managed volume.
+- Deploy a public HTTPS backend before TestFlight. Vercel project setup is currently blocked until the Vercel team billing/payment method is fixed.
 - Confirm `AGENT_REQUIRE_OWNER=true` and `AGENT_REQUIRE_PRIVY_TOKEN=true` in staging.
 - Confirm v2 endpoints reject invalid Bearer tokens with `401`.
 - Confirm v2 endpoints use Privy user id, not manual `userId`, in staging.
@@ -64,6 +66,7 @@ Staging readiness gate:
 
 ```sh
 STAGING_READINESS=true npm run smoke:production-readiness
+EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readiness
 HWALLET_SESSION_STORE=postgres npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
 ```

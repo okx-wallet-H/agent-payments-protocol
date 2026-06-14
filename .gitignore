@@ -17,6 +17,7 @@ build
 coverage
 .expo
 apps/mobile/.expo
+.vercel
 apps/mobile/dist
 apps/mobile/build
 *.jks

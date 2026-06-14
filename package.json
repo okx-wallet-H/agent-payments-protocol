@@ -19,6 +19,8 @@
     "smoke:v2": "node v2/scripts/smoke-v2.mjs",
     "smoke:v2:auth": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-v2-auth.mjs",
     "smoke:production-readiness": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-production-readiness.mjs",
+    "smoke:staging-readiness": "STAGING_READINESS=true NODE_ENV=production AGENT_REQUIRE_PRIVY_TOKEN=true AGENT_REQUIRE_OWNER=true HWALLET_SESSION_STORE=postgres npm run smoke:production-readiness",
+    "smoke:mobile-staging-env": "MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env",
     "smoke:mobile-build-env": "node v2/scripts/smoke-mobile-build-env.mjs",
     "smoke:mobile-device-hwallet:live": "node v2/scripts/smoke-mobile-device-hwallet-live.mjs",
     "smoke:agent-orchestrator": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-agent-orchestrator.mjs",
