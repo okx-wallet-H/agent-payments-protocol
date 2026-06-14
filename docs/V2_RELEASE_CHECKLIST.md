@@ -20,6 +20,9 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - World Cup Explore subpage exists with four market categories: champion, golden boot, group stage, and upcoming matches.
 - Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
 - OKX Outcomes adapter smoke currently passes: `npm run smoke:outcomes`.
+- EAS CLI is pinned in the mobile workspace and available through mobile npm scripts.
+- Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
+- HWallet mobile-device API smoke passes against the LAN backend: wallet bind, one receive address, tx verification, audit/memory writes, user isolation, and Agent follow-up.
 
 ## Before TestFlight / Internal Android Testing
 
@@ -32,6 +35,9 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Confirm v2 endpoints use Privy user id, not manual `userId`, in staging.
 - Verify Expo build profiles and bundle identifiers.
 - Run `npm run smoke:mobile-build-env` for local config, `MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env` for LAN device testing, and `MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env` before TestFlight/internal Android builds.
+- Log in to EAS from `apps/mobile` with `npm run eas:whoami`; if it returns `Not logged in`, run `npx eas-cli login`.
+- After EAS login, run `npm run eas:init` from `apps/mobile` and commit the generated `expo.extra.eas.projectId`.
+- Replace `https://api.example.com` in `apps/mobile/eas.json` with the real preview and production HTTPS API URLs.
 - Verify Privy mobile redirect/deep-link settings.
 - Verify X Layer receive address shown in recharge card is the correct production address source.
 - Add a basic in-app error state for expired login/token.
@@ -46,6 +52,7 @@ Local v2 smoke commands:
 npm run verify:merge
 npm run smoke:production-readiness
 npm run smoke:mobile-build-env
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_LAN_IP:3000 MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env
 npm run smoke:v2
 npm run smoke:v2:auth
 npm run smoke:outcomes
