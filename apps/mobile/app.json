@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Agent Wallet",
-    "slug": "agent-wallet-xlayer",
+    "slug": "agent-wallet-xlayer-mvp",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -26,7 +26,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "replace-with-eas-project-id"
+        "projectId": "7fb6881a-af55-401c-9d96-fa4a789dc4da"
       }
     },
     "plugins": [

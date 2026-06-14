@@ -21,6 +21,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
 - OKX Outcomes adapter smoke currently passes: `npm run smoke:outcomes`.
 - EAS CLI is pinned in the mobile workspace and available through mobile npm scripts.
+- EAS project is initialized as `@hongchen888/agent-wallet-xlayer-mvp`.
 - Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
 - HWallet mobile-device API smoke passes against the LAN backend: wallet bind, one receive address, tx verification, audit/memory writes, user isolation, and Agent follow-up.
 
@@ -36,7 +37,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Verify Expo build profiles and bundle identifiers.
 - Run `npm run smoke:mobile-build-env` for local config, `MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env` for LAN device testing, and `MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env` before TestFlight/internal Android builds.
 - Log in to EAS from `apps/mobile` with `npm run eas:whoami`; if it returns `Not logged in`, run `npx eas-cli login`.
-- After EAS login, run `npm run eas:init` from `apps/mobile` and commit the generated `expo.extra.eas.projectId`.
+- After EAS login, run `npm run eas:init` from `apps/mobile` and commit the generated `expo.extra.eas.projectId` if it is not already configured.
 - Replace `https://api.example.com` in `apps/mobile/eas.json` with the real preview and production HTTPS API URLs.
 - Verify Privy mobile redirect/deep-link settings.
 - Verify X Layer receive address shown in recharge card is the correct production address source.
