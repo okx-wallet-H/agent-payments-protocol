@@ -38,6 +38,9 @@ check(Boolean(easConfig.build?.development?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS
 check(Boolean(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS staging development API base URL is configured");
 check(Boolean(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS preview API base URL is configured");
 check(Boolean(easConfig.build?.production?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS production API base URL is configured");
+check(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS staging development uses V2 mobile UI");
+check(easConfig.build?.preview?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS preview uses V2 mobile UI");
+check(easConfig.build?.production?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS production uses V2 mobile UI");
 check(process.env.AGENT_WALLET_REAL_EXECUTION !== "true", "Agent real execution switch is closed");
 check(process.env.ONCHAINOS_LIVE_MODE !== "true", "Onchain OS live mode is closed");
 check(process.env.POLYMARKET_LIVE_MODE !== "true", "prediction trading live mode is closed");

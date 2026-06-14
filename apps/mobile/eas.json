@@ -15,19 +15,22 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip"
+        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip",
+        "EXPO_PUBLIC_AGENT_WALLET_V2_UI": "true"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip"
+        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip",
+        "EXPO_PUBLIC_AGENT_WALLET_V2_UI": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip"
+        "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip",
+        "EXPO_PUBLIC_AGENT_WALLET_V2_UI": "true"
       }
     }
   },
