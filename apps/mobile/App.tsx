@@ -2,6 +2,7 @@ import "fast-text-encoding";
 import "react-native-get-random-values";
 import "@ethersproject/shims";
 
+import { Buffer } from "buffer";
 import { Ionicons } from "@expo/vector-icons";
 import { PrivyProvider, useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy } from "@privy-io/expo";
 import Constants from "expo-constants";
@@ -24,6 +25,9 @@ import { createApi } from "./src/api";
 import type { Agent, AuditEvent, PredictionMarket, PredictionRouterInfo } from "./src/types";
 import { V2AgentWalletScreen } from "./src/V2AgentWalletScreen";
 import { V2AgentWalletPreview } from "./src/V2AgentWalletPreview";
+
+const globalWithBuffer = globalThis as typeof globalThis & { Buffer?: typeof Buffer };
+globalWithBuffer.Buffer ||= Buffer;
 
 const defaultApiBaseUrl =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
