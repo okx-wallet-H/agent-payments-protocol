@@ -1630,11 +1630,20 @@ function HWalletTab({
           disabled={!canUseReceiveAddress}
           onPress={copyWalletAddress}
         >
-          <Ionicons name="copy-outline" size={17} color={canUseReceiveAddress ? "#fff" : "#9f9992"} />
+          <Ionicons
+            name={addressCopied ? "checkmark-circle-outline" : "copy-outline"}
+            size={17}
+            color={canUseReceiveAddress ? "#fff" : "#9f9992"}
+          />
           <Text style={[styles.receiveCopyText, !canUseReceiveAddress ? styles.hWalletDisabledText : null]}>
             {addressCopied ? "已复制" : "复制地址"}
           </Text>
         </Pressable>
+        {addressCopied ? (
+          <Text accessibilityLiveRegion="polite" style={styles.receiveCopyFeedback}>
+            收款地址已复制，可以去交易所或钱包转入。
+          </Text>
+        ) : null}
       </View>
 
       <HWalletActionStrip
@@ -2707,7 +2716,7 @@ function ReceiveCardMessage({
           style={[styles.receiveCopyButton, styles.receiveActionButton]}
           onPress={copyAddress}
         >
-          <Ionicons name="copy-outline" size={17} color="#fff" />
+          <Ionicons name={copied ? "checkmark-circle-outline" : "copy-outline"} size={17} color="#fff" />
           <Text style={styles.receiveCopyText}>{copied ? "已复制" : "复制地址"}</Text>
         </Pressable>
         <Pressable
@@ -2720,6 +2729,11 @@ function ReceiveCardMessage({
           <Text style={styles.receiveWalletText}>去 HWallet</Text>
         </Pressable>
       </View>
+      {copied ? (
+        <Text accessibilityLiveRegion="polite" style={styles.receiveCopyFeedback}>
+          地址已复制，转入后 Agent 会自动识别资金。
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -3358,6 +3372,13 @@ const styles = StyleSheet.create({
   receiveCopyText: {
     color: "#fff",
     fontWeight: "900"
+  },
+  receiveCopyFeedback: {
+    color: "#138348",
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+    textAlign: "center"
   },
   address: {
     color: colors.ink,
