@@ -115,6 +115,15 @@ assert(!signedOutEntry.canUseReceiveAddress, "signed-out HWallet entry cannot re
 assert(signedOutEntry.walletTxCheckDisabled, "signed-out HWallet entry disables tx check");
 assert(signedOutEntry.receiveHint.includes("邮箱登录"), "signed-out HWallet entry keeps friendly login hint");
 assert(!signedOutEntry.canRetryProvisioning, "signed-out HWallet entry does not retry wallet creation");
+assert(!signedOutEntry.canAskAgent, "signed-out HWallet entry pauses Agent actions");
+
+const signedOutStaleWalletEntry = createHWalletEntryState({
+  privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: false }),
+  walletAddress: "0x1111111111111111111111111111111111111111",
+  wallet: readyWallet
+});
+assert(!signedOutStaleWalletEntry.displayAddress, "signed-out HWallet entry hides stale wallet address");
+assert(!signedOutStaleWalletEntry.canUseReceiveAddress, "signed-out HWallet entry cannot receive with stale wallet");
 
 const failedProvisionEntry = createHWalletEntryState({
   privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: true, provisionError: "failed" }),
