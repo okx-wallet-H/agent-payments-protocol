@@ -428,12 +428,37 @@ const verifiedReadyApi = {
   sendV2Chat: async () => ({ mobileTurn: predictionTurn })
 };
 
+function assertCleanScopedSession(
+  session: ReturnType<typeof createScopedV2AgentWalletSession>,
+  expectedScopeKey: string,
+  label: string
+) {
+  if (session.scopeKey !== expectedScopeKey) {
+    throw new Error(`Expected ${label} to use its own session scope.`);
+  }
+  if (session.messages.length !== 0) {
+    throw new Error(`Expected ${label} to start without previous chat messages.`);
+  }
+  if (session.audit.length !== 0) {
+    throw new Error(`Expected ${label} to start without previous audit events.`);
+  }
+  if (session.wallet || session.memory || session.home || session.orchestration || session.error || session.updatedAt) {
+    throw new Error(`Expected ${label} to clear previous HWallet state.`);
+  }
+}
+
 async function main() {
   const userAWallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`;
   const userBWallet = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" as `0x${string}`;
+  const userASecondWallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab" as `0x${string}`;
   const userAScope = createV2AgentWalletScopeKey("privy-user-a", userAWallet);
+  const userBScope = createV2AgentWalletScopeKey("privy-user-b", userBWallet);
+  const signedOutScope = createV2AgentWalletScopeKey(undefined, undefined);
+  const userASecondWalletScope = createV2AgentWalletScopeKey("privy-user-a", userASecondWallet);
   const userAInitial = createScopedV2AgentWalletSession("privy-user-a", userAWallet);
   const userBInitial = createScopedV2AgentWalletSession("privy-user-b", userBWallet);
+  const signedOutInitial = createScopedV2AgentWalletSession();
+  const userAChangedWalletInitial = createScopedV2AgentWalletSession("privy-user-a", userASecondWallet);
 
   if (userAInitial.scopeKey !== userAScope) {
     throw new Error("Expected scoped session to record the current Privy user and wallet.");
@@ -449,6 +474,40 @@ async function main() {
   }
   if (userAInitial.scopeKey === userBInitial.scopeKey) {
     throw new Error("Expected each Privy user and HWallet pair to have an isolated session scope.");
+  }
+  if (isV2AgentWalletSessionScope(userAInitial, "privy-user-a", userASecondWallet)) {
+    throw new Error("Expected session scope to reject a changed wallet for the same Privy user.");
+  }
+  assertCleanScopedSession(userBInitial, userBScope, "second logged-in user");
+  assertCleanScopedSession(signedOutInitial, signedOutScope, "signed-out user");
+  assertCleanScopedSession(userAChangedWalletInitial, userASecondWalletScope, "same user with a changed HWallet");
+
+  const userAActiveSession = {
+    ...userAInitial,
+    messages: predictionTurn.messages,
+    audit: [
+      {
+        type: "wallet.refresh",
+        title: "已检查 HWallet",
+        createdAt: "2026-06-08T00:02:00.000Z",
+        moneyMoved: false
+      }
+    ],
+    wallet: refreshedWallet,
+    memory: refreshedMemory,
+    home: refreshedHome,
+    orchestration: predictionOrchestration,
+    error: "stale error",
+    updatedAt: "2026-06-08T00:02:00.000Z"
+  };
+  if (isV2AgentWalletSessionScope(userAActiveSession, "privy-user-b", userBWallet)) {
+    throw new Error("Expected active user A state to be ignored after switching to user B.");
+  }
+  if (isV2AgentWalletSessionScope(userAActiveSession, undefined, undefined)) {
+    throw new Error("Expected active user A state to be ignored after signing out.");
+  }
+  if (isV2AgentWalletSessionScope(userAActiveSession, "privy-user-a", userASecondWallet)) {
+    throw new Error("Expected active user A state to be ignored after wallet changes.");
   }
 
   const selectedMarket = {
@@ -659,6 +718,9 @@ async function main() {
     txHashChatRefreshes,
     walletGoalFallbackRefreshes,
     inlinePredictionWalletRefreshes,
+    userAScope,
+    userBScope,
+    signedOutScope,
     txHashChatFundsStatus: afterTxHashChat.wallet?.agent?.fundsStatus,
     readyFollowUpFundsStatus: afterReadyFollowUp.wallet?.agent?.fundsStatus,
     orchestrationAction: afterReadyFollowUp.orchestration?.action,
