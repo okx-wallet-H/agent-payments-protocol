@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useMemo, useState } from "react";
-import { ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createApi } from "./api";
 import type { V2WalletContext, V2WorldCupExploreCategory, V2WorldCupExploreMarketCard, V2WorldCupExploreView } from "./types";
 
@@ -105,9 +105,10 @@ export function V2AgentWalletPreview() {
   const [walletActionBusy, setWalletActionBusy] = useState(false);
   const [worldCupExploreLoading, setWorldCupExploreLoading] = useState(false);
   const [worldCupExploreError, setWorldCupExploreError] = useState<string | undefined>();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl), []);
   const insightCopy = createPreviewInsightCopy(worldCupExplore);
-  const showBottomDock = tab !== "worldcup";
+  const showBottomDock = tab !== "worldcup" && !keyboardVisible;
   const previewUserId = useMemo(() => previewUserIdFromEmail(previewEmail), [previewEmail]);
   const receiveAddress = useMemo(() => previewAddressForEmail(previewEmail), [previewEmail]);
 
@@ -209,6 +210,18 @@ export function V2AgentWalletPreview() {
     };
   }, [previewAuthed, previewUserId, receiveAddress, worldCupApi]);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSubscription = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   if (!previewAuthed) {
     const canEnter = previewEmail.trim().length > 3;
 
@@ -253,6 +266,11 @@ export function V2AgentWalletPreview() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
       <View style={styles.shell}>
         {tab !== "worldcup" ? (
           <View style={styles.topbar}>
@@ -274,7 +292,12 @@ export function V2AgentWalletPreview() {
 
         {tab === "agent" ? (
           <View style={styles.agentScreen}>
-            <ScrollView contentContainerStyle={styles.agentContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.agentScroll}
+              contentContainerStyle={styles.agentContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <Text style={styles.heroTitle}>海豚，一切可好？</Text>
               {previewMessages.map((message, index) => (
                 <View key={`${message.role}-${index}`} style={[styles.previewMessage, message.role === "user" ? styles.previewUserMessage : styles.previewAgentMessage]}>
@@ -288,7 +311,7 @@ export function V2AgentWalletPreview() {
               ) : null}
               {showReceiveCard ? <AgentReceiveCard address={receiveAddress} /> : null}
             </ScrollView>
-            <View style={styles.composerWrap}>
+            <View style={[styles.composerWrap, keyboardVisible ? styles.composerWrapKeyboard : null]}>
               <View style={styles.composer}>
                 <Pressable style={styles.plusButton}>
                   <Ionicons name="add" size={24} color={colors.ink} />
@@ -457,6 +480,7 @@ export function V2AgentWalletPreview() {
           </View>
         ) : null}
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -1486,6 +1510,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.shell
   },
+  keyboardAvoid: {
+    flex: 1
+  },
   shell: {
     flex: 1,
     backgroundColor: colors.shell
@@ -1574,12 +1601,15 @@ const styles = StyleSheet.create({
   agentScreen: {
     flex: 1
   },
+  agentScroll: {
+    flex: 1
+  },
   agentContent: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingBottom: 192,
+    paddingBottom: 28,
     gap: 18
   },
   heroTitle: {
@@ -1679,11 +1709,12 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   composerWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 98,
-    paddingHorizontal: 17
+    paddingHorizontal: 17,
+    paddingTop: 8,
+    paddingBottom: 94
+  },
+  composerWrapKeyboard: {
+    paddingBottom: 12
   },
   composer: {
     minHeight: 64,
