@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createApi } from "./api";
 import type { V2WalletContext, V2WorldCupExploreCategory, V2WorldCupExploreMarketCard, V2WorldCupExploreView } from "./types";
@@ -20,6 +20,29 @@ const exploreCategoryByTab: Record<MarketCategory, V2WorldCupExploreCategory> = 
   "小组赛": "group_stage",
   "近期比赛": "upcoming_matches"
 };
+
+function usePreviewCopyFeedback() {
+  const [copied, setCopied] = useState(false);
+  const resetRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (resetRef.current) {
+        clearTimeout(resetRef.current);
+      }
+    };
+  }, []);
+
+  function flashCopied() {
+    if (resetRef.current) {
+      clearTimeout(resetRef.current);
+    }
+    setCopied(true);
+    resetRef.current = setTimeout(() => setCopied(false), 2200);
+  }
+
+  return { copied, flashCopied };
+}
 
 const championMarkets = [
   { flag: "🇪🇸", name: "西班牙", percent: "17%", volume: "78.67万 交易额", color: "#d0a000" },
@@ -505,6 +528,7 @@ function HWalletPreview({
   onVerifyTx: (txHash: string) => void;
 }) {
   const [txHash, setTxHash] = useState("");
+  const { copied, flashCopied } = usePreviewCopyFeedback();
   const assets = wallet?.assets || [
     { symbol: "USDT0" as const, name: "USD Tether 0", amountLabel: "待同步", valueLabel: "-", syncStatus: "pending" as const },
     { symbol: "OKB" as const, name: "X Layer Gas", amountLabel: "待同步", valueLabel: "-", syncStatus: "pending" as const }
@@ -526,6 +550,11 @@ function HWalletPreview({
     if (!trimmed) return;
     onVerifyTx(trimmed);
     setTxHash("");
+  }
+
+  async function copyAddress() {
+    await Clipboard.setStringAsync(address);
+    flashCopied();
   }
 
   return (
@@ -558,9 +587,9 @@ function HWalletPreview({
           </View>
         </View>
         <Text style={styles.receiveCardHint}>支持稳定币 / OKB 转入，到账后 Agent 会自动识别可用资金。</Text>
-        <Pressable style={styles.receiveCopyButton} onPress={() => Clipboard.setStringAsync(address)}>
-          <Ionicons name="copy-outline" size={17} color={colors.ink} />
-          <Text style={styles.receiveCopyText}>复制地址</Text>
+        <Pressable style={styles.receiveCopyButton} onPress={copyAddress}>
+          <Ionicons name={copied ? "checkmark-circle-outline" : "copy-outline"} size={17} color={colors.ink} />
+          <Text style={styles.receiveCopyText}>{copied ? "已复制" : "复制地址"}</Text>
         </Pressable>
       </View>
 
@@ -677,6 +706,13 @@ function HWalletPreview({
 }
 
 function AgentReceiveCard({ address }: { address: string }) {
+  const { copied, flashCopied } = usePreviewCopyFeedback();
+
+  async function copyAddress() {
+    await Clipboard.setStringAsync(address);
+    flashCopied();
+  }
+
   return (
     <View style={styles.agentReceiveCard}>
       <View style={styles.receiveCardTop}>
@@ -690,9 +726,9 @@ function AgentReceiveCard({ address }: { address: string }) {
       </View>
       <Text style={styles.receiveCardHint}>支持稳定币 / OKB 转入，到账后 Agent 会自动识别可用资金。</Text>
       <Text style={styles.receiveAddressText}>{shortPreviewAddress(address)}</Text>
-      <Pressable style={styles.receiveCopyButton} onPress={() => Clipboard.setStringAsync(address)}>
-        <Ionicons name="copy-outline" size={17} color={colors.ink} />
-        <Text style={styles.receiveCopyText}>复制地址</Text>
+      <Pressable style={styles.receiveCopyButton} onPress={copyAddress}>
+        <Ionicons name={copied ? "checkmark-circle-outline" : "copy-outline"} size={17} color={colors.ink} />
+        <Text style={styles.receiveCopyText}>{copied ? "已复制" : "复制地址"}</Text>
       </Pressable>
     </View>
   );
