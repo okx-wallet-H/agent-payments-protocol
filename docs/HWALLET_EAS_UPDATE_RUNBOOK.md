@@ -1,0 +1,52 @@
+# HWallet EAS Update Runbook
+
+## What Can Use Hot Update
+
+- UI layout, text, and React component changes.
+- Agent preview flow copy and small interaction fixes.
+- API client logic that does not require a new native module.
+- Bundled image or font asset changes that remain compatible with the same native runtime.
+
+## What Still Needs A New Build
+
+- Adding or upgrading native modules such as Expo SDK packages.
+- Changing bundle id, URL scheme, app permissions, entitlements, or native config.
+- Changing Privy native extension setup.
+- Any change that requires App Store / TestFlight binary review.
+
+## Preview Update Flow
+
+Use preview first for device testing:
+
+```bash
+cd apps/mobile
+npm run update:preview -- --message "Short update note"
+```
+
+The installed preview build must already include `expo-updates` and subscribe to the `preview` channel. For this project, that starts with native build number `4`.
+
+## Production Update Flow
+
+Only after preview is checked on device:
+
+```bash
+cd apps/mobile
+npm run update:production -- --message "Short production update note"
+```
+
+Keep production updates limited to safe JS/UI fixes while live execution remains closed.
+
+## Validation Before Publishing
+
+Run these before publishing an update:
+
+```bash
+npm --prefix apps/mobile run typecheck
+EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
+```
+
+For larger changes, run:
+
+```bash
+npm run verify:merge
+```
