@@ -1,4 +1,5 @@
 import type { AgentCapabilityRoute } from "./capability-registry";
+import { getAgentMcpToolContract, type AgentMcpToolContract } from "./mcp-tool-contracts";
 import type { AgentOrchestrationPlan } from "./orchestrator";
 
 export type AgentCapabilityExecutionStatus =
@@ -43,6 +44,9 @@ export interface AgentCapabilityExecutionResult {
   route: string;
   mode: AgentCapabilityExecutionRequest["mode"];
   safety: AgentCapabilityExecutionRequest["safety"];
+  contractId?: string;
+  toolName?: string;
+  externalCallEnabled: false;
   status: AgentCapabilityExecutionStatus;
   summary: string;
   moneyMoved: false;
@@ -188,6 +192,11 @@ function createResult(
     payload: Record<string, unknown>;
   }
 ): AgentCapabilityExecutionResult {
+  const contract = getAgentMcpToolContract({
+    serviceId: request.serviceId,
+    route: request.route,
+    mode: request.mode
+  });
   return {
     requestId: request.requestId,
     serviceId: request.serviceId,
@@ -196,13 +205,33 @@ function createResult(
     route: request.route,
     mode: request.mode,
     safety: request.safety,
+    contractId: contract?.id,
+    toolName: contract?.toolName,
+    externalCallEnabled: false,
     status: input.status,
     summary: input.summary,
     moneyMoved: false,
     liveExecutionEnabled: false,
     mcpCallStatus: input.mcpCallStatus,
-    payload: input.payload,
+    payload: {
+      ...input.payload,
+      toolContract: contract ? toPayloadContract(contract) : undefined
+    },
     createdAt: request.createdAt
+  };
+}
+
+function toPayloadContract(contract: AgentMcpToolContract): Record<string, unknown> {
+  return {
+    id: contract.id,
+    toolName: contract.toolName,
+    stage: contract.stage,
+    requiredInputs: contract.input.required,
+    optionalInputs: contract.input.optional,
+    redactedInputs: contract.input.redacted,
+    outputFields: contract.output.fields,
+    externalCallEnabled: contract.externalCallEnabled,
+    moneyMovementEnabled: contract.moneyMovementEnabled
   };
 }
 
