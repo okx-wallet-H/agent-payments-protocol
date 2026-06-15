@@ -293,8 +293,8 @@ export default function Home() {
       <div className="app-bg" />
       <section className="topbar">
         <div>
-          <p className="eyebrow">海豚社区 · OKX X Layer · 透明 AI 钱包</p>
-          <h1>AI 帮你看机会</h1>
+          <p className="eyebrow">HWallet · OKX X Layer · Agent Wallet</p>
+          <h1>Agent 的钱包入口</h1>
         </div>
         <div className="top-actions">
           <div className="chain-pill">X Layer Mainnet · Chain ID 196 · OKB Gas</div>
@@ -305,7 +305,7 @@ export default function Home() {
               </button>
             ) : (
               <button onClick={() => login()} disabled={!ready}>
-                Privy 登录
+                邮箱登录
               </button>
             )
           ) : (
@@ -346,7 +346,7 @@ export default function Home() {
           </span>
           <span>
             <Coins size={15} />
-            小金库 {shortAddress(selected?.vault?.address) || "未准备"}
+            收款地址 {shortAddress(selected?.vault?.address) || "未准备"}
           </span>
           <span>
             <Shield size={15} />
@@ -358,13 +358,13 @@ export default function Home() {
           {!selected && (
             <article className="simple-message assistant">
               <b>AI预言帝</b>
-              <p>先给你创建一个专属 AI 助手。创建后你只要像聊天一样说目标，我来处理后面的分析、方案和安全记录。</p>
+              <p>先为当前账号准备 HWallet 会话。后续你只要像聊天一样说目标，我来处理分析、方案和记录。</p>
             </article>
           )}
           {selected && !selected.vault && (
             <article className="simple-message assistant">
               <b>AI预言帝</b>
-              <p>AI 助手已经准备好了。下一步给它准备一个小金库地址，后续只允许在这个小金库预算内操作。</p>
+              <p>会话已经准备好了。下一步同步你的收款地址，充值和后续资金识别都从这里进入。</p>
             </article>
           )}
           {selected && selected.vault && latestMessages.length === 0 && (
@@ -395,7 +395,7 @@ export default function Home() {
             <article className="simple-message assistant safety-card">
               <b>{latestPreview.safetySummary.title}</b>
               <p>
-                {latestPreview.safetySummary.amountLabel}。{latestPreview.safetySummary.willMoveFunds ? "会动用小金库。" : "当前不会真实动钱。"}
+                {latestPreview.safetySummary.amountLabel}。{latestPreview.safetySummary.willMoveFunds ? "会进入资金预览。" : "当前不会真实动钱。"}
               </p>
               <small>风险等级：{humanRiskLevel(latestPreview.safetySummary.riskLevel)}</small>
               <small>确认状态：{latestPreview.confirmationStatus}</small>
@@ -446,12 +446,12 @@ export default function Home() {
         <div className="simple-action-row">
           {!selected && (
             <button disabled={state.busy || (privyConfigured && !authenticated)} onClick={() => run("Create agent", createAgentAction)}>
-              创建我的 AI 助手
+              准备 HWallet
             </button>
           )}
           {selected && !selected.vault && (
             <button disabled={state.busy} onClick={() => run("Create vault", createVaultAction)}>
-              准备 AI 小金库
+              同步收款地址
             </button>
           )}
           {selected?.vault && !latestIntent && (
@@ -509,10 +509,10 @@ export default function Home() {
 
       {privyConfigured && !authenticated && (
         <section className="auth-gate">
-          <h2>先登录，系统会帮你准备钱包</h2>
-          <p>你只需要邮箱登录。系统会准备钱包地址；私钥在 TEE 可信执行环境内生成和签名。</p>
+          <h2>登录后进入 HWallet</h2>
+          <p>你只需要邮箱登录。系统会同步钱包地址，Agent 会从这里识别资金和记录操作。</p>
           <button onClick={() => login()} disabled={!ready}>
-            用 Privy 登录
+            邮箱登录
           </button>
         </section>
       )}
@@ -530,12 +530,12 @@ export default function Home() {
             )}
             {journey.action === "create_agent" && (
               <button disabled={state.busy || (privyConfigured && !authenticated)} onClick={() => run("Create agent", createAgentAction)}>
-                创建 AI 助手
+                准备 HWallet
               </button>
             )}
             {journey.action === "create_vault" && (
               <button disabled={state.busy || !selected} onClick={() => run("Create vault", createVaultAction)}>
-                准备小金库
+                同步收款地址
               </button>
             )}
             {journey.action === "ask_agent" && (
@@ -576,12 +576,12 @@ export default function Home() {
         </div>
         <div>
           <Bot size={20} />
-          <span>AI 助手</span>
+          <span>Agent 会话</span>
           <b>{selected?.name || "未创建"}</b>
         </div>
         <div>
           <Coins size={20} />
-          <span>AI 小金库</span>
+          <span>收款地址</span>
           <b>{shortAddress(selected?.vault?.address) || "未准备"}</b>
         </div>
         <div>
@@ -593,10 +593,10 @@ export default function Home() {
 
       <section className="grid two">
         <div className="panel">
-          <h2>创建 AI 助手</h2>
+          <h2>Agent 会话</h2>
           <div className="row">
             <label>
-              名称
+              会话名称
               <input value={agentName} onChange={(event) => setAgentName(event.target.value)} />
             </label>
             <button
@@ -623,12 +623,12 @@ export default function Home() {
         </div>
 
         <div className="panel">
-          <h2>AI 小金库</h2>
+          <h2>收款地址</h2>
           {selected ? (
             <>
               <div className="row">
                 <label>
-                  小金库地址，可留空先体验
+                  HWallet 收款地址，可留空先体验
                   <input
                     placeholder="0x..."
                     value={vaultAddress}
@@ -964,7 +964,7 @@ export default function Home() {
                     <b>{latestPreview.safetySummary.title}</b>
                     <p>
                       {latestPreview.safetySummary.modeLabel} · {latestPreview.safetySummary.amountLabel} ·
-                      {latestPreview.safetySummary.willMoveFunds ? " 会动用小金库" : " 不会真实动钱"}
+                      {latestPreview.safetySummary.willMoveFunds ? " 会进入资金预览" : " 不会真实动钱"}
                     </p>
                     <small className="neutral">风险等级：{humanRiskLevel(latestPreview.safetySummary.riskLevel)}</small>
                     {latestPreview.safetySummary.userChecklist.map((item) => (
@@ -1088,21 +1088,21 @@ function getUserJourney(input: {
     {
       index: 1,
       label: "登录",
-      caption: "邮箱进入，钱包自动准备",
+      caption: "邮箱进入，钱包自动同步",
       done: input.authenticated,
       current: !input.authenticated
     },
     {
       index: 2,
-      label: "AI 助手",
-      caption: "给你的 AI 开一个账户",
+      label: "HWallet",
+      caption: "为当前账号准备会话",
       done: Boolean(input.selected),
       current: input.authenticated && !input.selected
     },
     {
       index: 3,
-      label: "小金库",
-      caption: "只给 AI 小额预算",
+      label: "收款地址",
+      caption: "同步你的专属地址",
       done: Boolean(input.selected?.vault),
       current: Boolean(input.selected && !input.selected.vault)
     },
@@ -1131,24 +1131,24 @@ function getUserJourney(input: {
 
   if (!input.authenticated) {
     return {
-      title: "先登录，系统会帮你准备钱包",
-      description: "你只需要邮箱进入。私钥在 TEE 可信执行环境内生成和签名。",
+      title: "登录后进入 HWallet",
+      description: "你只需要邮箱进入。系统会同步钱包地址，Agent 会从这里识别资金和记录操作。",
       action: "login",
       steps
     };
   }
   if (!input.selected) {
     return {
-      title: "创建你的第一个 AI 助手",
-      description: "它会负责看机会、出方案、讲风险，并把执行请求交给 TEE 签名和 Onchain OS 执行层。",
+      title: "准备 HWallet 会话",
+      description: "HWallet 会把当前账号、钱包地址和 Agent 对话绑定到同一个安全会话里。",
       action: "create_agent",
       steps
     };
   }
   if (!input.selected.vault) {
     return {
-      title: "给 AI 准备一个小金库",
-      description: "这不是主钱包。第一版可以先生成地址体验流程，真实充值以后再打开。",
+      title: "同步你的收款地址",
+      description: "第一版先打通收款地址、充值识别和审计记录，策略执行先保持关闭。",
       action: "create_vault",
       steps
     };
