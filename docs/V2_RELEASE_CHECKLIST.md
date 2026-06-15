@@ -108,8 +108,9 @@ isolation against a protected server.
 
 This live smoke verifies the HWallet path that the phone will use: bind wallet,
 show one receive address, verify a transaction hash, write wallet records,
-update audit/memory, keep other users isolated, and continue into the Agent
-flow without enabling live execution.
+update audit/memory, bind a second user's distinct receive address, keep other
+users isolated, and continue into the Agent flow without enabling live
+execution.
 
 ## Before Any Live Order
 

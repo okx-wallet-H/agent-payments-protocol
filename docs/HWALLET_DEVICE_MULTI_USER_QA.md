@@ -169,6 +169,10 @@ npm run verify:merge
   conflict, stale-error, and stale-wallet display boundaries.
 - `smoke:mobile-api-auth` covers mobile Authorization header behavior without
   printing tokens.
+- `smoke:mobile-device-hwallet:live` covers the device-facing API path. With
+  one Privy token it verifies User A's wallet flow; with
+  `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN` it also verifies User B gets a
+  distinct HWallet receive address and cannot see User A wallet records.
 
 The real device pass is still required because Privy native login, embedded
 wallet creation, clipboard behavior, keyboard behavior, and Expo Updates must be

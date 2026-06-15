@@ -7,6 +7,7 @@ const baseUrlInfo = classifyBaseUrl(baseUrl);
 const userId = `mobile-device-hwallet-${Date.now()}`;
 const otherUserId = `${userId}-other`;
 const walletAddress = "0x59029AD72744Ea033a4Ccb261Ec79569e158209e";
+const otherWalletAddress = "0x2222222222222222222222222222222222222222";
 const txHash = "0xbad718fc3c07ca668b564c54f7c88afe7b2877d7d5c973f30735ad3abbca0747";
 const accessToken = readAccessToken("MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "PRIVY_ACCESS_TOKEN");
 const otherAccessToken = readAccessToken("MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "OTHER_PRIVY_ACCESS_TOKEN");
@@ -25,8 +26,11 @@ assert(health.service === "hwallet-v2", "device API reaches HWallet V2 storage h
 const auth = await getJson("/api/system/auth", { auth: false });
 assert(auth.accessControl?.requireOwner === true, "device API owner guard is enabled");
 
-if (auth.accessControl?.requirePrivyToken === true && !accessToken) {
+if (auth.accessControl?.requirePrivyToken === true) {
   await assertMissingPrivyTokenIsRejected();
+}
+
+if (auth.accessControl?.requirePrivyToken === true && !accessToken) {
   console.log(JSON.stringify({
     ok: true,
     mode: "mobile-device-hwallet-auth-required",
@@ -100,6 +104,30 @@ assert(
 
 if (!accessToken || otherAccessToken) {
   const otherAuth = otherAccessToken ? { accessToken: otherAccessToken } : {};
+  const otherHome = await getJson(
+    `/api/v2/mobile/home?userId=${encodeURIComponent(otherUserId)}&walletAddress=${encodeURIComponent(otherWalletAddress)}`,
+    otherAuth
+  );
+  assert(otherHome.home?.type === "mobile_home_view", "other user device API returns mobile home");
+  assert(sameHex(otherHome.wallet?.address, otherWalletAddress), "other user device API binds a distinct HWallet address");
+  assert(!sameHex(otherHome.wallet?.address, walletAddress), "other user HWallet address is not first user address");
+
+  const otherRecharge = await postJson("/api/v2/phase-one", {
+    userId: otherUserId,
+    walletAddress: otherWalletAddress,
+    text: "我要充值"
+  }, otherAuth);
+  const otherReceiveCard = otherRecharge.mobileTurn?.cards?.find((card) => card.type === "receive_card");
+  assert(otherReceiveCard?.addresses?.length === 1, "other user receive flow exposes one HWallet address");
+  assert(
+    sameHex(otherReceiveCard?.addresses?.[0]?.address, otherWalletAddress),
+    "other user receive flow uses second user's HWallet address"
+  );
+  assert(
+    !sameHex(otherReceiveCard?.addresses?.[0]?.address, walletAddress),
+    "other user receive flow does not expose first user's HWallet address"
+  );
+
   const otherMemory = await getJson(`/api/v2/mobile/memory?userId=${encodeURIComponent(otherUserId)}`, otherAuth);
   const otherAudit = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(otherUserId)}&limit=20`, otherAuth);
   assert(
@@ -111,7 +139,7 @@ if (!accessToken || otherAccessToken) {
     "other user audit cannot see verified tx"
   );
 } else {
-  skipped.push("second-user isolation requires MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN when Privy auth is enabled");
+  skipped.push("second-user device path requires MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN when Privy auth is enabled");
 }
 
 console.log(JSON.stringify({
@@ -127,6 +155,7 @@ console.log(JSON.stringify({
   summary: {
     walletBound: true,
     receiveAddressCount: receiveCard.addresses.length,
+    secondUserChecked: !skipped.some((item) => item.includes("second-user")),
     verifiedFundsStatus: verified.wallet?.agent?.fundsStatus,
     followUpGoal: followUp.mobileTurn?.goalType,
     liveExecutionEnabled: Boolean(followUp.orchestration?.capability?.liveExecution?.enabled),
