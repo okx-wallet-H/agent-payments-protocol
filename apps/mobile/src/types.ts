@@ -463,6 +463,11 @@ export interface V2AgentCapabilityGate {
     mode: "none" | "observe" | "dry_run";
     capability: "none" | "okx-onchainos-skills";
     reason: string;
+    serviceId?: "hwallet-core" | "okx-onchainos-skills" | "okx-outcomes" | "polymarket-plugin";
+    serviceKind?: "internal" | "mcp_skill" | "api" | "plugin";
+    serviceLabel?: string;
+    route?: string;
+    safety?: "no_external_call" | "read_only" | "dry_run_only";
   };
   liveExecution: {
     enabled: false;

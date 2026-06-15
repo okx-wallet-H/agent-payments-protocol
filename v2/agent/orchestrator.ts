@@ -1,3 +1,4 @@
+import { selectAgentCapabilityRoute, type AgentCapabilityRoute } from "./capability-registry";
 import { classifyGoal } from "./business-agent";
 import { evaluateAgentPolicy, type AgentPolicyAction, type AgentPolicyDecision } from "./policy";
 import type { BusinessGoalType, MarketSnapshot } from "../domain/types";
@@ -31,6 +32,11 @@ export interface AgentCapabilityGate {
     mode: "none" | "observe" | "dry_run";
     capability: "none" | "okx-onchainos-skills";
     reason: string;
+    serviceId?: AgentCapabilityRoute["serviceId"];
+    serviceKind?: AgentCapabilityRoute["serviceKind"];
+    serviceLabel?: string;
+    route?: string;
+    safety?: AgentCapabilityRoute["safety"];
   };
   liveExecution: {
     enabled: false;
@@ -159,6 +165,11 @@ function createCapabilityGate(
   const needsWallet = shouldRequireWallet(plan.action);
   const needsFunds = shouldRequireFunds(plan.action);
   const policyAction = toPolicyAction(plan.action);
+  const route = selectAgentCapabilityRoute({
+    action: plan.action,
+    goalType: plan.goalType,
+    market: plan.candidateMarket
+  });
   const policyDecision = policyAction
     ? evaluateAgentPolicy({
         action: policyAction,
@@ -183,11 +194,16 @@ function createCapabilityGate(
     needsFunds,
     onchainSkill: {
       status: policyAction ? blockedReason ? "blocked" : "allowed" : "not_needed",
-      mode: toSkillMode(plan.action),
+      mode: route.mode,
       capability: policyAction ? wallet.skillBoundary.capabilities : "none",
       reason: policyAction
-        ? blockedReason || "可以调用 Onchain Skill 做数据读取或模拟，仍不开放真实下单。"
-        : "这一步只处理会话或钱包状态，不需要调用 Onchain Skill。"
+        ? blockedReason || route.reason
+        : route.reason,
+      serviceId: route.serviceId,
+      serviceKind: route.serviceKind,
+      serviceLabel: route.label,
+      route: route.command,
+      safety: route.safety
     },
     liveExecution: {
       enabled: false,
@@ -209,12 +225,6 @@ function toPolicyAction(action: AgentOrchestratorAction): AgentPolicyAction | un
   if (action === "analyze_worldcup_market") return "analyze";
   if (action === "simulate_prediction") return "simulate";
   return undefined;
-}
-
-function toSkillMode(action: AgentOrchestratorAction): AgentCapabilityGate["onchainSkill"]["mode"] {
-  if (action === "analyze_worldcup_market") return "observe";
-  if (action === "simulate_prediction") return "dry_run";
-  return "none";
 }
 
 function getCapabilityBlockReason(input: {
