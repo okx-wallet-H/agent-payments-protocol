@@ -419,6 +419,16 @@ const missingWalletApi = {
   }
 };
 
+const authExpiredApi = {
+  ...api,
+  getV2Wallet: async () => {
+    throw Object.assign(new Error("Missing Privy access token"), {
+      code: "Missing Privy access token",
+      status: 401
+    });
+  }
+};
+
 const verifiedReadyApi = {
   ...api,
   verifyV2WalletTx: async () => ({
@@ -582,6 +592,14 @@ async function main() {
     throw new Error("Expected missing wallet tx check to use friendly mobile copy.");
   }
 
+  const afterAuthExpired = await loadV2AgentWalletState(authExpiredApi, afterChat, "demo-user");
+  if (afterAuthExpired.error !== "登录已过期，请重新登录后再试。") {
+    throw new Error("Expected auth failures to use friendly login-expired mobile copy.");
+  }
+  if (afterAuthExpired.error.includes("Privy") || afterAuthExpired.error.includes("access token")) {
+    throw new Error("Expected auth failure copy to hide implementation details.");
+  }
+
   const afterReadyVerifyTx = await verifyV2AgentWalletTx(
     verifiedReadyApi,
     afterChat,
@@ -727,6 +745,7 @@ async function main() {
     orchestrationSkillMode: afterReadyFollowUp.orchestration?.capability.onchainSkill.mode,
     walletConflictCopy: afterWalletConflict.error,
     walletRequiredCopy: afterMissingWalletTx.error,
+    authExpiredCopy: afterAuthExpired.error,
     error: afterAction.error
   }, null, 2));
 }
