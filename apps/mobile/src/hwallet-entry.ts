@@ -24,7 +24,10 @@ export interface HWalletEntryState {
 }
 
 export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletEntryState {
-  const displayAddress = input.walletAddress || (input.wallet?.status === "ready" ? input.wallet.address : undefined);
+  const isSignedOut = input.privyStatus.kind === "signed_out";
+  const displayAddress = isSignedOut
+    ? undefined
+    : input.walletAddress || (input.wallet?.status === "ready" ? input.wallet.address : undefined);
   const canUseReceiveAddress = Boolean(displayAddress);
   const canRetryProvisioning = Boolean(
     input.privyStatus.needsProvisioning &&
@@ -37,7 +40,7 @@ export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletE
     (!canUseReceiveAddress ? input.provisionError : undefined);
 
   return {
-    canAskAgent: !input.busy,
+    canAskAgent: !input.busy && !isSignedOut,
     canRetryProvisioning,
     canUseReceiveAddress,
     displayAddress,

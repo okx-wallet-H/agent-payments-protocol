@@ -134,18 +134,21 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const walletProvisionAttemptRef = useRef<string | undefined>(undefined);
   const walletAutoSyncKeyRef = useRef<string | undefined>(undefined);
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
+  const activeUserId = user?.id;
+  const activeWalletAddress = user ? walletAddress : undefined;
+  const agentSessionReady = isReady && Boolean(activeUserId);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
     apiBaseUrl,
     getAccessToken,
-    isReady,
-    userId: user?.id,
-    walletAddress
+    isReady: agentSessionReady,
+    userId: activeUserId,
+    walletAddress: activeWalletAddress
   });
   const privyWalletStatus = createPrivyHWalletStatus({
     isReady,
     hasUser: Boolean(user),
-    walletAddress,
+    walletAddress: activeWalletAddress,
     backendWalletAddress: agent.session.wallet?.status === "ready" ? agent.session.wallet.address : undefined,
     isProvisioning: walletProvisioning,
     provisionError: walletProvisionError
@@ -176,12 +179,19 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   }, [activeTab, isReady, user, worldCupApi]);
 
   useEffect(() => {
-    if (!walletAddress) return;
+    if (!activeWalletAddress) return;
     setWalletProvisionError(undefined);
-  }, [walletAddress]);
+  }, [activeWalletAddress]);
 
   useEffect(() => {
-    if (!isReady || !user || walletAddress || walletProvisioning) return;
+    walletProvisionAttemptRef.current = undefined;
+    walletAutoSyncKeyRef.current = undefined;
+    setWalletProvisioning(false);
+    setWalletProvisionError(undefined);
+  }, [activeUserId]);
+
+  useEffect(() => {
+    if (!isReady || !user || activeWalletAddress || walletProvisioning) return;
     if (walletProvisionAttemptRef.current === user.id) return;
 
     let cancelled = false;
@@ -201,10 +211,10 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     return () => {
       cancelled = true;
     };
-  }, [create, isReady, user, walletAddress, walletProvisioning]);
+  }, [activeWalletAddress, create, isReady, user, walletProvisioning]);
 
   async function retryHWalletProvisioning() {
-    if (!isReady || !user || walletAddress || walletProvisioning) return;
+    if (!isReady || !user || activeWalletAddress || walletProvisioning) return;
 
     walletProvisionAttemptRef.current = user.id;
     setWalletProvisioning(true);
@@ -224,13 +234,13 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       walletAutoSyncKeyRef.current = undefined;
       return;
     }
-    if (!isReady || !user || !walletAddress || agent.session.busy) return;
+    if (!isReady || !user || !activeWalletAddress || agent.session.busy) return;
 
-    const syncKey = `${user.id}:${walletAddress}`;
+    const syncKey = `${user.id}:${activeWalletAddress}`;
     if (walletAutoSyncKeyRef.current === syncKey) return;
     walletAutoSyncKeyRef.current = syncKey;
     void agent.syncWalletState();
-  }, [activeTab, agent.session.busy, agent.syncWalletState, isReady, user, walletAddress]);
+  }, [activeTab, activeWalletAddress, agent.session.busy, agent.syncWalletState, isReady, user]);
 
   async function run(action: () => Promise<unknown>) {
     try {
@@ -353,7 +363,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
         {activeTab === "mine" ? (
           <MineTab
             audit={agent.session.audit}
-            walletAddress={walletAddress}
+            walletAddress={activeWalletAddress}
             trackingCount={agent.session.home?.state.trackingCount || 0}
             strategyCount={agent.session.home?.state.strategyCount || 0}
             recordCount={agent.session.home?.state.recordCount || 0}
@@ -372,7 +382,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             sessionError={agent.session.error}
             memory={agent.session.memory}
             wallet={agent.session.wallet}
-            walletAddress={walletAddress}
+            walletAddress={activeWalletAddress}
             busy={agent.session.busy}
             onRefresh={() => run(() => agent.refreshWallet())}
             onOpenCard={(card) => {

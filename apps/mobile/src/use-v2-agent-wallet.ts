@@ -147,9 +147,12 @@ export function useV2AgentWallet(input: {
   }, [updateSession]);
 
   useEffect(() => {
-    if (!input.isReady) return;
-    let cancelled = false;
     const scopedInitialSession = createScopedV2AgentWalletSession(input.userId, input.walletAddress);
+    if (!input.isReady) {
+      updateSession(scopedInitialSession);
+      return;
+    }
+    let cancelled = false;
     const requestScopeKey = scopedInitialSession.scopeKey;
     updateSession(scopedInitialSession);
     loadV2AgentWalletHome(api, scopedInitialSession, input.userId, input.walletAddress).then((next) => {
