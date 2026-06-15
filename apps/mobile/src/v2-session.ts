@@ -111,6 +111,7 @@ export async function verifyV2AgentWalletTx(
 }
 
 export interface V2AgentWalletSession {
+  scopeKey?: string;
   home?: V2MobileHomeView;
   wallet?: V2WalletContext;
   memory?: V2MobileAgentMemory;
@@ -127,6 +128,33 @@ export const initialV2AgentWalletSession: V2AgentWalletSession = {
   messages: [],
   busy: false
 };
+
+export function createV2AgentWalletScopeKey(userId?: string, walletAddress?: `0x${string}`): string {
+  return [
+    userId?.trim() || "anonymous",
+    walletAddress?.trim().toLowerCase() || "no-wallet"
+  ].join(":");
+}
+
+export function createScopedV2AgentWalletSession(
+  userId?: string,
+  walletAddress?: `0x${string}`
+): V2AgentWalletSession {
+  return {
+    ...initialV2AgentWalletSession,
+    audit: [],
+    messages: [],
+    scopeKey: createV2AgentWalletScopeKey(userId, walletAddress)
+  };
+}
+
+export function isV2AgentWalletSessionScope(
+  session: Pick<V2AgentWalletSession, "scopeKey">,
+  userId?: string,
+  walletAddress?: `0x${string}`
+): boolean {
+  return session.scopeKey === createV2AgentWalletScopeKey(userId, walletAddress);
+}
 
 export async function loadV2AgentWalletHome(
   api: V2AgentWalletApi,

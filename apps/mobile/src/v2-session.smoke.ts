@@ -1,6 +1,9 @@
 import {
+  createScopedV2AgentWalletSession,
+  createV2AgentWalletScopeKey,
   getLatestV2Card,
   initialV2AgentWalletSession,
+  isV2AgentWalletSessionScope,
   loadV2AgentWalletState,
   refreshV2AgentWallet,
   runV2AgentWalletCardAction,
@@ -426,6 +429,28 @@ const verifiedReadyApi = {
 };
 
 async function main() {
+  const userAWallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`;
+  const userBWallet = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" as `0x${string}`;
+  const userAScope = createV2AgentWalletScopeKey("privy-user-a", userAWallet);
+  const userAInitial = createScopedV2AgentWalletSession("privy-user-a", userAWallet);
+  const userBInitial = createScopedV2AgentWalletSession("privy-user-b", userBWallet);
+
+  if (userAInitial.scopeKey !== userAScope) {
+    throw new Error("Expected scoped session to record the current Privy user and wallet.");
+  }
+  if (!isV2AgentWalletSessionScope(userAInitial, "privy-user-a", userAWallet)) {
+    throw new Error("Expected session scope to match its owner user and wallet.");
+  }
+  if (isV2AgentWalletSessionScope(userAInitial, "privy-user-b", userBWallet)) {
+    throw new Error("Expected session scope to reject a different logged-in user.");
+  }
+  if (userAInitial.messages.length !== 0 || userBInitial.messages.length !== 0) {
+    throw new Error("Expected account switches to start from an empty mobile session.");
+  }
+  if (userAInitial.scopeKey === userBInitial.scopeKey) {
+    throw new Error("Expected each Privy user and HWallet pair to have an isolated session scope.");
+  }
+
   const selectedMarket = {
     provider: "okx-outcomes" as const,
     chainId: 196 as const,

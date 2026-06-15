@@ -22,6 +22,7 @@ The product baseline is:
 
 - Web preview login supports email-based local sessions for testing different users.
 - Native mobile path is wired to Privy email login and embedded Ethereum wallet creation.
+- Native mobile V2 session state is scoped by the current Privy user and HWallet address, so account or wallet switches start from a clean App session and stale async responses cannot overwrite the new user's screen.
 - Backend mobile home, wallet, audit, memory, and phase-one endpoints are available.
 - Wallet binding is user-scoped, and a previously bound user wallet cannot be silently replaced.
 - HWallet can show a receive address, current wallet state, X Layer asset snapshots, and user-facing wallet records.
@@ -45,6 +46,7 @@ The merge gate includes:
 - `npm run typecheck`
 - `npm run mobile:typecheck`
 - `npm run smoke:mobile-session`
+- `npm run smoke:mobile-api-auth`
 - `npm run smoke:privy-wallet-status`
 - `npm run smoke:production-readiness`
 - `npm run smoke:v2`
