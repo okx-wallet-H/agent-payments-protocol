@@ -243,6 +243,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
+    setInput("");
     setActiveTab("agent");
     await agent.sendText(trimmed);
     if (shouldOpenWalletAfterAgentText(trimmed)) {
@@ -2601,48 +2602,7 @@ function CardMessage({
   onWallet: () => void;
 }) {
   if (card.type === "receive_card") {
-    const address = card.addresses[0];
-    async function copyAddress() {
-      if (!address?.address) return;
-      await Clipboard.setStringAsync(address.address);
-      Alert.alert("已复制", "充值地址已复制。");
-    }
-
-    return (
-      <View style={styles.receiveCard}>
-        <View style={styles.receiveCardTop}>
-          <View>
-            <Text style={styles.receiveCardLabel}>充值地址</Text>
-            <Text style={styles.receiveCardTitle}>{card.title || "Agent Wallet"}</Text>
-          </View>
-          <View style={styles.receiveNetworkPill}>
-            <Text style={styles.receiveNetworkText}>{address?.network || "X Layer"}</Text>
-          </View>
-        </View>
-        <Text style={styles.receiveCardHint}>支持稳定币 / OKB 转入，到账后 Agent 会自动识别可用资金。</Text>
-        <Text style={styles.receiveAddressText}>{address?.address ? shortAddress(address.address) : "等待钱包地址"}</Text>
-        <View style={styles.receiveActionRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="复制充值地址"
-            style={[styles.receiveCopyButton, styles.receiveActionButton]}
-            onPress={() => copyAddress()}
-          >
-            <Ionicons name="copy-outline" size={17} color="#fff" />
-            <Text style={styles.receiveCopyText}>复制地址</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="打开 HWallet"
-            style={[styles.receiveWalletButton, styles.receiveActionButton]}
-            onPress={onWallet}
-          >
-            <Ionicons name="wallet-outline" size={17} color={colors.ink} />
-            <Text style={styles.receiveWalletText}>去 HWallet</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
+    return <ReceiveCardMessage card={card} onWallet={onWallet} />;
   }
 
   if (card.type === "prediction_card") {
@@ -2664,6 +2624,61 @@ function CardMessage({
   }
 
   return null;
+}
+
+function ReceiveCardMessage({
+  card,
+  onWallet
+}: {
+  card: Extract<V2ConversationCard, { type: "receive_card" }>;
+  onWallet: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const address = card.addresses[0];
+
+  async function copyAddress() {
+    if (!address?.address) return;
+    await Clipboard.setStringAsync(address.address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+    Alert.alert("已复制", "充值地址已复制。");
+  }
+
+  return (
+    <View style={styles.receiveCard}>
+      <View style={styles.receiveCardTop}>
+        <View>
+          <Text style={styles.receiveCardLabel}>充值地址</Text>
+          <Text style={styles.receiveCardTitle}>{card.title || "Agent Wallet"}</Text>
+        </View>
+        <View style={styles.receiveNetworkPill}>
+          <Text style={styles.receiveNetworkText}>{address?.network || "X Layer"}</Text>
+        </View>
+      </View>
+      <Text style={styles.receiveCardHint}>支持稳定币 / OKB 转入，到账后 Agent 会自动识别可用资金。</Text>
+      <Text style={styles.receiveAddressText}>{address?.address ? shortAddress(address.address) : "等待钱包地址"}</Text>
+      <View style={styles.receiveActionRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="复制充值地址"
+          style={[styles.receiveCopyButton, styles.receiveActionButton]}
+          onPress={copyAddress}
+        >
+          <Ionicons name="copy-outline" size={17} color="#fff" />
+          <Text style={styles.receiveCopyText}>{copied ? "已复制" : "复制地址"}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="打开 HWallet"
+          style={[styles.receiveWalletButton, styles.receiveActionButton]}
+          onPress={onWallet}
+        >
+          <Ionicons name="wallet-outline" size={17} color={colors.ink} />
+          <Text style={styles.receiveWalletText}>去 HWallet</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
 }
 
 function SimulationCardMessage({

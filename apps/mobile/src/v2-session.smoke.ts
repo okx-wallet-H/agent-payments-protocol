@@ -351,6 +351,19 @@ const walletGoalApi = {
   })
 };
 
+let txHashChatRefreshes = 0;
+const txHashChatApi = {
+  ...api,
+  getV2Wallet: async () => {
+    txHashChatRefreshes += 1;
+    return verifiedReadyWallet;
+  },
+  sendV2Chat: async () => ({
+    mobileTurn: walletTurn,
+    wallet: verifiedReadyWallet
+  })
+};
+
 let walletGoalFallbackRefreshes = 0;
 const walletGoalFallbackApi = {
   ...api,
@@ -547,6 +560,22 @@ async function main() {
     throw new Error("Expected inline wallet goal chat to avoid an extra wallet refresh.");
   }
 
+  const afterTxHashChat = await sendV2AgentWalletText(
+    txHashChatApi,
+    afterChat,
+    "0xbad718fc3c07ca668b564c54f7c88afe7b2877d7d5c973f30735ad3abbca0747",
+    "demo-user"
+  );
+  if (afterTxHashChat.wallet?.agent?.fundsStatus !== "ready") {
+    throw new Error("Expected direct tx hash chat to put HWallet funds in ready state.");
+  }
+  if (afterTxHashChat.memory?.wallet?.address !== verifiedReadyWallet.address) {
+    throw new Error("Expected direct tx hash chat to update mobile memory.");
+  }
+  if (txHashChatRefreshes !== 0) {
+    throw new Error("Expected direct tx hash chat to avoid an extra wallet refresh.");
+  }
+
   const afterWalletFallbackChat = await sendV2AgentWalletText(
     walletGoalFallbackApi,
     afterChat,
@@ -602,8 +631,10 @@ async function main() {
     receivedCandidateMarketId,
     actionHomeRefreshes,
     walletGoalRefreshes,
+    txHashChatRefreshes,
     walletGoalFallbackRefreshes,
     inlinePredictionWalletRefreshes,
+    txHashChatFundsStatus: afterTxHashChat.wallet?.agent?.fundsStatus,
     readyFollowUpFundsStatus: afterReadyFollowUp.wallet?.agent?.fundsStatus,
     orchestrationAction: afterReadyFollowUp.orchestration?.action,
     orchestrationSkillMode: afterReadyFollowUp.orchestration?.capability.onchainSkill.mode,
