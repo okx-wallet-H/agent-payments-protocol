@@ -8,7 +8,10 @@ const userId = `mobile-device-hwallet-${Date.now()}`;
 const otherUserId = `${userId}-other`;
 const walletAddress = "0x59029AD72744Ea033a4Ccb261Ec79569e158209e";
 const txHash = "0xbad718fc3c07ca668b564c54f7c88afe7b2877d7d5c973f30735ad3abbca0747";
+const accessToken = readAccessToken("MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "PRIVY_ACCESS_TOKEN");
+const otherAccessToken = readAccessToken("MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "OTHER_PRIVY_ACCESS_TOKEN");
 const checks = [];
+const skipped = [];
 
 assert(baseUrlInfo.kind !== "missing", "device API base URL is configured");
 assert(baseUrlInfo.valid, "device API base URL is valid");
@@ -18,6 +21,29 @@ if (process.env.ALLOW_LOCAL_MOBILE_DEVICE_SMOKE !== "true") {
 
 const health = await getJson("/api/v2/system/storage");
 assert(health.service === "hwallet-v2", "device API reaches HWallet V2 storage health");
+
+const auth = await getJson("/api/system/auth", { auth: false });
+assert(auth.accessControl?.requireOwner === true, "device API owner guard is enabled");
+
+if (auth.accessControl?.requirePrivyToken === true && !accessToken) {
+  await assertMissingPrivyTokenIsRejected();
+  console.log(JSON.stringify({
+    ok: true,
+    mode: "mobile-device-hwallet-auth-required",
+    baseUrl: {
+      configured: true,
+      kind: baseUrlInfo.kind,
+      protocol: baseUrlInfo.protocol
+    },
+    checks,
+    summary: {
+      fullWalletPath: "skipped",
+      reason: "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN is required for the authenticated HWallet device path.",
+      authRequired: true
+    }
+  }, null, 2));
+  process.exit(0);
+}
 
 const home = await getJson(
   `/api/v2/mobile/home?userId=${encodeURIComponent(userId)}&walletAddress=${encodeURIComponent(walletAddress)}`
@@ -72,16 +98,21 @@ assert(
   "mobile memory records wallet journey"
 );
 
-const otherMemory = await getJson(`/api/v2/mobile/memory?userId=${encodeURIComponent(otherUserId)}`);
-const otherAudit = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(otherUserId)}&limit=20`);
-assert(
-  !otherMemory.memory?.wallet?.verifiedTransfers?.some((transfer) => sameHex(transfer.txHash, txHash)),
-  "other user memory cannot see verified tx"
-);
-assert(
-  !otherAudit.events?.some((event) => sameHex(event.txHash, txHash)),
-  "other user audit cannot see verified tx"
-);
+if (!accessToken || otherAccessToken) {
+  const otherAuth = otherAccessToken ? { accessToken: otherAccessToken } : {};
+  const otherMemory = await getJson(`/api/v2/mobile/memory?userId=${encodeURIComponent(otherUserId)}`, otherAuth);
+  const otherAudit = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(otherUserId)}&limit=20`, otherAuth);
+  assert(
+    !otherMemory.memory?.wallet?.verifiedTransfers?.some((transfer) => sameHex(transfer.txHash, txHash)),
+    "other user memory cannot see verified tx"
+  );
+  assert(
+    !otherAudit.events?.some((event) => sameHex(event.txHash, txHash)),
+    "other user audit cannot see verified tx"
+  );
+} else {
+  skipped.push("second-user isolation requires MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN when Privy auth is enabled");
+}
 
 console.log(JSON.stringify({
   ok: true,
@@ -92,12 +123,15 @@ console.log(JSON.stringify({
     protocol: baseUrlInfo.protocol
   },
   checks,
+  skipped,
   summary: {
     walletBound: true,
     receiveAddressCount: receiveCard.addresses.length,
     verifiedFundsStatus: verified.wallet?.agent?.fundsStatus,
     followUpGoal: followUp.mobileTurn?.goalType,
-    liveExecutionEnabled: Boolean(followUp.orchestration?.capability?.liveExecution?.enabled)
+    liveExecutionEnabled: Boolean(followUp.orchestration?.capability?.liveExecution?.enabled),
+    authRequired: Boolean(auth.accessControl?.requirePrivyToken),
+    authenticated: Boolean(accessToken)
   }
 }, null, 2));
 
@@ -127,24 +161,48 @@ function classifyBaseUrl(value) {
   }
 }
 
-async function getJson(path) {
-  const response = await fetchWithTimeout(`${baseUrl}${path}`);
-  const data = await response.json().catch(() => ({}));
+async function getJson(path, options = {}) {
+  const { response, data } = await fetchJson(path, undefined, options);
   if (!response.ok) throw new Error(`${path} failed: ${response.status} ${data.error || data.message || ""}`.trim());
   return data;
 }
 
-async function postJson(path, body) {
-  const response = await fetchWithTimeout(`${baseUrl}${path}`, {
+async function postJson(path, body, options = {}) {
+  const { response, data } = await fetchJson(path, {
     method: "POST",
     headers: {
       "content-type": "application/json"
     },
     body: JSON.stringify(body)
-  });
-  const data = await response.json().catch(() => ({}));
+  }, options);
   if (!response.ok) throw new Error(`${path} failed: ${response.status} ${data.error || data.message || ""}`.trim());
   return data;
+}
+
+async function fetchJson(path, init = {}, options = {}) {
+  const response = await fetchWithTimeout(`${baseUrl}${path}`, {
+    ...init,
+    headers: createHeaders(init.headers, options)
+  });
+  const data = await response.json().catch(() => ({}));
+  return { response, data };
+}
+
+async function assertMissingPrivyTokenIsRejected() {
+  const { response, data } = await fetchJson(
+    `/api/v2/mobile/home?userId=${encodeURIComponent(userId)}&walletAddress=${encodeURIComponent(walletAddress)}`,
+    undefined,
+    { auth: false }
+  );
+  assert(response.status === 401, "device API rejects missing Privy access token");
+  assert(data?.error === "Missing Privy access token", "device API returns the expected missing-token error");
+}
+
+function createHeaders(rawHeaders = {}, options = {}) {
+  const headers = { ...rawHeaders };
+  const token = options.auth === false ? undefined : options.accessToken || accessToken;
+  if (token) headers.authorization = `Bearer ${token}`;
+  return headers;
 }
 
 async function fetchWithTimeout(url, init) {
@@ -167,6 +225,14 @@ function assert(condition, label) {
 
 function sameHex(left, right) {
   return Boolean(left && right && String(left).toLowerCase() === String(right).toLowerCase());
+}
+
+function readAccessToken(...keys) {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return "";
 }
 
 async function loadLocalEnv() {
