@@ -149,6 +149,62 @@ AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:l
 
 Use this only after the dual observation is clean. It verifies the same App-facing path while reads and writes go through Supabase directly.
 
+## Cutover Safety Gate
+
+Do not switch a shared environment to `HWALLET_SESSION_STORE=postgres` only because
+the schema exists. Treat the switch as a cutover with an explicit rollback path:
+
+1. Keep the current App build and API release pinned before the storage switch.
+2. Run the static gate:
+
+```bash
+npm run smoke:supabase-cutover-safety
+```
+
+3. Run the live structure gate:
+
+```bash
+npm run smoke:supabase-closeout
+```
+
+4. Run staging in `dual` first:
+
+```bash
+HWALLET_SESSION_STORE=dual npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-observation:live
+```
+
+5. Create a database backup before changing the read path. Use a managed
+Supabase backup when available, or a local encrypted dump with a placeholder
+connection string:
+
+```bash
+pg_dump "$DATABASE_URL" --format=custom --file ./private-backups/hwallet-before-postgres-cutover.dump
+```
+
+The backup directory must stay outside Git. Never paste the real `DATABASE_URL`
+into docs, logs, issue comments, or PR text.
+
+6. Switch one staging environment to `postgres` and run the App-facing readback:
+
+```bash
+HWALLET_SESSION_STORE=postgres npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
+```
+
+7. Roll back immediately if login, wallet binding, recharge, tx verification,
+Agent memory, audit, or record readback fails:
+
+```bash
+HWALLET_SESSION_STORE=dual
+# or, for local emergency fallback:
+HWALLET_SESSION_STORE=jsonl
+```
+
+After rollback, keep real execution disabled, preserve the failing request id /
+audit id, and compare the affected user rows against the JSONL fallback before
+trying the cutover again.
+
 Live audit timeline smoke command:
 
 ```bash

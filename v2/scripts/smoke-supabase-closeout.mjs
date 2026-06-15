@@ -37,7 +37,8 @@ const requiredScripts = [
   "smoke:audit-timeline:live",
   "smoke:phase-one-records:live",
   "smoke:agent-action-store:live",
-  "smoke:market-snapshots:live"
+  "smoke:market-snapshots:live",
+  "smoke:supabase-cutover-safety"
 ];
 
 const originalSessionStore = process.env.HWALLET_SESSION_STORE;
