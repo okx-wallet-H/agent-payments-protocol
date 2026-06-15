@@ -10,6 +10,8 @@ The safe executor boundary is implemented in
 The MCP/API/plugin tool contracts are listed in
 `v2/agent/mcp-tool-contracts.ts` and documented in
 `docs/AGENT_MCP_TOOL_CONTRACTS.md`.
+The disabled-by-default adapter boundary is implemented in
+`v2/agent/mcp-tool-adapter.ts`.
 
 ## Current Services
 
@@ -90,6 +92,7 @@ Run:
 npm run smoke:agent-capability-registry
 npm run smoke:agent-capability-executor
 npm run smoke:agent-mcp-tool-contracts
+npm run smoke:agent-mcp-tool-adapter
 ```
 
 This verifies:
@@ -101,5 +104,6 @@ This verifies:
 - execute-like user text remains downgraded to read-only analysis.
 - executor results are safe, normalized, and never move money.
 - every current capability route has an explicit tool contract.
+- disabled contracts do not invoke a supplied adapter implementation.
 
 These smokes are included in `npm run verify:merge`.

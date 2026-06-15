@@ -1,4 +1,9 @@
 import type { AgentCapabilityRoute } from "./capability-registry";
+import {
+  runAgentMcpToolAdapterSafely,
+  type AgentMcpToolAdapter,
+  type AgentMcpToolAdapterResult
+} from "./mcp-tool-adapter";
 import { getAgentMcpToolContract, type AgentMcpToolContract } from "./mcp-tool-contracts";
 import type { AgentOrchestrationPlan } from "./orchestrator";
 
@@ -47,6 +52,8 @@ export interface AgentCapabilityExecutionResult {
   contractId?: string;
   toolName?: string;
   externalCallEnabled: false;
+  externalCallAttempted: false;
+  adapterStatus?: AgentMcpToolAdapterResult["status"];
   status: AgentCapabilityExecutionStatus;
   summary: string;
   moneyMoved: false;
@@ -57,7 +64,10 @@ export interface AgentCapabilityExecutionResult {
 }
 
 export interface AgentMcpCapabilityExecutor {
-  execute(request: AgentCapabilityExecutionRequest): Promise<AgentCapabilityExecutionResult>;
+  execute(
+    request: AgentCapabilityExecutionRequest,
+    context?: { adapter?: AgentMcpToolAdapter }
+  ): Promise<AgentCapabilityExecutionResult>;
 }
 
 export function buildAgentCapabilityExecutionRequest(input: {
@@ -105,9 +115,12 @@ export async function executeAgentCapability(input: {
   userText: string;
   walletAddress?: `0x${string}`;
   executor?: AgentMcpCapabilityExecutor;
+  adapter?: AgentMcpToolAdapter;
 }): Promise<AgentCapabilityExecutionResult> {
   const request = buildAgentCapabilityExecutionRequest(input);
-  return (input.executor || safeMockMcpExecutor).execute(request);
+  return (input.executor || safeMockMcpExecutor).execute(request, {
+    adapter: input.adapter
+  });
 }
 
 export async function executeAgentCapabilitySafely(input: {
@@ -115,6 +128,7 @@ export async function executeAgentCapabilitySafely(input: {
   userText: string;
   walletAddress?: `0x${string}`;
   executor?: AgentMcpCapabilityExecutor;
+  adapter?: AgentMcpToolAdapter;
 }): Promise<AgentCapabilityExecutionResult> {
   try {
     return await executeAgentCapability(input);
@@ -133,12 +147,24 @@ export async function executeAgentCapabilitySafely(input: {
 }
 
 export const safeMockMcpExecutor: AgentMcpCapabilityExecutor = {
-  async execute(request) {
+  async execute(request, context) {
+    const contract = getAgentMcpToolContract({
+      serviceId: request.serviceId,
+      route: request.route,
+      mode: request.mode
+    });
+    const adapterResult = await runAgentMcpToolAdapterSafely({
+      request,
+      contract,
+      adapter: context?.adapter
+    });
+
     if (request.capabilityStatus === "blocked") {
       return createResult(request, {
         status: "blocked",
         summary: request.capabilityReason,
         mcpCallStatus: "not_called",
+        adapterResult,
         payload: {
           reason: request.capabilityReason,
           externalCall: false
@@ -151,6 +177,7 @@ export const safeMockMcpExecutor: AgentMcpCapabilityExecutor = {
         status: "skipped",
         summary: "这一步由 HWallet 内部完成，不需要调用 MCP 服务。",
         mcpCallStatus: "not_called",
+        adapterResult,
         payload: {
           externalCall: false
         }
@@ -162,6 +189,7 @@ export const safeMockMcpExecutor: AgentMcpCapabilityExecutor = {
         status: "observed",
         summary: "已生成只读观察任务，等待接入真实 MCP 后可读取市场和链上数据。",
         mcpCallStatus: "mocked",
+        adapterResult,
         payload: {
           externalCall: false,
           mockOnly: true,
@@ -174,6 +202,7 @@ export const safeMockMcpExecutor: AgentMcpCapabilityExecutor = {
       status: "dry_run_completed",
       summary: "已生成模拟执行预览，当前不提交真实交易。",
       mcpCallStatus: "mocked",
+      adapterResult,
       payload: {
         externalCall: false,
         mockOnly: true,
@@ -189,6 +218,7 @@ function createResult(
     status: AgentCapabilityExecutionStatus;
     summary: string;
     mcpCallStatus: AgentCapabilityMcpCallStatus;
+    adapterResult?: AgentMcpToolAdapterResult;
     payload: Record<string, unknown>;
   }
 ): AgentCapabilityExecutionResult {
@@ -208,6 +238,8 @@ function createResult(
     contractId: contract?.id,
     toolName: contract?.toolName,
     externalCallEnabled: false,
+    externalCallAttempted: input.adapterResult?.externalCallAttempted || false,
+    adapterStatus: input.adapterResult?.status,
     status: input.status,
     summary: input.summary,
     moneyMoved: false,
@@ -215,6 +247,15 @@ function createResult(
     mcpCallStatus: input.mcpCallStatus,
     payload: {
       ...input.payload,
+      adapter: input.adapterResult
+        ? {
+            status: input.adapterResult.status,
+            summary: input.adapterResult.summary,
+            externalCallAttempted: input.adapterResult.externalCallAttempted,
+            moneyMoved: input.adapterResult.moneyMoved,
+            payload: input.adapterResult.payload
+          }
+        : undefined,
       toolContract: contract ? toPayloadContract(contract) : undefined
     },
     createdAt: request.createdAt

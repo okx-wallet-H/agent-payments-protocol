@@ -7,8 +7,10 @@ added one route at a time.
 Implementation:
 
 - Contract table: `v2/agent/mcp-tool-contracts.ts`
+- Adapter boundary: `v2/agent/mcp-tool-adapter.ts`
 - Safe executor: `v2/agent/mcp-capability-executor.ts`
 - Smoke gate: `npm run smoke:agent-mcp-tool-contracts`
+- Adapter smoke gate: `npm run smoke:agent-mcp-tool-adapter`
 
 ## Current Contract Stages
 
@@ -25,6 +27,22 @@ Every current contract has:
 
 This is intentional. The first integration pass can read or preview data, but
 cannot submit transactions or move funds.
+
+## Adapter Boundary
+
+`mcp-tool-adapter.ts` turns a contract and an orchestration request into a
+future MCP/API/plugin invocation. In the current MVP it returns one of these
+safe statuses:
+
+- `not_required`: HWallet handled the action internally.
+- `disabled`: the contract exists, but external calls are still off.
+- `blocked`: policy or wallet state blocks the route before adapter use.
+- `failed`: adapter execution failed without any money movement.
+
+The adapter boundary records `externalCallAttempted=false`,
+`liveExecutionEnabled=false`, and `moneyMoved=false` in every current result.
+Real MCP calls must not be attached until the corresponding contract is
+explicitly reviewed and enabled in code.
 
 ## Current Routes
 
@@ -64,6 +82,7 @@ Run:
 
 ```bash
 npm run smoke:agent-mcp-tool-contracts
+npm run smoke:agent-mcp-tool-adapter
 ```
 
 This verifies:
@@ -74,5 +93,6 @@ This verifies:
 - contracts do not require private keys;
 - executor results expose `contractId` and `toolName`;
 - sensitive auth fields stay in `redactedInputs`.
+- disabled contracts do not invoke a supplied adapter implementation.
 
-The smoke is included in `npm run verify:merge`.
+Both smokes are included in `npm run verify:merge`.
