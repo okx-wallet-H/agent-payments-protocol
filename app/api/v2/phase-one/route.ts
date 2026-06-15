@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executeAgentCapabilitySafely, type AgentCapabilityExecutionResult } from "@/v2/agent/mcp-capability-executor";
 import { createAgentOrchestrationPlan } from "@/v2/agent/orchestrator";
 import { handlePhaseOneUserText } from "@/v2/agent/conversation-turn";
 import { PHASE_ONE_APP_SHELL } from "@/v2/app/app-shell";
@@ -137,6 +138,11 @@ export async function POST(request: Request) {
     walletStatusText: createWalletStatusReply(walletAfterTxVerification),
     walletFundText: walletTxText || createWalletFundReply(walletAfterTxVerification)
   });
+  const capabilityResult = await executeAgentCapabilitySafely({
+    userText: text,
+    walletAddress: walletAfterTxVerification.receiveAddress,
+    orchestration
+  });
 
   const turn = handlePhaseOneUserText({
     userText: text,
@@ -205,6 +211,7 @@ export async function POST(request: Request) {
     walletStatus: walletAfterTxVerification.status,
     submittedTxHash,
     orchestration,
+    capabilityResult,
     turnId: turn.id
   });
 
@@ -217,7 +224,8 @@ export async function POST(request: Request) {
       goalType: orchestration.goalType,
       progressHint: orchestration.progressHint,
       capability: orchestration.capability
-    }
+    },
+    capabilityResult
   }, { status: 201 });
 }
 
@@ -227,6 +235,7 @@ async function saveOrchestrationRecord(input: {
   walletStatus: string;
   submittedTxHash?: `0x${string}`;
   orchestration: Awaited<ReturnType<typeof createAgentOrchestrationPlan>>;
+  capabilityResult?: AgentCapabilityExecutionResult;
   turnId: string;
 }) {
   const status = input.orchestration.capability.onchainSkill.status === "blocked" ? "blocked" : "completed";
@@ -246,6 +255,7 @@ async function saveOrchestrationRecord(input: {
       action: input.orchestration.action,
       goalType: input.orchestration.goalType,
       progressHint: input.orchestration.progressHint,
+      capabilityResult: input.capabilityResult,
       moneyMoved: false
     },
     finishedAt
