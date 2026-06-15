@@ -56,6 +56,9 @@ assert(home.home?.type === "mobile_home_view", "device API returns mobile home")
 assert(sameHex(home.wallet?.address, walletAddress), "device API binds HWallet address");
 assert(home.wallet?.vault?.userVisibleAddress === false, "device API keeps internal vault address hidden");
 assert(home.wallet?.policy?.liveExecutionEnabled === false, "device API keeps live execution disabled");
+if (auth.accessControl?.requirePrivyToken === true && accessToken) {
+  await assertBearerTokenOwnsExplicitUserId();
+}
 
 const recharge = await postJson("/api/v2/phase-one", {
   userId,
@@ -225,6 +228,17 @@ async function assertMissingPrivyTokenIsRejected() {
   );
   assert(response.status === 401, "device API rejects missing Privy access token");
   assert(data?.error === "Missing Privy access token", "device API returns the expected missing-token error");
+}
+
+async function assertBearerTokenOwnsExplicitUserId() {
+  const spoofedUserId = `${userId}-spoofed`;
+  const spoofedHome = await getJson(
+    `/api/v2/mobile/home?userId=${encodeURIComponent(spoofedUserId)}&walletAddress=${encodeURIComponent(walletAddress)}`
+  );
+  assert(spoofedHome.home?.type === "mobile_home_view", "device API accepts token-owned session with spoofed explicit userId");
+  assert(sameHex(spoofedHome.wallet?.address, walletAddress), "device API keeps token-owned HWallet address during spoofed userId probe");
+  assert(Boolean(spoofedHome.wallet?.userId), "device API returns token-owned user id during spoofed userId probe");
+  assert(spoofedHome.wallet?.userId !== spoofedUserId, "device API ignores spoofed explicit userId when Privy token is present");
 }
 
 function createHeaders(rawHeaders = {}, options = {}) {
