@@ -15,6 +15,7 @@ const requiredScripts = [
   "smoke:hwallet-dual-api:live",
   "smoke:hwallet-dual-observation:live",
   "smoke:hwallet-postgres-api:live",
+  "smoke:hwallet-postgres-performance:live",
   "smoke:staging-readiness",
   "smoke:staging-server",
   "smoke:staging-storage-summary",
@@ -41,6 +42,7 @@ assertIncludes(storageMigration, "npm run smoke:supabase-cutover-safety", "stora
 assertIncludes(storageMigration, "npm run smoke:supabase-closeout", "storage migration documents live closeout gate");
 assertIncludes(storageMigration, "smoke:hwallet-dual-observation:live", "storage migration documents dual observation smoke");
 assertIncludes(storageMigration, "smoke:hwallet-postgres-api:live", "storage migration documents postgres API smoke");
+assertIncludes(storageMigration, "smoke:hwallet-postgres-performance:live", "storage migration documents postgres performance smoke");
 checks.push("storage migration documents required validation gates");
 
 assertPattern(storageMigration, /\bpg_dump\b|managed Supabase backup/i, "storage migration documents backup before cutover");

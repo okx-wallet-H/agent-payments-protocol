@@ -192,7 +192,21 @@ HWALLET_SESSION_STORE=postgres npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
 ```
 
-7. Roll back immediately if login, wallet binding, recharge, tx verification,
+7. Run the postgres performance gate before promoting the switch beyond staging:
+
+```bash
+HWALLET_SESSION_STORE=postgres npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-performance:live
+```
+
+The default performance thresholds are intentionally conservative for early
+Supabase pooler testing: core write endpoints must finish within 25 seconds,
+read endpoints within 10 seconds, and the full smoke within 120 seconds. Tighten
+`HWALLET_POSTGRES_PERF_MAX_ENDPOINT_MS`,
+`HWALLET_POSTGRES_PERF_MAX_READ_ENDPOINT_MS`, and
+`HWALLET_POSTGRES_PERF_MAX_TOTAL_MS` before a public launch.
+
+8. Roll back immediately if login, wallet binding, recharge, tx verification,
 Agent memory, audit, or record readback fails:
 
 ```bash
