@@ -494,6 +494,8 @@ export interface V2AgentCapabilityExecutionResult {
   contractId?: string;
   toolName?: string;
   externalCallEnabled: false;
+  externalCallAttempted: false;
+  adapterStatus?: "not_required" | "disabled" | "blocked" | "ready" | "failed";
   status: "skipped" | "observed" | "dry_run_completed" | "blocked" | "failed";
   summary: string;
   moneyMoved: false;
