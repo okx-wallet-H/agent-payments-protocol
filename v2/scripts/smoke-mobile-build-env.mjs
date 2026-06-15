@@ -25,15 +25,24 @@ const privyClientConfigured = Boolean(process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID ||
 
 check(Boolean(mobilePackage.dependencies?.expo), "Expo dependency is configured");
 check(String(mobilePackage.dependencies?.expo || "").includes("56."), "Expo SDK 56 dependency is pinned");
+check(Boolean(mobilePackage.dependencies?.["expo-updates"]), "Expo Updates dependency is configured");
 check(Boolean(mobilePackage.devDependencies?.["eas-cli"] || mobilePackage.dependencies?.["eas-cli"]), "EAS CLI package is configured");
+check(scriptTargetsChannel(mobilePackage.scripts?.["update:preview"], "preview"), "EAS preview update script is configured");
+check(scriptTargetsChannel(mobilePackage.scripts?.["update:production"], "production"), "EAS production update script is configured");
 check(expoConfig.orientation === "portrait", "mobile app is locked to portrait orientation");
 check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
 check(Boolean(expoConfig.ios?.bundleIdentifier), "iOS bundle identifier is configured");
 check(Boolean(expoConfig.android?.package), "Android package name is configured");
+check(isExpoUpdatesUrl(expoConfig.updates?.url, easProjectId), "EAS Update URL is configured");
+check(expoConfig.runtimeVersion?.policy === "appVersion", "EAS Update runtime version uses app version policy");
 check(Boolean(easConfig.build?.development), "EAS development profile exists");
 check(Boolean(easConfig.build?.["development-staging"]), "EAS staging development profile exists");
 check(Boolean(easConfig.build?.preview), "EAS preview profile exists");
 check(Boolean(easConfig.build?.production), "EAS production profile exists");
+check(easConfig.build?.development?.channel === "development", "EAS development update channel is configured");
+check(easConfig.build?.["development-staging"]?.channel === "development-staging", "EAS staging development update channel is configured");
+check(easConfig.build?.preview?.channel === "preview", "EAS preview update channel is configured");
+check(easConfig.build?.production?.channel === "production", "EAS production update channel is configured");
 check(Boolean(easConfig.build?.development?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS development API base URL is configured");
 check(Boolean(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS staging development API base URL is configured");
 check(Boolean(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS preview API base URL is configured");
@@ -140,7 +149,19 @@ function classifyApiBaseUrl(url) {
 }
 
 function isPlaceholderEasProject(value) {
-  return !value || value === "replace-with-eas-project-id";
+  return !value || value === "replace-with-eas-project-id" || value === "00000000-0000-0000-0000-000000000000";
+}
+
+function isExpoUpdatesUrl(value, projectId) {
+  if (!value || isPlaceholderEasProject(projectId)) return false;
+  return value === `https://u.expo.dev/${projectId}`;
+}
+
+function scriptTargetsChannel(value, channel) {
+  return typeof value === "string"
+    && value.includes("eas update")
+    && value.includes(`--channel ${channel}`)
+    && value.includes("--environment");
 }
 
 function usesExampleApi(value) {

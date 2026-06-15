@@ -21,6 +21,9 @@
     "build:android:preview": "eas build --platform android --profile preview",
     "build:ios": "eas build --platform ios --profile production",
     "build:android": "eas build --platform android --profile production",
+    "update:development-staging": "eas update --channel development-staging --environment preview",
+    "update:preview": "eas update --channel preview --environment preview",
+    "update:production": "eas update --channel production --environment production",
     "submit:ios": "eas submit --platform ios --profile production",
     "submit:android": "eas submit --platform android --profile production"
   },
@@ -41,6 +44,7 @@
     "expo-linking": "~56.0.13",
     "expo-secure-store": "~56.0.4",
     "expo-status-bar": "~56.0.4",
+    "expo-updates": "~56.0.19",
     "expo-web-browser": "~56.0.5",
     "fast-text-encoding": "^1.0.6",
     "react": "19.2.3",
