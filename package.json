@@ -13,6 +13,7 @@
     "smoke:hwallet-postgres-session": "node v2/scripts/smoke-hwallet-postgres-session-store.mjs",
     "smoke:hwallet-postgres-session:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-postgres-session-live.mjs",
     "smoke:hwallet-postgres-api:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-postgres-api-live.mjs",
+    "smoke:hwallet-postgres-performance:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-postgres-performance-live.mjs",
     "smoke:hwallet-dual-api:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-dual-api-live.mjs",
     "smoke:hwallet-dual-observation:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-dual-observation-live.mjs",
     "smoke:mvp": "node scripts/smoke-mvp.mjs",

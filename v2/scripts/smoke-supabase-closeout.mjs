@@ -34,6 +34,7 @@ const requiredScripts = [
   "smoke:hwallet-dual-api:live",
   "smoke:hwallet-dual-observation:live",
   "smoke:hwallet-postgres-api:live",
+  "smoke:hwallet-postgres-performance:live",
   "smoke:audit-timeline:live",
   "smoke:phase-one-records:live",
   "smoke:agent-action-store:live",
