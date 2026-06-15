@@ -483,6 +483,23 @@ export interface V2AgentOrchestration {
   capability: V2AgentCapabilityGate;
 }
 
+export interface V2AgentCapabilityExecutionResult {
+  requestId: string;
+  serviceId: "hwallet-core" | "okx-onchainos-skills" | "okx-outcomes" | "polymarket-plugin";
+  serviceKind: "internal" | "mcp_skill" | "api" | "plugin";
+  serviceLabel: string;
+  route: string;
+  mode: "none" | "observe" | "dry_run";
+  safety: "no_external_call" | "read_only" | "dry_run_only";
+  status: "skipped" | "observed" | "dry_run_completed" | "blocked" | "failed";
+  summary: string;
+  moneyMoved: false;
+  liveExecutionEnabled: false;
+  mcpCallStatus: "not_called" | "mocked";
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface V2WorldCupInfoPanel {
   type: "world_cup_info_panel";
   title: string;

@@ -9,6 +9,7 @@ import type {
   PredictionRouterInfo,
   TradeIntent,
   V2AuditTimelineEvent,
+  V2AgentCapabilityExecutionResult,
   V2MarketSnapshot,
   V2AgentOrchestration,
   V2MobileAgentMemory,
@@ -46,6 +47,7 @@ export interface ApiClient {
     mobileTurn: V2MobileChatTurn;
     wallet?: V2WalletContext;
     orchestration?: V2AgentOrchestration;
+    capabilityResult?: V2AgentCapabilityExecutionResult;
   }>;
   runV2Action(input: {
     action: "simulate" | "track" | "build_strategy";
@@ -248,7 +250,12 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       }, getAccessToken);
     },
     async sendV2Chat(text, userId, walletAddress, candidateMarket) {
-      return request<{ mobileTurn: V2MobileChatTurn; wallet?: V2WalletContext; orchestration?: V2AgentOrchestration }>(cleanBaseUrl, "/api/v2/phase-one", {
+      return request<{
+        mobileTurn: V2MobileChatTurn;
+        wallet?: V2WalletContext;
+        orchestration?: V2AgentOrchestration;
+        capabilityResult?: V2AgentCapabilityExecutionResult;
+      }>(cleanBaseUrl, "/api/v2/phase-one", {
         method: "POST",
         body: JSON.stringify({ text, userId, walletAddress, candidateMarket })
       }, getAccessToken);

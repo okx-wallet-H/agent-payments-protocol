@@ -5,6 +5,8 @@ memory, and audit as the product core. External MCP services, Skills, plugins,
 and APIs sit behind the Agent capability registry.
 
 The registry is implemented in `v2/agent/capability-registry.ts`.
+The safe executor boundary is implemented in
+`v2/agent/mcp-capability-executor.ts`.
 
 ## Current Services
 
@@ -46,12 +48,29 @@ This lets the App show or hide future service details without changing wallet
 logic, and lets audit records explain which service lane the Agent planned to
 use.
 
+## Safe Executor Boundary
+
+`mcp-capability-executor.ts` converts an orchestration plan into a normalized
+execution result:
+
+- internal wallet actions are marked `skipped` and do not call MCP;
+- read-only routes are marked `observed`;
+- simulation routes are marked `dry_run_completed`;
+- blocked policy or wallet states are marked `blocked`;
+- every result keeps `moneyMoved=false` and `liveExecutionEnabled=false`.
+
+The current executor is a safe mock. It does not call external MCP services,
+submit transactions, or move funds. When real OKX / plugin MCP tools are
+provided, they should be attached behind this executor interface without
+changing HWallet wallet binding, memory, or audit flow.
+
 ## Validation
 
 Run:
 
 ```bash
 npm run smoke:agent-capability-registry
+npm run smoke:agent-capability-executor
 ```
 
 This verifies:
@@ -61,5 +80,6 @@ This verifies:
 - OKX Outcomes routes are read-only;
 - Polymarket plugin routes are dry-run only;
 - execute-like user text remains downgraded to read-only analysis.
+- executor results are safe, normalized, and never move money.
 
-The smoke is included in `npm run verify:merge`.
+Both smokes are included in `npm run verify:merge`.
