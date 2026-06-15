@@ -22,6 +22,7 @@
     "smoke:staging-readiness": "STAGING_READINESS=true NODE_ENV=production AGENT_REQUIRE_PRIVY_TOKEN=true AGENT_REQUIRE_OWNER=true HWALLET_SESSION_STORE=postgres npm run smoke:production-readiness",
     "smoke:staging-server": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-staging-server.mjs",
     "smoke:staging-storage-summary": "node v2/scripts/smoke-staging-storage-summary.mjs",
+    "smoke:staging-auth-surface": "node v2/scripts/smoke-staging-auth-surface.mjs",
     "smoke:mobile-staging-env": "MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env",
     "smoke:mobile-build-env": "node v2/scripts/smoke-mobile-build-env.mjs",
     "smoke:mobile-device-hwallet:live": "node v2/scripts/smoke-mobile-device-hwallet-live.mjs",
