@@ -516,7 +516,7 @@ function AgentTab({
           <TextInput
             value={input}
             onChangeText={setInput}
-            placeholder="向 Agent 发送消息"
+            placeholder="和 Agent 说一句"
             placeholderTextColor="#817a72"
             style={styles.composerInput}
             returnKeyType="send"
@@ -1474,6 +1474,7 @@ function HWalletTab({
   onVerifyTx: (txHash: string) => void;
 }) {
   const [txHash, setTxHash] = useState("");
+  const [addressCopied, setAddressCopied] = useState(false);
   const entryState = createHWalletEntryState({
     busy,
     isProvisioning,
@@ -1504,6 +1505,8 @@ function HWalletTab({
   async function copyWalletAddress() {
     if (!displayAddress) return;
     await Clipboard.setStringAsync(displayAddress);
+    setAddressCopied(true);
+    setTimeout(() => setAddressCopied(false), 1800);
     Alert.alert("已复制", "HWallet 地址已复制。");
   }
 
@@ -1602,7 +1605,9 @@ function HWalletTab({
           onPress={copyWalletAddress}
         >
           <Ionicons name="copy-outline" size={17} color={canUseReceiveAddress ? "#fff" : "#9f9992"} />
-          <Text style={[styles.receiveCopyText, !canUseReceiveAddress ? styles.hWalletDisabledText : null]}>复制地址</Text>
+          <Text style={[styles.receiveCopyText, !canUseReceiveAddress ? styles.hWalletDisabledText : null]}>
+            {addressCopied ? "已复制" : "复制地址"}
+          </Text>
         </Pressable>
       </View>
 
