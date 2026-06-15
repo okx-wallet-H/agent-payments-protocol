@@ -95,6 +95,13 @@ network, run:
 MOBILE_DEVICE_API_BASE_URL=http://YOUR_LAN_IP:3000 npm run smoke:mobile-device-hwallet:live
 ```
 
+For staging or any server with Privy enforcement enabled, run the same command
+first without a token to verify the API rejects unauthenticated device traffic.
+To run the full authenticated HWallet path, provide a short-lived Privy access
+token through `MOBILE_DEVICE_PRIVY_ACCESS_TOKEN`; provide
+`MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN` as well when validating second-user
+isolation against a protected server.
+
 This live smoke verifies the HWallet path that the phone will use: bind wallet,
 show one receive address, verify a transaction hash, write wallet records,
 update audit/memory, keep other users isolated, and continue into the Agent
