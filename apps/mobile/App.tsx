@@ -36,6 +36,8 @@ const defaultApiBaseUrl =
 
 const privyAppId = process.env.EXPO_PUBLIC_PRIVY_APP_ID;
 const privyClientId = process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID;
+const usePreviewUi = process.env.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true";
+const useV2Ui = process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI !== "false";
 
 const xLayerChain = {
   id: 196,
@@ -50,11 +52,11 @@ const xLayerChain = {
 };
 
 export default function App() {
-  if (process.env.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true") {
+  if (usePreviewUi) {
     return <V2AgentWalletPreview />;
   }
 
-  if (Platform.OS === "web" && process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true") {
+  if (Platform.OS === "web" && useV2Ui) {
     return <V2AgentWalletPreview />;
   }
 
@@ -79,7 +81,7 @@ export default function App() {
 }
 
 function AgentWalletApp() {
-  if (process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true") {
+  if (useV2Ui) {
     return <V2AgentWalletScreen apiBaseUrl={defaultApiBaseUrl} />;
   }
 
