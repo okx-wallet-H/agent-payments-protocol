@@ -50,6 +50,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Add rate limiting for chat and action endpoints.
 - Add request logging without private keys, access tokens, or raw secrets.
 - Run a full fresh-user test: login, home load, recharge prompt, World Cup prompt, track, strategy, simulate, records.
+- Run the real-device multi-user HWallet QA checklist in `docs/HWALLET_DEVICE_MULTI_USER_QA.md`: User A login, User B login, switch back to User A, signed-out boundary, copy feedback, tx verification, memory, and audit.
 - Run a mobile visual pass in 390x844 and simulator sizes: Agent empty chat, World Cup campaign page, World Cup Explore categories, Mine page, bottom fixed CTA behavior, and World Cup Home return behavior.
 
 Local v2 smoke commands:
