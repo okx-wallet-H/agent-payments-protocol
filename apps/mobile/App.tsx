@@ -174,8 +174,8 @@ function AgentWalletApp() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>OKX X Layer · Mobile MVP</Text>
-          <Text style={styles.title}>AI 帮你看机会</Text>
+          <Text style={styles.eyebrow}>HWallet · Agent Wallet</Text>
+          <Text style={styles.title}>Agent 的钱包入口</Text>
           <View style={styles.chainBadge}>
             <Ionicons name="flash" size={15} color="#0d7a53" />
             <Text style={styles.chainText}>X Layer Mainnet · Chain ID 196 · OKB Gas</Text>
@@ -205,7 +205,7 @@ function AgentWalletApp() {
           </View>
         </Card>
 
-        <Card title="Privy 登录">
+        <Card title="邮箱登录">
           {!isReady ? (
             <Text style={styles.body}>Privy 初始化中...</Text>
           ) : user ? (
@@ -281,8 +281,8 @@ function AgentWalletApp() {
         </Card>
 
         {user ? (
-          <Card title="创建 AI 助手">
-          <Text style={styles.label}>助手名称</Text>
+          <Card title="Agent 会话">
+          <Text style={styles.label}>会话名称</Text>
           <TextInput value={agentName} onChangeText={setAgentName} style={styles.input} />
           <ActionButton
             icon="add-circle"
@@ -313,14 +313,14 @@ function AgentWalletApp() {
           </Card>
         ) : (
           <Card title="开始">
-            <Text style={styles.body}>先用邮箱注册/登录，系统会帮你准备钱包。AI 不接触私钥，也不能绕过你的确认动用资金。</Text>
+            <Text style={styles.body}>先用邮箱注册/登录，系统会帮你准备钱包地址，后续充值和 Agent 记录都从这里进入。</Text>
           </Card>
         )}
 
         {selected ? (
           <>
-            <Card title="AI 小金库">
-              <Text style={styles.label}>绑定 Vault 地址，可留空生成占位 AA 金库</Text>
+            <Card title="收款地址">
+              <Text style={styles.label}>绑定 HWallet 收款地址，可留空先体验</Text>
               <TextInput
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -331,7 +331,7 @@ function AgentWalletApp() {
               />
               <ActionButton
                 icon="wallet"
-                label="创建/绑定 Vault"
+                label="创建/绑定地址"
                 disabled={busy}
                 onPress={() =>
                   run("Create Vault", async () => {
@@ -557,7 +557,7 @@ function AgentWalletApp() {
                     <Text style={styles.resultStatus}>{latestPreview.safetySummary.title}</Text>
                     <Text style={styles.body}>
                       {latestPreview.safetySummary.modeLabel} · {latestPreview.safetySummary.amountLabel} ·
-                      {latestPreview.safetySummary.willMoveFunds ? " 会动用小金库" : " 不会真实动钱"}
+                      {latestPreview.safetySummary.willMoveFunds ? " 会进入资金预览" : " 不会真实动钱"}
                     </Text>
                     <Text style={styles.muted}>风险等级：{humanRiskLevel(latestPreview.safetySummary.riskLevel)}</Text>
                     {latestPreview.safetySummary.userChecklist.map((item) => (
@@ -628,7 +628,7 @@ function AgentWalletApp() {
           </>
         ) : (
           <Card title="开始">
-            <Text style={styles.body}>先创建一个 AI 助手，然后准备小金库和安全预算。</Text>
+            <Text style={styles.body}>先准备 HWallet 会话，再同步收款地址和安全记录。</Text>
           </Card>
         )}
       </ScrollView>
@@ -750,21 +750,21 @@ function getMobileJourney(input: {
     {
       index: 1,
       label: "登录",
-      caption: "邮箱进入，钱包自动准备",
+      caption: "邮箱进入，钱包自动同步",
       done: input.authenticated,
       current: !input.authenticated
     },
     {
       index: 2,
-      label: "AI 助手",
-      caption: "给你的 AI 开一个账户",
+      label: "HWallet",
+      caption: "为当前账号准备会话",
       done: Boolean(input.selected),
       current: input.authenticated && !input.selected
     },
     {
       index: 3,
-      label: "小金库",
-      caption: "只给 AI 小额预算",
+      label: "收款地址",
+      caption: "同步你的专属地址",
       done: Boolean(input.selected?.vault),
       current: Boolean(input.selected && !input.selected.vault)
     },
@@ -793,22 +793,22 @@ function getMobileJourney(input: {
 
   if (!input.authenticated) {
     return {
-      title: "先登录，系统会帮你准备钱包",
-      description: "你只需要邮箱进入。AI 不接触私钥，也不能绕过你的确认动钱。",
+      title: "登录后进入 HWallet",
+      description: "你只需要邮箱进入。系统会同步钱包地址，Agent 会从这里识别资金和记录操作。",
       steps
     };
   }
   if (!input.selected) {
     return {
-      title: "创建你的第一个 AI 助手",
-      description: "它会负责看机会、出方案、讲风险，但不会直接动用资金。",
+      title: "准备 HWallet 会话",
+      description: "HWallet 会把当前账号、钱包地址和 Agent 对话绑定到同一个安全会话里。",
       steps
     };
   }
   if (!input.selected.vault) {
     return {
-      title: "给 AI 准备一个小金库",
-      description: "第一版可以先生成地址体验流程，真实充值以后再打开。",
+      title: "同步你的收款地址",
+      description: "第一版先打通收款地址、充值识别和审计记录，策略执行先保持关闭。",
       steps
     };
   }
