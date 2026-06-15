@@ -319,7 +319,7 @@ export function V2AgentWalletPreview() {
                 <TextInput
                   value={input}
                   onChangeText={setInput}
-                  placeholder="向 Agent 发送消息"
+                  placeholder="和 Agent 说一句"
                   placeholderTextColor="#817a72"
                   style={styles.composerInput}
                 />
