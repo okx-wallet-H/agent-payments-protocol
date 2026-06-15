@@ -491,6 +491,9 @@ export interface V2AgentCapabilityExecutionResult {
   route: string;
   mode: "none" | "observe" | "dry_run";
   safety: "no_external_call" | "read_only" | "dry_run_only";
+  contractId?: string;
+  toolName?: string;
+  externalCallEnabled: false;
   status: "skipped" | "observed" | "dry_run_completed" | "blocked" | "failed";
   summary: string;
   moneyMoved: false;

@@ -7,6 +7,9 @@ and APIs sit behind the Agent capability registry.
 The registry is implemented in `v2/agent/capability-registry.ts`.
 The safe executor boundary is implemented in
 `v2/agent/mcp-capability-executor.ts`.
+The MCP/API/plugin tool contracts are listed in
+`v2/agent/mcp-tool-contracts.ts` and documented in
+`docs/AGENT_MCP_TOOL_CONTRACTS.md`.
 
 ## Current Services
 
@@ -64,6 +67,21 @@ submit transactions, or move funds. When real OKX / plugin MCP tools are
 provided, they should be attached behind this executor interface without
 changing HWallet wallet binding, memory, or audit flow.
 
+## Tool Contract Table
+
+Before a real MCP/API/plugin route is enabled, it must have a contract that
+defines:
+
+- exact tool name;
+- required, optional, and redacted input fields;
+- normalized output fields;
+- user-safe failure fallback;
+- `externalCallEnabled=false`, `liveExecutionEnabled=false`, and
+  `moneyMovementEnabled=false` for the current MVP stage.
+
+The executor attaches `contractId` and `toolName` to each `capabilityResult`
+so audit and future operator tooling can explain what the Agent planned to use.
+
 ## Validation
 
 Run:
@@ -71,6 +89,7 @@ Run:
 ```bash
 npm run smoke:agent-capability-registry
 npm run smoke:agent-capability-executor
+npm run smoke:agent-mcp-tool-contracts
 ```
 
 This verifies:
@@ -81,5 +100,6 @@ This verifies:
 - Polymarket plugin routes are dry-run only;
 - execute-like user text remains downgraded to read-only analysis.
 - executor results are safe, normalized, and never move money.
+- every current capability route has an explicit tool contract.
 
-Both smokes are included in `npm run verify:merge`.
+These smokes are included in `npm run verify:merge`.
