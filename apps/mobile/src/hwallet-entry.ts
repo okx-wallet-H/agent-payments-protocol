@@ -35,9 +35,10 @@ export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletE
       !input.isProvisioning &&
       !canUseReceiveAddress
   );
-  const walletNotice = input.sessionError ||
+  const rawWalletNotice = input.sessionError ||
     (input.privyStatus.kind === "binding_mismatch" ? input.privyStatus.detail : undefined) ||
     (!canUseReceiveAddress ? input.provisionError : undefined);
+  const walletNotice = createFriendlyWalletNotice(rawWalletNotice);
 
   return {
     canAskAgent: !input.busy && !isSignedOut,
@@ -52,4 +53,16 @@ export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletE
     walletNotice,
     walletTxCheckDisabled: Boolean(input.busy || !canUseReceiveAddress)
   };
+}
+
+function createFriendlyWalletNotice(notice?: string): string | undefined {
+  const normalized = notice?.trim();
+  if (!normalized) return undefined;
+
+  const lower = normalized.toLowerCase();
+  if (lower.includes("privy") || lower.includes("access token") || lower.includes("unauthorized")) {
+    return "登录状态正在同步，请稍后再试。";
+  }
+
+  return normalized;
 }

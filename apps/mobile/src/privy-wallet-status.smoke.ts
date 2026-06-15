@@ -132,6 +132,25 @@ const failedProvisionEntry = createHWalletEntryState({
 assert(failedProvisionEntry.canRetryProvisioning, "failed HWallet entry can retry wallet creation");
 assert(failedProvisionEntry.walletNotice === "failed", "failed HWallet entry surfaces provision error");
 
+const authNoticeEntry = createHWalletEntryState({
+  privyStatus: readyStatus,
+  sessionError: "Missing Privy access token",
+  walletAddress: "0x2222222222222222222222222222222222222222"
+});
+const authNotice = authNoticeEntry.walletNotice || "";
+assert(authNotice === "登录状态正在同步，请稍后再试。", "HWallet entry hides raw auth session error");
+assert(!authNotice.includes("Privy"), "HWallet entry hides Privy wording from auth notice");
+assert(!authNotice.includes("access token"), "HWallet entry hides access-token wording from auth notice");
+
+const authProvisionNoticeEntry = createHWalletEntryState({
+  privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: true, provisionError: "Invalid Privy access token" }),
+  provisionError: "Invalid Privy access token"
+});
+assert(
+  authProvisionNoticeEntry.walletNotice === "登录状态正在同步，请稍后再试。",
+  "HWallet entry hides raw auth provision error"
+);
+
 const creatingEntry = createHWalletEntryState({
   isProvisioning: true,
   privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: true, isProvisioning: true })
