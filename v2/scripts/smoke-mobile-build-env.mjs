@@ -12,6 +12,7 @@ const checks = [];
 const warnings = [];
 
 const mobilePackage = await readJson("apps/mobile/package.json");
+const mobileAppSource = await readFile("apps/mobile/App.tsx", "utf8");
 const appConfig = await readJson("apps/mobile/app.json");
 const easConfig = await readJson("apps/mobile/eas.json");
 
@@ -40,6 +41,7 @@ check(scriptIncludesEnv(stagingUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=tru
 check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS preview update ships V2 mobile UI");
 check(scriptIncludesEnv(productionUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS production update ships V2 mobile UI");
 check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true"), "EAS preview update ships human visual preview UI");
+check(mobileAppSource.includes('process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI !== "false"'), "native app defaults to V2 HWallet UI");
 check(expoConfig.orientation === "portrait", "mobile app is locked to portrait orientation");
 check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
 check(Boolean(expoConfig.ios?.bundleIdentifier), "iOS bundle identifier is configured");
