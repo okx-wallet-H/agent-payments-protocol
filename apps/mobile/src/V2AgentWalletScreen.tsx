@@ -1476,6 +1476,7 @@ function HWalletTab({
 }) {
   const [txHash, setTxHash] = useState("");
   const [addressCopied, setAddressCopied] = useState(false);
+  const addressCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entryState = createHWalletEntryState({
     busy,
     isProvisioning,
@@ -1503,12 +1504,26 @@ function HWalletTab({
   const walletNotice = entryState.walletNotice;
   const walletTxCheckDisabled = entryState.walletTxCheckDisabled;
 
+  useEffect(() => {
+    return () => {
+      if (addressCopyResetRef.current) {
+        clearTimeout(addressCopyResetRef.current);
+      }
+    };
+  }, []);
+
+  function flashAddressCopied() {
+    if (addressCopyResetRef.current) {
+      clearTimeout(addressCopyResetRef.current);
+    }
+    setAddressCopied(true);
+    addressCopyResetRef.current = setTimeout(() => setAddressCopied(false), 2200);
+  }
+
   async function copyWalletAddress() {
     if (!displayAddress) return;
     await Clipboard.setStringAsync(displayAddress);
-    setAddressCopied(true);
-    setTimeout(() => setAddressCopied(false), 1800);
-    Alert.alert("已复制", "HWallet 地址已复制。");
+    flashAddressCopied();
   }
 
   async function pasteTxHashFromClipboard() {
@@ -1616,6 +1631,7 @@ function HWalletTab({
         busy={busy}
         canCopy={canUseReceiveAddress}
         canVerify={canUseReceiveAddress}
+        copied={addressCopied}
         onCopy={copyWalletAddress}
         onPasteAndVerify={pasteAndVerifyTxFromClipboard}
         onRefresh={onRefresh}
@@ -1873,6 +1889,7 @@ function HWalletActionStrip({
   busy,
   canCopy,
   canVerify,
+  copied,
   onCopy,
   onPasteAndVerify,
   onRefresh,
@@ -1881,6 +1898,7 @@ function HWalletActionStrip({
   busy?: boolean;
   canCopy: boolean;
   canVerify: boolean;
+  copied?: boolean;
   onCopy: () => void;
   onPasteAndVerify: () => void;
   onRefresh: () => void;
@@ -1890,8 +1908,8 @@ function HWalletActionStrip({
     <View style={styles.hWalletActionStrip}>
       <HWalletActionButton
         disabled={!canCopy}
-        icon="copy-outline"
-        label="收款"
+        icon={copied ? "checkmark-circle-outline" : "copy-outline"}
+        label={copied ? "已复制" : "收款"}
         onPress={onCopy}
       />
       <HWalletActionButton
@@ -2634,14 +2652,29 @@ function ReceiveCardMessage({
   onWallet: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const copiedResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const address = card.addresses[0];
+
+  useEffect(() => {
+    return () => {
+      if (copiedResetRef.current) {
+        clearTimeout(copiedResetRef.current);
+      }
+    };
+  }, []);
+
+  function flashCopied() {
+    if (copiedResetRef.current) {
+      clearTimeout(copiedResetRef.current);
+    }
+    setCopied(true);
+    copiedResetRef.current = setTimeout(() => setCopied(false), 2200);
+  }
 
   async function copyAddress() {
     if (!address?.address) return;
     await Clipboard.setStringAsync(address.address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-    Alert.alert("已复制", "充值地址已复制。");
+    flashCopied();
   }
 
   return (
