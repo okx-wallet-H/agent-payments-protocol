@@ -14,6 +14,7 @@ const requiredScripts = [
   "smoke:supabase-closeout",
   "smoke:hwallet-dual-api:live",
   "smoke:hwallet-dual-observation:live",
+  "smoke:hwallet-dual-consistency:live",
   "smoke:hwallet-postgres-api:live",
   "smoke:hwallet-postgres-performance:live",
   "smoke:staging-readiness",
@@ -41,6 +42,7 @@ checks.push("storage migration keeps staged jsonl/dual/postgres path");
 assertIncludes(storageMigration, "npm run smoke:supabase-cutover-safety", "storage migration documents static cutover gate");
 assertIncludes(storageMigration, "npm run smoke:supabase-closeout", "storage migration documents live closeout gate");
 assertIncludes(storageMigration, "smoke:hwallet-dual-observation:live", "storage migration documents dual observation smoke");
+assertIncludes(storageMigration, "smoke:hwallet-dual-consistency:live", "storage migration documents dual consistency smoke");
 assertIncludes(storageMigration, "smoke:hwallet-postgres-api:live", "storage migration documents postgres API smoke");
 assertIncludes(storageMigration, "smoke:hwallet-postgres-performance:live", "storage migration documents postgres performance smoke");
 checks.push("storage migration documents required validation gates");

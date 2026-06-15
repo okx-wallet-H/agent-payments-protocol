@@ -140,6 +140,18 @@ AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-observati
 
 Use this before real-device observation. It verifies the user-facing App APIs and the Postgres mirror in the same run: wallet binding, recharge conversation, tx verification, tracking record, memory endpoint, audit endpoint, records endpoint, and user isolation.
 
+Live dual consistency command:
+
+```bash
+HWALLET_SESSION_STORE=dual npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-consistency:live
+```
+
+Use this after the dual observation smoke. It compares the JSONL read path with
+the Supabase mirror for the same user and same action: wallet binding, recharge
+chat, verified transfer, wallet record, tracking record, audit events,
+`money_moved=false`, knowledge notes, idempotency, and user isolation.
+
 Live Postgres-only API command:
 
 ```bash
@@ -172,9 +184,15 @@ npm run smoke:supabase-closeout
 ```bash
 HWALLET_SESSION_STORE=dual npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-observation:live
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-consistency:live
 ```
 
-5. Create a database backup before changing the read path. Use a managed
+5. Confirm the dual consistency gate is clean before changing the read path.
+If JSONL and Supabase disagree for wallet binding, transfer history, Agent
+records, audit events, or user isolation, keep `dual` mode and investigate the
+affected user before continuing.
+
+6. Create a database backup before changing the read path. Use a managed
 Supabase backup when available, or a local encrypted dump with a placeholder
 connection string:
 
@@ -185,14 +203,14 @@ pg_dump "$DATABASE_URL" --format=custom --file ./private-backups/hwallet-before-
 The backup directory must stay outside Git. Never paste the real `DATABASE_URL`
 into docs, logs, issue comments, or PR text.
 
-6. Switch one staging environment to `postgres` and run the App-facing readback:
+7. Switch one staging environment to `postgres` and run the App-facing readback:
 
 ```bash
 HWALLET_SESSION_STORE=postgres npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
 ```
 
-7. Run the postgres performance gate before promoting the switch beyond staging:
+8. Run the postgres performance gate before promoting the switch beyond staging:
 
 ```bash
 HWALLET_SESSION_STORE=postgres npm run dev
@@ -206,7 +224,7 @@ read endpoints within 10 seconds, and the full smoke within 120 seconds. Tighten
 `HWALLET_POSTGRES_PERF_MAX_READ_ENDPOINT_MS`, and
 `HWALLET_POSTGRES_PERF_MAX_TOTAL_MS` before a public launch.
 
-8. Roll back immediately if login, wallet binding, recharge, tx verification,
+9. Roll back immediately if login, wallet binding, recharge, tx verification,
 Agent memory, audit, or record readback fails:
 
 ```bash

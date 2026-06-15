@@ -16,6 +16,7 @@
     "smoke:hwallet-postgres-performance:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-postgres-performance-live.mjs",
     "smoke:hwallet-dual-api:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-dual-api-live.mjs",
     "smoke:hwallet-dual-observation:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-dual-observation-live.mjs",
+    "smoke:hwallet-dual-consistency:live": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-hwallet-dual-consistency-live.mjs",
     "smoke:mvp": "node scripts/smoke-mvp.mjs",
     "smoke:v2": "node v2/scripts/smoke-v2.mjs",
     "smoke:v2:auth": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-v2-auth.mjs",

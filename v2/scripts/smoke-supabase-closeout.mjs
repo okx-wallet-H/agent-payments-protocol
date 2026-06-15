@@ -33,6 +33,7 @@ const requiredScripts = [
   "smoke:hwallet-postgres-session:live",
   "smoke:hwallet-dual-api:live",
   "smoke:hwallet-dual-observation:live",
+  "smoke:hwallet-dual-consistency:live",
   "smoke:hwallet-postgres-api:live",
   "smoke:hwallet-postgres-performance:live",
   "smoke:audit-timeline:live",
