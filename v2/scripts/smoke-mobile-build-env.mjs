@@ -22,13 +22,24 @@ const parsedApiBaseUrl = parseUrl(apiBaseUrl);
 const apiBaseKind = classifyApiBaseUrl(parsedApiBaseUrl);
 const privyAppConfigured = Boolean(process.env.EXPO_PUBLIC_PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID);
 const privyClientConfigured = Boolean(process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID || process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID);
+const stagingUpdateScript = mobilePackage.scripts?.["update:development-staging"];
+const previewUpdateScript = mobilePackage.scripts?.["update:preview"];
+const productionUpdateScript = mobilePackage.scripts?.["update:production"];
 
 check(Boolean(mobilePackage.dependencies?.expo), "Expo dependency is configured");
 check(String(mobilePackage.dependencies?.expo || "").includes("56."), "Expo SDK 56 dependency is pinned");
 check(Boolean(mobilePackage.dependencies?.["expo-updates"]), "Expo Updates dependency is configured");
 check(Boolean(mobilePackage.devDependencies?.["eas-cli"] || mobilePackage.dependencies?.["eas-cli"]), "EAS CLI package is configured");
-check(scriptTargetsChannel(mobilePackage.scripts?.["update:preview"], "preview"), "EAS preview update script is configured");
-check(scriptTargetsChannel(mobilePackage.scripts?.["update:production"], "production"), "EAS production update script is configured");
+check(scriptTargetsChannel(stagingUpdateScript, "development-staging"), "EAS staging update script is configured");
+check(scriptTargetsChannel(previewUpdateScript, "preview"), "EAS preview update script is configured");
+check(scriptTargetsChannel(productionUpdateScript, "production"), "EAS production update script is configured");
+check(scriptIncludesEnv(stagingUpdateScript, "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip"), "EAS staging update uses public HWallet API URL");
+check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip"), "EAS preview update uses public HWallet API URL");
+check(scriptIncludesEnv(productionUpdateScript, "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip"), "EAS production update uses public HWallet API URL");
+check(scriptIncludesEnv(stagingUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS staging update ships V2 mobile UI");
+check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS preview update ships V2 mobile UI");
+check(scriptIncludesEnv(productionUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS production update ships V2 mobile UI");
+check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true"), "EAS preview update ships human visual preview UI");
 check(expoConfig.orientation === "portrait", "mobile app is locked to portrait orientation");
 check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
 check(Boolean(expoConfig.ios?.bundleIdentifier), "iOS bundle identifier is configured");
@@ -162,6 +173,10 @@ function scriptTargetsChannel(value, channel) {
     && value.includes("eas update")
     && value.includes(`--channel ${channel}`)
     && value.includes("--environment");
+}
+
+function scriptIncludesEnv(value, assignment) {
+  return typeof value === "string" && value.includes(assignment);
 }
 
 function usesExampleApi(value) {
