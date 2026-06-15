@@ -92,6 +92,7 @@ Run remote server readiness:
 
 ```sh
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-server
+STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-storage-summary
 ```
 
 Then update `apps/mobile/eas.json` preview and production

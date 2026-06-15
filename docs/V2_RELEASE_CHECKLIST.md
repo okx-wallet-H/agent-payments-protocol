@@ -71,6 +71,7 @@ Staging readiness gate:
 STAGING_READINESS=true npm run smoke:production-readiness
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readiness
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-server
+STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-storage-summary
 HWALLET_SESSION_STORE=postgres npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
 ```
@@ -78,6 +79,8 @@ AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:l
 The staging readiness smoke must not print secrets. It checks Privy token
 enforcement, owner guard, Postgres-only HWallet storage, table readiness, and
 that all live trading/broadcast switches remain closed for the MVP.
+The storage summary smoke is a read-only HTTPS check for the production storage
+shape; it prints only non-sensitive mode, table-count, and readiness fields.
 
 For physical-device builds, set `EXPO_PUBLIC_API_BASE_URL` to the reachable
 backend URL, for example the LAN URL during local testing or the staging HTTPS
