@@ -21,9 +21,9 @@
     "build:android:preview": "eas build --platform android --profile preview",
     "build:ios": "eas build --platform ios --profile production",
     "build:android": "eas build --platform android --profile production",
-    "update:development-staging": "eas update --channel development-staging --environment preview",
-    "update:preview": "eas update --channel preview --environment preview",
-    "update:production": "eas update --channel production --environment production",
+    "update:development-staging": "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip EXPO_PUBLIC_AGENT_WALLET_V2_UI=true eas update --channel development-staging --environment preview",
+    "update:preview": "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip EXPO_PUBLIC_AGENT_WALLET_V2_UI=true EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true eas update --channel preview --environment preview",
+    "update:production": "EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip EXPO_PUBLIC_AGENT_WALLET_V2_UI=true eas update --channel production --environment production",
     "submit:ios": "eas submit --platform ios --profile production",
     "submit:android": "eas submit --platform android --profile production"
   },
