@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 const screen = await readFile("apps/mobile/src/V2AgentWalletScreen.tsx", "utf8");
 const entryState = await readFile("apps/mobile/src/hwallet-entry.ts", "utf8");
 const statusSmoke = await readFile("apps/mobile/src/privy-wallet-status.smoke.ts", "utf8");
+const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 
 const checks = [];
 
@@ -37,6 +38,14 @@ assertIncludes(screen, "高级核对", "transaction hash check stays secondary")
 assertIncludes(screen, "到账会自动识别，哈希只用来核对单笔。", "hash check explains it is optional");
 assertIncludes(screen, "showTxCheck", "hash check stays collapsed unless opened");
 checks.push("hash verification remains optional, not required for normal receive flow");
+
+assertIncludes(deviceQa, "## Installed-App Regression Gate", "device QA includes installed-app regression gate");
+assertIncludes(deviceQa, "Confirm the App does not crash or return to the launcher.", "device QA checks no-crash HWallet render");
+assertIncludes(deviceQa, "Confirm User B receives a different short HWallet address than User A.", "device QA checks distinct user receive addresses");
+assertIncludes(deviceQa, "Switch back to User A and confirm User A's original HWallet address returns.", "device QA checks switch-back address restore");
+assertIncludes(deviceQa, "Copy feedback is visible before any transaction hash check.", "device QA checks copy feedback before hash check");
+assertIncludes(deviceQa, "The transaction hash check remains optional", "device QA keeps hash verification optional");
+checks.push("installed-app regression gate captures no-crash switching, distinct addresses, and copy feedback");
 
 console.log(JSON.stringify({
   ok: true,
