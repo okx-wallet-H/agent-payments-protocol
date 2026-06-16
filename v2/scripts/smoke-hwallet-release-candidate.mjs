@@ -10,6 +10,7 @@ const stagingDeployment = await readFile("docs/STAGING_SERVER_DEPLOYMENT.md", "u
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
 const deviceEvidenceExample = await readFile("docs/HWALLET_DEVICE_EVIDENCE.example.json", "utf8");
+const deviceEvidenceInit = await readFile("v2/scripts/init-hwallet-device-evidence.mjs", "utf8");
 const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
 const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet-live.mjs", "utf8");
@@ -30,6 +31,7 @@ const requiredScripts = [
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
   "smoke:hwallet-device-evidence",
+  "hwallet:device-evidence:init",
   "smoke:hwallet-staging-handoff",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-hwallet-ux",
@@ -61,6 +63,7 @@ assertOrder(releaseCandidate, "MOBILE_STAGING_READINESS=true", "MOBILE_DEVICE_AP
 assertPattern(releaseCandidate, /MOBILE_DEVICE_PRIVY_ACCESS_TOKEN/, "release gate documents primary Privy token");
 assertPattern(releaseCandidate, /MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN/, "release gate documents second-user Privy token");
 assertIncludes(releaseCandidate, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "release gate requires real device evidence");
+assertIncludes(releaseCandidate, "npm run hwallet:device-evidence:init", "release gate initializes local device evidence");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-staging-handoff", "release checklist includes staging handoff gate");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
@@ -68,11 +71,14 @@ checks.push("release checklist keeps HWallet candidate checks in safe order");
 
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-release-candidate", "staging deployment runs the release candidate gate");
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-staging-handoff", "staging deployment runs the staging handoff gate");
+assertIncludes(stagingDeployment, "npm run hwallet:device-evidence:init", "staging deployment initializes local device evidence");
 assertIncludes(stagingDeployment, "STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-auth-surface", "staging deployment keeps auth surface gate");
 assertIncludes(stagingDeployment, "Only after these pass", "staging deployment blocks builds before server gates pass");
 assertIncludes(easRunbook, "npm run smoke:hwallet-release-candidate", "EAS runbook requires the release candidate gate");
+assertIncludes(easRunbook, "npm run hwallet:device-evidence:init", "EAS runbook initializes local device evidence");
 assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface", "EAS runbook checks staging auth surface before OTA");
 assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
+assertIncludes(deviceQa, "npm run hwallet:device-evidence:init", "device QA initializes an ignored evidence file");
 assertIncludes(deviceQa, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device QA names the primary device token env");
 assertIncludes(deviceQa, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device QA names the second-user device token env");
 assertIncludes(deviceQa, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "device QA validates redacted evidence file");
@@ -102,7 +108,14 @@ assert(evidence.checks?.addressesAreDistinct === true, "device evidence example 
 assert(evidence.checks?.copyFeedbackVisible === true, "device evidence example covers copy feedback");
 assert(evidence.checks?.signedOutHidesWalletAddress === true, "device evidence example covers signed-out clearing");
 assert(evidence.checks?.liveExecutionClosed === true, "device evidence example covers closed live execution");
+assert(evidence.confirmations?.observedOnPhysicalDevice === true, "device evidence example covers physical-device confirmation");
+assert(evidence.confirmations?.containsNoSecrets === true, "device evidence example covers no-secret confirmation");
 checks.push("device evidence example covers the installed-App multi-user release proof");
+
+assertIncludes(deviceEvidenceInit, ".tmp/hwallet-device-evidence.json", "device evidence initializer writes to ignored .tmp path");
+assertIncludes(deviceEvidenceInit, "git\", [\"check-ignore\"", "device evidence initializer verifies git ignore coverage");
+assertIncludes(deviceEvidenceInit, "observedOnPhysicalDevice: false", "device evidence initializer requires manual physical-device confirmation");
+checks.push("device evidence initializer creates an ignored local file that cannot pass strict mode untouched");
 
 assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile TestFlight smoke includes device QA boundary");
 assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile TestFlight smoke checks public HTTPS API URLs");
@@ -124,6 +137,7 @@ assertNoRawSecrets({
   "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
   "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
   "docs/HWALLET_DEVICE_EVIDENCE.example.json": deviceEvidenceExample,
+  "v2/scripts/init-hwallet-device-evidence.mjs": deviceEvidenceInit,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");

@@ -28,9 +28,14 @@ MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip n
   HWallet release candidate gate. The full staging device smoke needs
   `MOBILE_DEVICE_PRIVY_ACCESS_TOKEN` and `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN`
   so the backend can verify User A and User B under Privy protection.
-- After the manual device pass, copy
-  `docs/HWALLET_DEVICE_EVIDENCE.example.json` to a local ignored path such as
-  `.tmp/hwallet-device-evidence.json`, fill only redacted observations, and run:
+- Before the manual device pass, create a local ignored evidence file:
+
+```sh
+npm run hwallet:device-evidence:init
+```
+
+- After the manual device pass, fill `.tmp/hwallet-device-evidence.json` with
+  only redacted observations, set all confirmation fields to `true`, and run:
 
 ```sh
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
@@ -191,6 +196,7 @@ Run before publishing a new build or OTA update:
 
 ```sh
 npm run smoke:mobile-testflight-readiness
+npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 npm run smoke:hwallet-staging-handoff
 npm run smoke:mobile-session

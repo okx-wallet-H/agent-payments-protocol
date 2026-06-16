@@ -62,6 +62,7 @@ Run these before publishing an update:
 ```bash
 npm run smoke:mobile-testflight-readiness
 npm run smoke:hwallet-release-candidate
+npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 npm run smoke:hwallet-staging-handoff
 npm --prefix apps/mobile run typecheck

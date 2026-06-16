@@ -58,6 +58,7 @@ Mobile TestFlight readiness gate:
 ```sh
 npm run smoke:mobile-testflight-readiness
 npm run smoke:hwallet-release-candidate
+npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 npm run smoke:mobile-session
@@ -92,6 +93,7 @@ STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:mobile-device-hwallet:live
+npm run hwallet:device-evidence:init
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
 ```
 
@@ -99,7 +101,9 @@ This is the App-release gate for the HWallet product body. The first device API
 smoke may stop after proving unauthenticated staging traffic is rejected; the
 second authenticated run must use two short-lived Privy tokens so User A and
 User B receive different HWallet addresses and cannot read each other's memory,
-audit, records, or tx history. Do not submit to TestFlight, publish an EAS
+audit, records, or tx history. Fill the generated `.tmp/hwallet-device-evidence.json`
+only with redacted observations from the installed App, then set the
+confirmation fields to `true`. Do not submit to TestFlight, publish an EAS
 Update, or promote production if this gate fails, if the second-user path is
 skipped, if redacted device evidence is missing, or if any live execution switch
 is open.
@@ -108,6 +112,7 @@ HWallet staging handoff gate:
 
 ```sh
 npm run smoke:hwallet-staging-handoff
+npm run hwallet:device-evidence:init
 HWALLET_STAGING_HANDOFF_STRICT=true HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:hwallet-staging-handoff
 ```
 
