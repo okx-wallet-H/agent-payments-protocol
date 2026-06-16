@@ -21,6 +21,9 @@ npm run smoke:mobile-build-env
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 ```
 
+- Before trusting device multi-user results against staging, run the Supabase readback drill so wallet,
+  message, transfer, audit, record, Agent memory, and other-user isolation are
+  already checked at the API/storage level.
 - Keep real execution closed:
   - live transaction broadcast: off
   - Agent real execution: off

@@ -98,6 +98,7 @@ Staging readiness gate:
 ```sh
 npm run smoke:supabase-cutover-safety
 npm run smoke:supabase-staging-sequence
+npm run smoke:supabase-readback-drill
 npm run smoke:supabase-rollback-plan
 STAGING_READINESS=true npm run smoke:production-readiness
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readiness
@@ -114,11 +115,32 @@ shape; it prints only non-sensitive mode, table-count, and readiness fields.
 The auth surface smoke verifies every mobile-facing HWallet and Agent endpoint
 rejects unauthenticated staging traffic before any wallet or Agent work can run.
 
+Supabase staging readback drill:
+
+```sh
+npm run smoke:supabase-closeout
+HWALLET_SESSION_STORE=dual npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-observation:live
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-consistency:live
+HWALLET_SESSION_STORE=postgres npm run dev
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:live
+AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-performance:live
+MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:mobile-build-env
+```
+
+Run this after the live closeout passes and before trusting a staging App build
+against Supabase. It confirms same-user wallet, message, transfer, audit,
+record, and Agent memory readback, plus other user isolation. If any readback
+or other user isolation check fails, keep `HWALLET_SESSION_STORE=dual` or
+`jsonl`, do not publish an EAS Update, do not enable live execution, and
+investigate the affected API/storage path before retrying.
+
 Supabase staging stability gate:
 
 ```sh
 npm run smoke:supabase-cutover-safety
 npm run smoke:supabase-staging-sequence
+npm run smoke:supabase-readback-drill
 npm run smoke:supabase-rollback-plan
 npm run smoke:supabase-closeout
 HWALLET_SESSION_STORE=dual npm run dev
