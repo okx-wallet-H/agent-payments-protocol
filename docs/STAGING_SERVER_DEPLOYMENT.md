@@ -85,6 +85,7 @@ the public IP. Point HTTPS to `127.0.0.1:3102`. If using Caddy, start from
 Run local config readiness:
 
 ```sh
+npm run smoke:hwallet-release-candidate
 npm run smoke:supabase-cutover-safety
 npm run smoke:supabase-staging-sequence
 npm run smoke:supabase-readback-drill
@@ -106,6 +107,12 @@ Then update `apps/mobile/eas.json` preview and production
 ```sh
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 ```
+
+Before calling the staging backend a release candidate, run the HWallet release
+candidate gate from `docs/V2_RELEASE_CHECKLIST.md`. The authenticated device
+smoke must use two short-lived Privy tokens so User A and User B receive
+different HWallet addresses and cannot read each other's memory, audit, records,
+or tx history.
 
 For a Supabase storage switch rehearsal, keep the staging server live execution
 switches closed and run the local sequence from `docs/V2_RELEASE_CHECKLIST.md`:
