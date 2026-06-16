@@ -136,6 +136,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
+  const activeUserLabel = getUserEmailLabel(user) || "已登录";
   const agentSessionReady = isReady && Boolean(activeUserId);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
@@ -266,6 +267,19 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     await agent.sendText("好了，继续");
   }
 
+  function confirmLogout() {
+    Alert.alert("切换账号", "退出当前账号后，可以用另一个邮箱登录。", [
+      { text: "取消", style: "cancel" },
+      {
+        text: "退出",
+        style: "destructive",
+        onPress: () => {
+          void run(logout);
+        }
+      }
+    ]);
+  }
+
   if (!isReady) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -369,7 +383,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             recordCount={agent.session.home?.state.recordCount || 0}
             recent={agent.session.home?.recent}
             onRefresh={() => run(() => agent.refreshHome())}
-            onLogout={() => run(logout)}
+            onLogout={confirmLogout}
           />
         ) : null}
 
@@ -380,6 +394,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             provisionError={walletProvisionError}
             privyStatus={privyWalletStatus}
             sessionError={agent.session.error}
+            userLabel={activeUserLabel}
             memory={agent.session.memory}
             wallet={agent.session.wallet}
             walletAddress={activeWalletAddress}
@@ -393,6 +408,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             onRetryProvision={() => run(retryHWalletProvisioning)}
             onStartAgent={() => run(startAgentFromWallet)}
             onVerifyTx={(txHash) => run(() => agent.verifyWalletTx(txHash))}
+            onLogout={confirmLogout}
           />
         ) : null}
 
@@ -1458,6 +1474,7 @@ function HWalletTab({
   provisionError,
   privyStatus,
   sessionError,
+  userLabel,
   memory,
   wallet,
   walletAddress,
@@ -1466,7 +1483,8 @@ function HWalletTab({
   onOpenPrediction,
   onRetryProvision,
   onStartAgent,
-  onVerifyTx
+  onVerifyTx,
+  onLogout
 }: {
   audit: V2AuditTimelineEvent[];
   busy?: boolean;
@@ -1474,6 +1492,7 @@ function HWalletTab({
   provisionError?: string;
   privyStatus: PrivyHWalletStatus;
   sessionError?: string;
+  userLabel: string;
   memory?: V2MobileAgentMemory;
   wallet?: V2WalletContext;
   walletAddress?: string;
@@ -1483,6 +1502,7 @@ function HWalletTab({
   onRetryProvision: () => void;
   onStartAgent: () => void;
   onVerifyTx: (txHash: string) => void;
+  onLogout: () => void;
 }) {
   const [txHash, setTxHash] = useState("");
   const [addressCopied, setAddressCopied] = useState(false);
@@ -1570,6 +1590,15 @@ function HWalletTab({
         <Text style={styles.hWalletText}>
           {entryState.canUseReceiveAddress ? "充值、收款和后续 Agent 资金识别都会从这里进入。" : entryState.receiveHint}
         </Text>
+        <View style={styles.hWalletAccountBar}>
+          <View style={styles.hWalletAccountText}>
+            <Text style={styles.hWalletAccountLabel}>当前账户</Text>
+            <Text numberOfLines={1} style={styles.hWalletAccountValue}>{userLabel}</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="切换 HWallet 账号" style={styles.hWalletSwitchButton} onPress={onLogout}>
+            <Text style={styles.hWalletSwitchText}>切换</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.receiveCard}>
@@ -3071,6 +3100,15 @@ function shortAddress(address?: string): string | undefined {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function getUserEmailLabel(user: unknown): string | undefined {
+  const direct = user as { email?: { address?: string } };
+  if (direct.email?.address) return direct.email.address;
+  const linkedAccounts = (user as { linkedAccounts?: Array<{ type?: string; address?: string; email?: string }> })
+    .linkedAccounts;
+  const emailAccount = linkedAccounts?.find((account) => account.type === "email");
+  return emailAccount?.address || emailAccount?.email;
+}
+
 const colors = {
   ink: "#1c1a17",
   muted: "#817a72",
@@ -3878,6 +3916,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     fontWeight: "700"
+  },
+  hWalletAccountBar: {
+    marginTop: 8,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    minHeight: 64,
+    paddingLeft: 18,
+    paddingRight: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  hWalletAccountText: {
+    flex: 1
+  },
+  hWalletAccountLabel: {
+    color: "rgba(255, 255, 255, 0.58)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  hWalletAccountValue: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "900",
+    marginTop: 3
+  },
+  hWalletSwitchButton: {
+    minHeight: 48,
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  hWalletSwitchText: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
   },
   hWalletDisabledButton: {
     backgroundColor: "#f1ebe5"
