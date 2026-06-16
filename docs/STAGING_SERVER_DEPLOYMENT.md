@@ -118,6 +118,7 @@ For the final App handoff pass, run the staging handoff gate:
 
 ```sh
 npm run smoke:hwallet-staging-handoff
+npm run hwallet:device-evidence:init
 HWALLET_STAGING_HANDOFF_STRICT=true HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:hwallet-staging-handoff
 ```
 

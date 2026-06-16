@@ -32,6 +32,7 @@ assertValidUser(userA, "User A");
 assertValidUser(userB, "User B");
 assert(userA.emailLabel !== userB.emailLabel, "User A and User B labels are distinct");
 assert(userA.shortAddress !== userB.shortAddress, "User A and User B short addresses are distinct");
+const confirmations = evidence.confirmations || {};
 
 const requiredChecks = [
   "appOpensWithoutCrash",
@@ -64,8 +65,23 @@ if (requireRealEvidence) {
   assert(!isExample, "real device evidence file is provided");
   assert(!looksLikeExample(userA.emailLabel), "User A label is not the example value");
   assert(!looksLikeExample(userB.emailLabel), "User B label is not the example value");
+  assert(!looksUnresolved(userA.emailLabel), "User A label is filled");
+  assert(!looksUnresolved(userB.emailLabel), "User B label is filled");
+  assert(!looksUnresolved(userA.shortAddress), "User A short address is filled");
+  assert(!looksUnresolved(userB.shortAddress), "User B short address is filled");
   assert(!userA.shortAddress.includes("1111...aaaa"), "User A short address is not the example value");
   assert(!userB.shortAddress.includes("2222...bbbb"), "User B short address is not the example value");
+  assert(!/Example only/i.test(String(evidence.notes || "")), "evidence notes are not the example note");
+  const requiredConfirmations = [
+    "observedOnPhysicalDevice",
+    "twoDifferentUsersTested",
+    "screenshotsRedacted",
+    "containsNoSecrets",
+    "liveExecutionStillClosed"
+  ];
+  for (const confirmationName of requiredConfirmations) {
+    assert(confirmations[confirmationName] === true, `${confirmationName} confirmed`);
+  }
 }
 
 console.log(JSON.stringify({
@@ -101,6 +117,10 @@ function assertValidIsoDate(value, label) {
 
 function looksLikeExample(value) {
   return /example\.com$/i.test(value);
+}
+
+function looksUnresolved(value) {
+  return /(?:fill|todo|tbd|placeholder|replace)/i.test(String(value || ""));
 }
 
 function assertNoRawSecrets(text, file) {

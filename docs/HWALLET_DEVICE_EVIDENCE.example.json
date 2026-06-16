@@ -38,6 +38,13 @@
     "transactionHashOptional": true,
     "liveExecutionClosed": true
   },
+  "confirmations": {
+    "observedOnPhysicalDevice": true,
+    "twoDifferentUsersTested": true,
+    "screenshotsRedacted": true,
+    "containsNoSecrets": true,
+    "liveExecutionStillClosed": true
+  },
   "artifacts": [
     {
       "label": "user-a-hwallet-ready",
