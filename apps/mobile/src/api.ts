@@ -14,6 +14,8 @@ import type {
   V2AgentOrchestration,
   V2MobileAgentMemory,
   V2MobileChatTurn,
+  V2MobileDeviceEvidenceInput,
+  V2MobileDeviceEvidenceResponse,
   V2MobileHomeResponse,
   V2MobileHomeView,
   V2PhaseOneRecord,
@@ -64,6 +66,7 @@ export interface ApiClient {
   listV2Strategies(userId?: string): Promise<V2StrategyCard[]>;
   listV2Records(userId?: string): Promise<V2PhaseOneRecord[]>;
   listV2Audit(userId?: string): Promise<V2AuditTimelineEvent[]>;
+  submitV2DeviceEvidence(input: V2MobileDeviceEvidenceInput): Promise<V2MobileDeviceEvidenceResponse>;
   getWorldCupExplore(): Promise<V2WorldCupExploreView>;
 }
 
@@ -306,6 +309,12 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         getAccessToken
       );
       return data.events;
+    },
+    async submitV2DeviceEvidence(input) {
+      return request<V2MobileDeviceEvidenceResponse>(cleanBaseUrl, "/api/v2/mobile/device-evidence", {
+        method: "POST",
+        body: JSON.stringify(input)
+      }, getAccessToken);
     },
     async getWorldCupExplore() {
       const data = await request<{ explore: V2WorldCupExploreView }>(

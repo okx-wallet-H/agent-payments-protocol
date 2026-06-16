@@ -28,6 +28,34 @@ const walletOnly = await getJson(
 );
 assert(walletOnly.wallet?.address === walletAddress, "wallet endpoint returns current HWallet");
 assert(walletOnly.wallet?.policy?.liveExecutionEnabled === false, "wallet endpoint keeps live execution disabled");
+const deviceEvidence = await postJson("/api/v2/mobile/device-evidence", {
+  userId,
+  walletAddress,
+  environment: {
+    platform: "ios",
+    buildChannel: "preview",
+    apiBaseUrl: baseUrl,
+    appVersion: "0.1.0",
+    buildNumber: "9"
+  },
+  checks: {
+    appOpensWithoutCrash: true,
+    hWalletVisible: true,
+    receiveAddressVisible: true,
+    copyFeedbackVisible: true,
+    noWrongUserDataExposure: true,
+    liveExecutionClosed: true
+  },
+  artifacts: [
+    {
+      label: "h-wallet-copy-feedback",
+      redacted: true
+    }
+  ]
+});
+assert(deviceEvidence.ok === true, "device evidence endpoint accepts authenticated App proof");
+assert(deviceEvidence.evidence?.redacted === true, "device evidence response stays redacted");
+assert(deviceEvidence.evidence?.walletAddress === "0x1111...111111", "device evidence redacts wallet address");
 const conflictingWallet = await getStatus(
   `/api/v2/mobile/home?userId=${encodeURIComponent(userId)}&walletAddress=${encodeURIComponent("0x2222222222222222222222222222222222222222")}`
 );
@@ -100,6 +128,10 @@ assert(
   "wallet refresh replies with wallet recognition copy"
 );
 const auditAfterWalletRefresh = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
+assert(
+  auditAfterWalletRefresh.events?.some((event) => event.type === "device.evidence" && event.moneyMoved === false),
+  "audit timeline records device evidence without money movement"
+);
 assert(
   auditAfterWalletRefresh.events?.some((event) => event.type === "wallet.refresh" && event.moneyMoved === false),
   "audit timeline records wallet refresh without money movement"

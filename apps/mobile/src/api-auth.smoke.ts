@@ -35,6 +35,39 @@ try {
   assert(authedHeaders.authorization === `Bearer ${token}`, "mobile API attaches Privy Bearer token");
   assert(!authedRequest?.url.includes(token), "mobile API never puts access token in URL");
 
+  await authedApi.submitV2DeviceEvidence({
+    userId: "api-auth-user",
+    walletAddress: "0x59029AD72744Ea033a4Ccb261Ec79569e158209e",
+    environment: {
+      platform: "ios",
+      buildChannel: "preview",
+      apiBaseUrl: "https://app.example",
+      appVersion: "0.1.0",
+      buildNumber: "9"
+    },
+    checks: {
+      appOpensWithoutCrash: true,
+      hWalletVisible: true,
+      receiveAddressVisible: true,
+      copyFeedbackVisible: true,
+      noWrongUserDataExposure: true,
+      liveExecutionClosed: true
+    },
+    artifacts: [
+      {
+        label: "h-wallet-copy-feedback",
+        redacted: true
+      }
+    ]
+  });
+
+  const evidenceRequest = requests.at(-1);
+  assert(evidenceRequest?.url === "https://app.example/api/v2/mobile/device-evidence", "mobile API posts device evidence path");
+  assert(evidenceRequest?.init?.method === "POST", "mobile API submits device evidence with POST");
+  const evidenceHeaders = readHeaders(evidenceRequest?.init?.headers);
+  assert(evidenceHeaders.authorization === `Bearer ${token}`, "mobile API attaches Privy token to device evidence");
+  assert(!evidenceRequest?.url.includes(token), "device evidence URL does not expose access token");
+
   requests.length = 0;
   const anonymousApi = createApi("https://app.example", async () => undefined);
 

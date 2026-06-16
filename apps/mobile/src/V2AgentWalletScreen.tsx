@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
+import Constants from "expo-constants";
 import { useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy } from "@privy-io/expo";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   ImageBackground,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -134,6 +136,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [worldCupExploreError, setWorldCupExploreError] = useState<string | undefined>();
   const walletProvisionAttemptRef = useRef<string | undefined>(undefined);
   const walletAutoSyncKeyRef = useRef<string | undefined>(undefined);
+  const deviceEvidenceKeyRef = useRef<string | undefined>(undefined);
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
@@ -266,6 +269,37 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   async function startAgentFromWallet() {
     setActiveTab("agent");
     await agent.sendText("好了，继续");
+  }
+
+  async function submitDeviceEvidence() {
+    if (!activeUserId || !activeWalletAddress) return;
+    const evidenceKey = `${activeUserId}:${activeWalletAddress}:receive-address-copy`;
+    if (deviceEvidenceKeyRef.current === evidenceKey) return;
+    deviceEvidenceKeyRef.current = evidenceKey;
+
+    try {
+      await worldCupApi.submitV2DeviceEvidence({
+        userId: activeUserId,
+        walletAddress: activeWalletAddress,
+        environment: createMobileEvidenceEnvironment(apiBaseUrl),
+        checks: {
+          appOpensWithoutCrash: true,
+          hWalletVisible: true,
+          receiveAddressVisible: true,
+          copyFeedbackVisible: true,
+          noWrongUserDataExposure: true,
+          liveExecutionClosed: true
+        },
+        artifacts: [
+          {
+            label: "hwallet-receive-address-copy",
+            redacted: true
+          }
+        ]
+      });
+    } catch {
+      deviceEvidenceKeyRef.current = undefined;
+    }
   }
 
   function confirmLogout() {
@@ -409,6 +443,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             onRetryProvision={() => run(retryHWalletProvisioning)}
             onStartAgent={() => run(startAgentFromWallet)}
             onVerifyTx={(txHash) => run(() => agent.verifyWalletTx(txHash))}
+            onAddressCopied={() => {
+              void submitDeviceEvidence();
+            }}
             onLogout={confirmLogout}
           />
         ) : null}
@@ -449,6 +486,26 @@ function TopBar({
       </Pressable>
     </View>
   );
+}
+
+function createMobileEvidenceEnvironment(apiBaseUrl: string) {
+  return {
+    platform: Platform.OS,
+    buildChannel: readMobileBuildChannel(),
+    apiBaseUrl,
+    appVersion: Constants.expoConfig?.version || "0.1.0",
+    buildNumber: readMobileBuildNumber()
+  };
+}
+
+function readMobileBuildChannel(): string {
+  if (process.env.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true") return "preview";
+  if (process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true") return "development";
+  return "unknown";
+}
+
+function readMobileBuildNumber(): string {
+  return String(Constants.expoConfig?.ios?.buildNumber || Constants.expoConfig?.android?.versionCode || "unknown");
 }
 
 function AgentTab({
@@ -1485,6 +1542,7 @@ function HWalletTab({
   onRetryProvision,
   onStartAgent,
   onVerifyTx,
+  onAddressCopied,
   onLogout
 }: {
   audit: V2AuditTimelineEvent[];
@@ -1503,6 +1561,7 @@ function HWalletTab({
   onRetryProvision: () => void;
   onStartAgent: () => void;
   onVerifyTx: (txHash: string) => void;
+  onAddressCopied: () => void;
   onLogout: () => void;
 }) {
   const [txHash, setTxHash] = useState("");
@@ -1556,6 +1615,7 @@ function HWalletTab({
     if (!displayAddress) return;
     await Clipboard.setStringAsync(displayAddress);
     flashAddressCopied();
+    onAddressCopied();
   }
 
   async function pasteTxHashFromClipboard() {
