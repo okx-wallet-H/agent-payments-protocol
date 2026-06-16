@@ -136,7 +136,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
-  const activeUserLabel = getUserEmailLabel(user) || "已登录";
+  const activeUserLabel = user ? getUserEmailLabel(user) || "已登录" : "未登录";
   const agentSessionReady = isReady && Boolean(activeUserId);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
@@ -3101,10 +3101,16 @@ function shortAddress(address?: string): string | undefined {
 }
 
 function getUserEmailLabel(user: unknown): string | undefined {
-  const direct = user as { email?: { address?: string } };
+  if (!user || typeof user !== "object") return undefined;
+
+  const direct = user as {
+    email?: string | { address?: string };
+    linkedAccounts?: Array<{ type?: string; address?: string; email?: string }>;
+  };
+  if (typeof direct.email === "string") return direct.email;
   if (direct.email?.address) return direct.email.address;
-  const linkedAccounts = (user as { linkedAccounts?: Array<{ type?: string; address?: string; email?: string }> })
-    .linkedAccounts;
+
+  const linkedAccounts = Array.isArray(direct.linkedAccounts) ? direct.linkedAccounts : undefined;
   const emailAccount = linkedAccounts?.find((account) => account.type === "email");
   return emailAccount?.address || emailAccount?.email;
 }
