@@ -1486,6 +1486,7 @@ function HWalletTab({
 }) {
   const [txHash, setTxHash] = useState("");
   const [addressCopied, setAddressCopied] = useState(false);
+  const [showTxCheck, setShowTxCheck] = useState(false);
   const addressCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entryState = createHWalletEntryState({
     busy,
@@ -1544,18 +1545,6 @@ function HWalletTab({
       return;
     }
     setTxHash(hash);
-  }
-
-  async function pasteAndVerifyTxFromClipboard() {
-    if (!canUseReceiveAddress) return;
-    const clipboardText = await Clipboard.getStringAsync();
-    const hash = extractTransactionHash(clipboardText);
-    if (!hash) {
-      Alert.alert("交易哈希", "剪贴板里没有识别到 X Layer 交易哈希。");
-      return;
-    }
-    setTxHash("");
-    onVerifyTx(hash);
   }
 
   function submitTxHash() {
@@ -1652,7 +1641,7 @@ function HWalletTab({
         canVerify={canUseReceiveAddress}
         copied={addressCopied}
         onCopy={copyWalletAddress}
-        onPasteAndVerify={pasteAndVerifyTxFromClipboard}
+        onOpenTxCheck={() => setShowTxCheck(true)}
         onRefresh={onRefresh}
         onStartAgent={onStartAgent}
       />
@@ -1687,48 +1676,66 @@ function HWalletTab({
 
       <WalletLifecycleCard lifecycle={lifecycle} />
 
-      <View style={styles.walletTxCheckCard}>
-        <View style={styles.walletTxCheckHeader}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={showTxCheck ? "收起交易哈希核对" : "展开交易哈希核对"}
+        onPress={() => setShowTxCheck((value) => !value)}
+        style={styles.walletTxOptionalToggle}
+      >
+        <View style={styles.walletTxOptionalLeft}>
+          <Ionicons name="receipt-outline" size={18} color={colors.ink} />
           <View>
-            <Text style={styles.agentFundsLabel}>查一笔到账</Text>
-            <Text style={styles.walletTxCheckTitle}>粘贴交易哈希</Text>
+            <Text style={styles.walletTxOptionalTitle}>高级核对</Text>
+            <Text style={styles.walletTxOptionalText}>到账会自动识别，哈希只用来核对单笔。</Text>
           </View>
-          <Ionicons name="receipt-outline" size={22} color={colors.ink} />
         </View>
-        <View style={styles.walletTxInputRow}>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!walletTxCheckDisabled}
-            onChangeText={setTxHash}
-            placeholder={canUseReceiveAddress ? "0x..." : "钱包生成后可粘贴交易哈希"}
-            placeholderTextColor="#aaa39c"
-            style={[styles.walletTxInput, !canUseReceiveAddress ? styles.walletTxInputDisabled : null]}
-            value={txHash}
-          />
+        <Ionicons name={showTxCheck ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
+      </Pressable>
+
+      {showTxCheck ? (
+        <View style={styles.walletTxCheckCard}>
+          <View style={styles.walletTxCheckHeader}>
+            <View>
+              <Text style={styles.agentFundsLabel}>可选核对</Text>
+              <Text style={styles.walletTxCheckTitle}>用交易哈希核对</Text>
+            </View>
+            <Ionicons name="receipt-outline" size={22} color={colors.ink} />
+          </View>
+          <View style={styles.walletTxInputRow}>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!walletTxCheckDisabled}
+              onChangeText={setTxHash}
+              placeholder={canUseReceiveAddress ? "0x..." : "钱包生成后可粘贴交易哈希"}
+              placeholderTextColor="#aaa39c"
+              style={[styles.walletTxInput, !canUseReceiveAddress ? styles.walletTxInputDisabled : null]}
+              value={txHash}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="从剪贴板粘贴交易哈希"
+              disabled={walletTxCheckDisabled}
+              onPress={pasteTxHashFromClipboard}
+              style={[styles.walletTxPasteButton, walletTxCheckDisabled ? styles.hWalletDisabledButton : null]}
+            >
+              <Ionicons name="clipboard-outline" size={17} color={walletTxCheckDisabled ? "#9f9992" : colors.ink} />
+              <Text style={[styles.walletTxPasteText, walletTxCheckDisabled ? styles.hWalletDisabledText : null]}>粘贴</Text>
+            </Pressable>
+          </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="从剪贴板粘贴交易哈希"
+            accessibilityLabel="核对交易是否到账"
             disabled={walletTxCheckDisabled}
-            onPress={pasteTxHashFromClipboard}
-            style={[styles.walletTxPasteButton, walletTxCheckDisabled ? styles.hWalletDisabledButton : null]}
+            onPress={submitTxHash}
+            style={[styles.walletTxButton, walletTxCheckDisabled ? styles.hWalletDisabledButton : null]}
           >
-            <Ionicons name="clipboard-outline" size={17} color={walletTxCheckDisabled ? "#9f9992" : colors.ink} />
-            <Text style={[styles.walletTxPasteText, walletTxCheckDisabled ? styles.hWalletDisabledText : null]}>粘贴</Text>
+            <Text style={[styles.walletTxButtonText, walletTxCheckDisabled ? styles.hWalletDisabledText : null]}>
+              {busy ? "正在核对" : "核对到账"}
+            </Text>
           </Pressable>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="检查交易是否到账"
-          disabled={walletTxCheckDisabled}
-          onPress={submitTxHash}
-          style={[styles.walletTxButton, walletTxCheckDisabled ? styles.hWalletDisabledButton : null]}
-        >
-          <Text style={[styles.walletTxButtonText, walletTxCheckDisabled ? styles.hWalletDisabledText : null]}>
-            {busy ? "正在检查" : "检查到账"}
-          </Text>
-        </Pressable>
-      </View>
+      ) : null}
 
       <View style={styles.agentFundsCard}>
         <View style={styles.agentFundsTop}>
@@ -1910,7 +1917,7 @@ function HWalletActionStrip({
   canVerify,
   copied,
   onCopy,
-  onPasteAndVerify,
+  onOpenTxCheck,
   onRefresh,
   onStartAgent
 }: {
@@ -1919,7 +1926,7 @@ function HWalletActionStrip({
   canVerify: boolean;
   copied?: boolean;
   onCopy: () => void;
-  onPasteAndVerify: () => void;
+  onOpenTxCheck: () => void;
   onRefresh: () => void;
   onStartAgent: () => void;
 }) {
@@ -1934,8 +1941,8 @@ function HWalletActionStrip({
       <HWalletActionButton
         disabled={busy || !canVerify}
         icon="receipt-outline"
-        label="查到账"
-        onPress={onPasteAndVerify}
+        label="核对"
+        onPress={onOpenTxCheck}
       />
       <HWalletActionButton
         disabled={busy}
@@ -4142,6 +4149,42 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 12,
     fontWeight: "800"
+  },
+  walletTxOptionalToggle: {
+    minHeight: 72,
+    borderRadius: 24,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#f0ece8",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    shadowColor: "#d9d3cc",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 1
+  },
+  walletTxOptionalLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  walletTxOptionalTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  walletTxOptionalText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
+    marginTop: 2
   },
   walletTxCheckCard: {
     borderRadius: 26,
