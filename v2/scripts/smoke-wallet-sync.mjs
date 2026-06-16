@@ -48,6 +48,8 @@ assert(depositRecords[0]?.title === "资金已到账", "positive delta creates d
 assert(depositRecords[0]?.id?.startsWith("wallet-deposit-detected-"), "deposit record uses stable versioned id");
 assert(depositRecords[0]?.note.includes("0.053127 USDT0"), "deposit record describes incoming USDT0");
 assert(depositRecords[0]?.note.includes("5 USDT"), "deposit record describes incoming USDT");
+assert(!("txHash" in depositRecords[0]), "auto-detected deposit record does not require tx hash");
+assert(!depositRecords[0]?.id.startsWith("wallet-tx-"), "auto-detected deposit record stays separate from tx verification");
 
 const repeatedDepositRecords = createWalletSyncRecords({
   assets: nowAssets,
@@ -126,6 +128,12 @@ assert(
   detectedDepositWallet.agent.nextActionText.includes("资金已到账"),
   "Agent recognizes versioned deposit records"
 );
+assert(detectedDepositWallet.agent.fundsStatus === "ready", "auto-detected deposit makes wallet funds ready");
+assert(detectedDepositWallet.vault.status === "ready", "auto-detected deposit makes Agent vault ready");
+assert(
+  detectedDepositWallet.vault.sourceText === "已识别新到账资金",
+  "auto-detected deposit is shown as balance recognition"
+);
 
 const verifiedWallet = withVerifiedInboundTransfer(pendingWallet, {
   txHash: "0xbad718fc3c07ca668b564c54f7c88afe7b2877d7d5c973f30735ad3abbca0747",
@@ -148,6 +156,10 @@ assert(
   "verified tx creates immediate wallet record"
 );
 assert(
+  verifiedWallet.recentRecords[0]?.id?.startsWith("wallet-tx-"),
+  "verified tx record stays on transaction-verification path"
+);
+assert(
   verifiedWallet.assets.some((asset) => asset.symbol === "USDT0" && asset.amountLabel === "0.053127" && asset.syncStatus === "synced"),
   "verified tx updates asset even before balance refresh"
 );
@@ -156,9 +168,11 @@ console.log(JSON.stringify({
   ok: true,
   checks: [
     "deposit detected",
+    "deposit does not require tx hash",
     "deposit id stable per snapshot",
     "deposit id changes for new snapshot",
     "versioned deposit recognized",
+    "auto deposit marks Agent funds ready",
     "unchanged balances detected",
     "verified tx makes wallet ready",
     "verified tx marks lifecycle ready",
