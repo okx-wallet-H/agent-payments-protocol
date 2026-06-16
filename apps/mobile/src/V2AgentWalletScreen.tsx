@@ -18,6 +18,7 @@ import { useV2AgentWallet } from "./use-v2-agent-wallet";
 import { createApi } from "./api";
 import { createPrivyHWalletStatus, type PrivyHWalletStatus } from "./privy-wallet-status";
 import { createHWalletEntryState } from "./hwallet-entry";
+import { getHWalletUserLabel } from "./user-label";
 import type {
   V2AuditTimelineEvent,
   V2ConversationCard,
@@ -136,7 +137,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const walletAddress = wallets[0]?.address as `0x${string}` | undefined;
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
-  const activeUserLabel = user ? getUserEmailLabel(user) || "已登录" : "未登录";
+  const activeUserLabel = getHWalletUserLabel(user);
   const agentSessionReady = isReady && Boolean(activeUserId);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
@@ -3098,21 +3099,6 @@ function formatExploreUpdatedAt(value?: string): string | undefined {
 function shortAddress(address?: string): string | undefined {
   if (!address) return undefined;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-function getUserEmailLabel(user: unknown): string | undefined {
-  if (!user || typeof user !== "object") return undefined;
-
-  const direct = user as {
-    email?: string | { address?: string };
-    linkedAccounts?: Array<{ type?: string; address?: string; email?: string }>;
-  };
-  if (typeof direct.email === "string") return direct.email;
-  if (direct.email?.address) return direct.email.address;
-
-  const linkedAccounts = Array.isArray(direct.linkedAccounts) ? direct.linkedAccounts : undefined;
-  const emailAccount = linkedAccounts?.find((account) => account.type === "email");
-  return emailAccount?.address || emailAccount?.email;
 }
 
 const colors = {
