@@ -114,6 +114,16 @@ smoke must use two short-lived Privy tokens so User A and User B receive
 different HWallet addresses and cannot read each other's memory, audit, records,
 or tx history.
 
+For the final App handoff pass, run the staging handoff gate:
+
+```sh
+npm run smoke:hwallet-staging-handoff
+HWALLET_STAGING_HANDOFF_STRICT=true HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:hwallet-staging-handoff
+```
+
+The strict mode is the release handoff: it requires staging auth/storage/server
+checks, the device-facing API smoke, and redacted manual device evidence.
+
 For a Supabase storage switch rehearsal, keep the staging server live execution
 switches closed and run the local sequence from `docs/V2_RELEASE_CHECKLIST.md`:
 `dual` shadow writes, dual consistency, `postgres` readback, and postgres

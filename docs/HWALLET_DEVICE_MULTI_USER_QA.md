@@ -192,6 +192,7 @@ Run before publishing a new build or OTA update:
 ```sh
 npm run smoke:mobile-testflight-readiness
 npm run smoke:hwallet-device-evidence
+npm run smoke:hwallet-staging-handoff
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
 npm run smoke:mobile-api-auth
