@@ -53,12 +53,39 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Run the real-device multi-user HWallet QA checklist in `docs/HWALLET_DEVICE_MULTI_USER_QA.md`: User A login, User B login, switch back to User A, signed-out boundary, copy feedback, tx verification, memory, and audit.
 - Run a mobile visual pass in 390x844 and simulator sizes: Agent empty chat, World Cup campaign page, World Cup Explore categories, Mine page, bottom fixed CTA behavior, and World Cup Home return behavior.
 
+Mobile TestFlight readiness gate:
+
+```sh
+npm run smoke:mobile-testflight-readiness
+MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
+npm run smoke:mobile-session
+npm run smoke:privy-wallet-status
+npm run smoke:mobile-api-auth
+npm run smoke:mobile-hwallet-ux
+npm run mobile:typecheck
+npm run mobile:build:ios
+```
+
+Do not submit to TestFlight if the gate fails, if preview/production profiles
+point to localhost or a LAN URL, if the installed App still shows preview-only
+screens, if HWallet copy feedback is missing, if User A and User B can see each
+other's wallet state, or if live execution switches are open. For safe JS/UI
+fixes after a checked preview build, publish through:
+
+```sh
+npm --prefix apps/mobile run update:preview -- --message "Short update note"
+```
+
+Only promote the same fix to production after preview is checked on device and
+the rollback path in `docs/HWALLET_EAS_UPDATE_RUNBOOK.md` is understood.
+
 Local v2 smoke commands:
 
 ```sh
 npm run verify:merge
 npm run smoke:production-readiness
 npm run smoke:mobile-build-env
+npm run smoke:mobile-testflight-readiness
 EXPO_PUBLIC_API_BASE_URL=http://YOUR_LAN_IP:3000 MOBILE_DEVICE_READINESS=true npm run smoke:mobile-build-env
 npm run smoke:v2
 npm run smoke:v2:auth

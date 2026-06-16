@@ -38,11 +38,29 @@ npm run update:production -- --message "Short production update note"
 
 Keep production updates limited to safe JS/UI fixes while live execution remains closed.
 
+## Rollback / Inspection Flow
+
+Before promoting an update, list the channel history and keep the last known
+good update id in the release notes:
+
+```bash
+cd apps/mobile
+npx eas-cli update:list --channel preview
+npx eas-cli update:list --channel production
+```
+
+If a JS/UI update breaks HWallet login, copy feedback, keyboard behavior, or
+multi-user switching, publish a new update that reverts the offending change on
+the same channel. If the issue requires native config, Privy native extension
+changes, permissions, bundle id, URL scheme, or a new Expo module, do not use
+OTA as the fix path; create a new build.
+
 ## Validation Before Publishing
 
 Run these before publishing an update:
 
 ```bash
+npm run smoke:mobile-testflight-readiness
 npm --prefix apps/mobile run typecheck
 EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 ```
