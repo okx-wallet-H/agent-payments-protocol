@@ -161,6 +161,17 @@ AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-postgres-api:l
 
 Use this only after the dual observation is clean. It verifies the same App-facing path while reads and writes go through Supabase directly.
 
+Supabase staging readback drill static gate:
+
+```bash
+npm run smoke:supabase-readback-drill
+```
+
+Use this before any storage switch rehearsal. It confirms the package scripts,
+release checklist, staging deployment guide, device QA checklist, and live
+readback smokes stay aligned around dual observation, dual consistency,
+Postgres readback, performance, and other-user isolation.
+
 ## Cutover Safety Gate
 
 Do not switch a shared environment to `HWALLET_SESSION_STORE=postgres` only because
@@ -171,6 +182,7 @@ the schema exists. Treat the switch as a cutover with an explicit rollback path:
 
 ```bash
 npm run smoke:supabase-cutover-safety
+npm run smoke:supabase-readback-drill
 ```
 
 3. Run the live structure gate:

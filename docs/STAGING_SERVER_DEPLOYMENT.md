@@ -87,6 +87,7 @@ Run local config readiness:
 ```sh
 npm run smoke:supabase-cutover-safety
 npm run smoke:supabase-staging-sequence
+npm run smoke:supabase-readback-drill
 npm run smoke:supabase-rollback-plan
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readiness
 ```
@@ -109,8 +110,10 @@ EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API MOBILE_STAGING_READINESS=true 
 For a Supabase storage switch rehearsal, keep the staging server live execution
 switches closed and run the local sequence from `docs/V2_RELEASE_CHECKLIST.md`:
 `dual` shadow writes, dual consistency, `postgres` readback, and postgres
-performance. If the same performance endpoint fails twice, keep staging in
-`dual` or `jsonl` mode and do not publish an EAS Update from that backend.
+performance. Run the Supabase readback drill first so the documented sequence
+and script coverage agree before the server points a build at Postgres. If the
+same performance endpoint fails twice, keep staging in `dual` or `jsonl` mode
+and do not publish an EAS Update from that backend.
 
 Only after these pass should we build a development client or TestFlight build.
 
