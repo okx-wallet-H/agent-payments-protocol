@@ -29,6 +29,7 @@
     "smoke:mobile-build-env": "node v2/scripts/smoke-mobile-build-env.mjs",
     "smoke:mobile-testflight-readiness": "node v2/scripts/smoke-mobile-testflight-readiness.mjs",
     "smoke:hwallet-release-candidate": "node v2/scripts/smoke-hwallet-release-candidate.mjs",
+    "smoke:hwallet-device-evidence": "node v2/scripts/smoke-hwallet-device-evidence.mjs",
     "smoke:mobile-device-hwallet:live": "node v2/scripts/smoke-mobile-device-hwallet-live.mjs",
     "smoke:agent-orchestrator": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-agent-orchestrator.mjs",
     "smoke:agent-capability-registry": "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-agent-capability-registry.mjs",

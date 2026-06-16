@@ -20,6 +20,7 @@ const requiredRootScripts = [
   "smoke:mobile-build-env",
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
+  "smoke:hwallet-device-evidence",
   "smoke:mobile-session",
   "smoke:mobile-user-label",
   "smoke:mobile-hwallet-ux",
@@ -100,6 +101,7 @@ assertUpdateScript("update:production", "production", "production");
 checks.push("EAS Update scripts target the expected channels and environments");
 
 assertIncludes(releaseChecklist, "npm run smoke:mobile-testflight-readiness", "release checklist includes mobile TestFlight readiness smoke");
+assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
 assertIncludes(releaseChecklist, "npm run mobile:build:ios", "release checklist includes iOS build command");
 assertIncludes(releaseChecklist, "npm --prefix apps/mobile run update:preview", "release checklist includes preview OTA update command");
 assertIncludes(releaseChecklist, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "release checklist points to the device multi-user QA");
@@ -112,7 +114,8 @@ assertIncludes(deviceQa, "Switch Back To User A", "device QA includes switch-bac
 assertIncludes(deviceQa, "Signed-Out Boundary", "device QA includes signed-out boundary");
 assertIncludes(deviceQa, "Copy feedback visible as `已复制`", "device QA includes copy feedback evidence");
 assertIncludes(deviceQa, "smoke:mobile-device-hwallet:live", "device QA includes live device API smoke");
-checks.push("device QA covers multi-user, signed-out, copy, and HWallet live-smoke gates");
+assertIncludes(deviceQa, "smoke:hwallet-device-evidence", "device QA includes redacted evidence smoke");
+checks.push("device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates");
 
 assertIncludes(easRunbook, "update:preview", "EAS runbook documents preview update");
 assertIncludes(easRunbook, "update:production", "EAS runbook documents production update");
