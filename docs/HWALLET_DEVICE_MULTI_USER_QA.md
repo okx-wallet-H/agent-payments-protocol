@@ -28,6 +28,14 @@ MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip n
   HWallet release candidate gate. The full staging device smoke needs
   `MOBILE_DEVICE_PRIVY_ACCESS_TOKEN` and `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN`
   so the backend can verify User A and User B under Privy protection.
+- After the manual device pass, copy
+  `docs/HWALLET_DEVICE_EVIDENCE.example.json` to a local ignored path such as
+  `.tmp/hwallet-device-evidence.json`, fill only redacted observations, and run:
+
+```sh
+HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+```
+
 - Keep real execution closed:
   - live transaction broadcast: off
   - Agent real execution: off
@@ -183,6 +191,7 @@ Run before publishing a new build or OTA update:
 
 ```sh
 npm run smoke:mobile-testflight-readiness
+npm run smoke:hwallet-device-evidence
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
 npm run smoke:mobile-api-auth
@@ -207,6 +216,9 @@ npm run verify:merge
   one Privy token it verifies User A's wallet flow; with
   `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN` it also verifies User B gets a
   distinct HWallet receive address and cannot see User A wallet records.
+- `smoke:hwallet-device-evidence` validates the redacted manual evidence file
+  for no-crash login, account switching, distinct receive addresses, visible
+  copy feedback, signed-out clearing, and closed live execution.
 
 The real device pass is still required because Privy native login, embedded
 wallet creation, clipboard behavior, keyboard behavior, and Expo Updates must be

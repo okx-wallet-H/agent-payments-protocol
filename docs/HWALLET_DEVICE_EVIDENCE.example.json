@@ -1,0 +1,52 @@
+{
+  "kind": "hwallet-device-multi-user-evidence",
+  "version": 1,
+  "environment": {
+    "platform": "ios",
+    "buildChannel": "preview",
+    "apiBaseUrl": "https://app.hwallet.vip",
+    "appVersion": "0.1.0",
+    "buildNumber": "9",
+    "otaUpdateMessage": "Fix HWallet startup crash before user is ready"
+  },
+  "tester": {
+    "label": "manual-qa",
+    "testedAt": "2026-06-16T00:00:00.000Z"
+  },
+  "users": {
+    "userA": {
+      "emailLabel": "user-a@example.com",
+      "shortAddress": "0x1111...aaaa"
+    },
+    "userB": {
+      "emailLabel": "user-b@example.com",
+      "shortAddress": "0x2222...bbbb"
+    }
+  },
+  "checks": {
+    "appOpensWithoutCrash": true,
+    "userALoginCompleted": true,
+    "userBLoginCompleted": true,
+    "accountSwitchAvailable": true,
+    "userAReceiveAddressVisible": true,
+    "userBReceiveAddressVisible": true,
+    "addressesAreDistinct": true,
+    "copyFeedbackVisible": true,
+    "signedOutHidesWalletAddress": true,
+    "switchBackRestoresUserAAddress": true,
+    "noWrongUserDataExposure": true,
+    "transactionHashOptional": true,
+    "liveExecutionClosed": true
+  },
+  "artifacts": [
+    {
+      "label": "user-a-hwallet-ready",
+      "redacted": true
+    },
+    {
+      "label": "user-b-hwallet-ready",
+      "redacted": true
+    }
+  ],
+  "notes": "Example only. Real evidence should use short labels, redacted screenshots, and no verification codes, tokens, private keys, API keys, or database URLs."
+}

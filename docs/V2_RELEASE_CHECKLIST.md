@@ -58,6 +58,7 @@ Mobile TestFlight readiness gate:
 ```sh
 npm run smoke:mobile-testflight-readiness
 npm run smoke:hwallet-release-candidate
+npm run smoke:hwallet-device-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
@@ -91,6 +92,7 @@ STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:mobile-device-hwallet:live
+HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
 ```
 
 This is the App-release gate for the HWallet product body. The first device API
@@ -99,7 +101,8 @@ second authenticated run must use two short-lived Privy tokens so User A and
 User B receive different HWallet addresses and cannot read each other's memory,
 audit, records, or tx history. Do not submit to TestFlight, publish an EAS
 Update, or promote production if this gate fails, if the second-user path is
-skipped, or if any live execution switch is open.
+skipped, if redacted device evidence is missing, or if any live execution switch
+is open.
 
 Local v2 smoke commands:
 

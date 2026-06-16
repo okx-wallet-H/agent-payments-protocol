@@ -9,6 +9,7 @@ const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const stagingDeployment = await readFile("docs/STAGING_SERVER_DEPLOYMENT.md", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
+const deviceEvidenceExample = await readFile("docs/HWALLET_DEVICE_EVIDENCE.example.json", "utf8");
 const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
 const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet-live.mjs", "utf8");
@@ -28,6 +29,7 @@ const requiredScripts = [
   "smoke:staging-auth-surface",
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
+  "smoke:hwallet-device-evidence",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-hwallet-ux",
   "smoke:privy-wallet-status",
@@ -57,6 +59,7 @@ assertOrder(releaseCandidate, "smoke:staging-auth-surface", "MOBILE_STAGING_READ
 assertOrder(releaseCandidate, "MOBILE_STAGING_READINESS=true", "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "mobile staging env comes before device API smoke");
 assertPattern(releaseCandidate, /MOBILE_DEVICE_PRIVY_ACCESS_TOKEN/, "release gate documents primary Privy token");
 assertPattern(releaseCandidate, /MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN/, "release gate documents second-user Privy token");
+assertIncludes(releaseCandidate, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "release gate requires real device evidence");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
 
@@ -68,6 +71,7 @@ assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run
 assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
 assertIncludes(deviceQa, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device QA names the primary device token env");
 assertIncludes(deviceQa, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device QA names the second-user device token env");
+assertIncludes(deviceQa, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "device QA validates redacted evidence file");
 checks.push("release, staging, EAS, and device docs share the same HWallet candidate gate");
 
 assertIncludes(stagingServerSmoke, "server HWallet store is postgres-only", "staging server smoke verifies postgres-only storage");
@@ -87,7 +91,16 @@ assertIncludes(mobileDeviceSmoke, "other user audit cannot see verified tx", "de
 assertIncludes(mobileDeviceSmoke, "liveExecutionEnabled", "device smoke reports live execution state");
 checks.push("device live smoke covers multi-user wallet, memory, audit, and execution state");
 
-assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, and HWallet live-smoke gates", "mobile TestFlight smoke includes device QA boundary");
+const evidence = JSON.parse(deviceEvidenceExample);
+assert(evidence.kind === "hwallet-device-multi-user-evidence", "device evidence example has expected kind");
+assert(evidence.checks?.appOpensWithoutCrash === true, "device evidence example covers no-crash launch");
+assert(evidence.checks?.addressesAreDistinct === true, "device evidence example covers distinct addresses");
+assert(evidence.checks?.copyFeedbackVisible === true, "device evidence example covers copy feedback");
+assert(evidence.checks?.signedOutHidesWalletAddress === true, "device evidence example covers signed-out clearing");
+assert(evidence.checks?.liveExecutionClosed === true, "device evidence example covers closed live execution");
+checks.push("device evidence example covers the installed-App multi-user release proof");
+
+assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile TestFlight smoke includes device QA boundary");
 assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile TestFlight smoke checks public HTTPS API URLs");
 assertIncludes(supabaseReadbackSmoke, "release drill mentions other-user isolation", "Supabase readback smoke enforces other-user isolation docs");
 checks.push("existing release smokes are chained into the HWallet candidate gate");
@@ -106,6 +119,7 @@ assertNoRawSecrets({
   "docs/STAGING_SERVER_DEPLOYMENT.md": stagingDeployment,
   "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
   "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
+  "docs/HWALLET_DEVICE_EVIDENCE.example.json": deviceEvidenceExample,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");
