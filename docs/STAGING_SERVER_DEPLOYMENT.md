@@ -85,6 +85,9 @@ the public IP. Point HTTPS to `127.0.0.1:3102`. If using Caddy, start from
 Run local config readiness:
 
 ```sh
+npm run smoke:supabase-cutover-safety
+npm run smoke:supabase-staging-sequence
+npm run smoke:supabase-rollback-plan
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readiness
 ```
 
@@ -103,6 +106,12 @@ Then update `apps/mobile/eas.json` preview and production
 EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 ```
 
+For a Supabase storage switch rehearsal, keep the staging server live execution
+switches closed and run the local sequence from `docs/V2_RELEASE_CHECKLIST.md`:
+`dual` shadow writes, dual consistency, `postgres` readback, and postgres
+performance. If the same performance endpoint fails twice, keep staging in
+`dual` or `jsonl` mode and do not publish an EAS Update from that backend.
+
 Only after these pass should we build a development client or TestFlight build.
 
 ## What The Server Smoke Checks
@@ -115,3 +124,5 @@ Only after these pass should we build a development client or TestFlight build.
 - Protected HWallet APIs reject missing tokens.
 - Real execution, Onchain OS live mode, prediction live trading, and public
   trading API execution are all closed.
+- The Supabase rehearsal confirms wallet, transfer, message, audit, record, and
+  memory readback before the App build points at the staging API.
