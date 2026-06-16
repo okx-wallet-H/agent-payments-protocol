@@ -86,10 +86,14 @@ assert(walletRefresh.wallet?.address === walletAddress, "wallet refresh returns 
 assert(Boolean(walletRefresh.wallet?.agent?.fundsStatus), "wallet refresh returns Agent fund state");
 assert(walletRefresh.wallet?.vault?.title === "Agent 资金池", "wallet refresh returns Agent vault state");
 assert(walletRefresh.wallet?.policy?.liveExecutionEnabled === false, "wallet refresh returns Agent policy state");
+assert(Boolean(walletRefresh.orchestration?.action), "wallet refresh returns Agent orchestration");
+assert(walletRefresh.orchestration?.capability?.liveExecution?.enabled === false, "wallet refresh orchestration keeps live execution disabled");
 if (walletRefresh.wallet?.agent?.fundsStatus === "ready") {
   assert(walletRefresh.mobileTurn?.goalType === "prediction_market_research", "funded wallet refresh enters prediction research");
+  assert(walletRefresh.orchestration?.action === "analyze_worldcup_market", "funded wallet refresh returns market-analysis orchestration");
 } else {
   assert(walletRefresh.mobileTurn?.goalType === "agent_fund_prepare", "unfunded wallet refresh returns fund-preparation turn");
+  assert(walletRefresh.orchestration?.action === "check_wallet_funds", "unfunded wallet refresh returns wallet-check orchestration");
 }
 assert(
   walletRefresh.mobileTurn?.messages?.some((message) => /到账|资产|刷新|HWallet|观察|模拟/.test(message.text || "")),

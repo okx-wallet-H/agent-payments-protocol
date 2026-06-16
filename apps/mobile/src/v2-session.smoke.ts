@@ -315,7 +315,8 @@ const api = {
   },
   refreshV2Wallet: async () => ({
     wallet: refreshedWallet,
-    mobileTurn: actionTurn
+    mobileTurn: actionTurn,
+    orchestration: predictionOrchestration
   }),
   verifyV2WalletTx: async () => ({
     wallet: refreshedWallet,
@@ -558,6 +559,9 @@ async function main() {
   }
   if (afterRefresh.orchestration?.action !== afterChat.orchestration?.action) {
     throw new Error("Expected wallet refresh to preserve latest orchestration gate.");
+  }
+  if (afterRefresh.orchestration?.capability.liveExecution.enabled !== false) {
+    throw new Error("Expected wallet refresh orchestration to keep live execution disabled.");
   }
   const afterVerifyTx = await verifyV2AgentWalletTx(
     api,
