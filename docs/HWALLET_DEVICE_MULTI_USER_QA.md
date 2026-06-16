@@ -41,6 +41,32 @@ Record only non-sensitive observations:
 - Whether the short address changed between users.
 - Whether memory/audit/records stayed scoped to the active user.
 
+## Installed-App Regression Gate
+
+Run this quick pass after every preview build or OTA update that touches
+HWallet login, account switching, receive-address copy, keyboard behavior, or
+wallet state rendering.
+
+1. Open the installed App and log in as User A.
+2. Open HWallet from the `H` entry.
+3. Confirm the App does not crash or return to the launcher.
+4. Confirm User A email is visible in the HWallet account area.
+5. Tap `切换` and confirm the App shows a logout/switch confirmation.
+6. Exit User A, log in as User B, then open HWallet again.
+7. Confirm User B email is visible.
+8. Confirm User B receives a different short HWallet address than User A.
+9. Tap copy and confirm the button changes to `已复制`.
+10. Switch back to User A and confirm User A's original HWallet address returns.
+
+Pass criteria:
+
+- No crash during login, switch, logout, or HWallet render.
+- User A and User B have different HWallet receive addresses.
+- HWallet never shows the previous user's receive address after switching.
+- Copy feedback is visible before any transaction hash check.
+- The transaction hash check remains optional; normal receive flow works without
+  pasting a hash.
+
 ## User A Fresh Login
 
 1. Open the App from a fresh install or after clearing App state.
