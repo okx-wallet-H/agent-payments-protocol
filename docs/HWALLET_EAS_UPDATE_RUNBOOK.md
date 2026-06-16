@@ -63,6 +63,7 @@ Run these before publishing an update:
 npm run smoke:mobile-testflight-readiness
 npm run smoke:hwallet-release-candidate
 npm run smoke:hwallet-device-evidence
+npm run smoke:hwallet-staging-handoff
 npm --prefix apps/mobile run typecheck
 EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface

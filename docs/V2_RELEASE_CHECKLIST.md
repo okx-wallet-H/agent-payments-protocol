@@ -104,6 +104,18 @@ Update, or promote production if this gate fails, if the second-user path is
 skipped, if redacted device evidence is missing, or if any live execution switch
 is open.
 
+HWallet staging handoff gate:
+
+```sh
+npm run smoke:hwallet-staging-handoff
+HWALLET_STAGING_HANDOFF_STRICT=true HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:hwallet-staging-handoff
+```
+
+Use the first command for a quick staging health pass. Use the strict command
+before a TestFlight/internal build handoff: it requires the two-user Privy token
+API path and the redacted manual device evidence file. Do not paste the tokens
+into docs or commit the evidence file.
+
 Local v2 smoke commands:
 
 ```sh
