@@ -57,6 +57,7 @@ Mobile TestFlight readiness gate:
 
 ```sh
 npm run smoke:mobile-testflight-readiness
+npm run smoke:hwallet-release-candidate
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
@@ -78,6 +79,27 @@ npm --prefix apps/mobile run update:preview -- --message "Short update note"
 
 Only promote the same fix to production after preview is checked on device and
 the rollback path in `docs/HWALLET_EAS_UPDATE_RUNBOOK.md` is understood.
+
+HWallet release candidate gate:
+
+```sh
+npm run smoke:hwallet-release-candidate
+npm run smoke:supabase-readback-drill
+STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
+STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
+STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
+MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
+MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live
+MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:mobile-device-hwallet:live
+```
+
+This is the App-release gate for the HWallet product body. The first device API
+smoke may stop after proving unauthenticated staging traffic is rejected; the
+second authenticated run must use two short-lived Privy tokens so User A and
+User B receive different HWallet addresses and cannot read each other's memory,
+audit, records, or tx history. Do not submit to TestFlight, publish an EAS
+Update, or promote production if this gate fails, if the second-user path is
+skipped, or if any live execution switch is open.
 
 Local v2 smoke commands:
 

@@ -1,0 +1,165 @@
+import { readFile } from "node:fs/promises";
+
+const checks = [];
+
+const packageJson = JSON.parse(await readFile("package.json", "utf8"));
+const mobilePackage = JSON.parse(await readFile("apps/mobile/package.json", "utf8"));
+const easConfig = JSON.parse(await readFile("apps/mobile/eas.json", "utf8"));
+const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
+const stagingDeployment = await readFile("docs/STAGING_SERVER_DEPLOYMENT.md", "utf8");
+const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
+const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
+const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
+const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
+const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet-live.mjs", "utf8");
+const mobileTestflightSmoke = await readFile("v2/scripts/smoke-mobile-testflight-readiness.mjs", "utf8");
+const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
+
+const scripts = packageJson.scripts || {};
+const mobileScripts = mobilePackage.scripts || {};
+const easProfiles = easConfig.build || {};
+
+const requiredScripts = [
+  "smoke:hwallet-release-candidate",
+  "smoke:supabase-readback-drill",
+  "smoke:supabase-closeout",
+  "smoke:staging-server",
+  "smoke:staging-storage-summary",
+  "smoke:staging-auth-surface",
+  "smoke:mobile-staging-env",
+  "smoke:mobile-device-hwallet:live",
+  "smoke:mobile-testflight-readiness",
+  "smoke:mobile-hwallet-ux",
+  "smoke:privy-wallet-status",
+  "verify:merge"
+];
+
+for (const scriptName of requiredScripts) {
+  assert(typeof scripts[scriptName] === "string", `package script ${scriptName} exists`);
+}
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:hwallet-release-candidate"),
+  "verify:merge includes HWallet release candidate gate"
+);
+checks.push("package exposes the HWallet release candidate gate");
+
+for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:ios"]) {
+  assert(typeof mobileScripts[scriptName] === "string", `mobile package script ${scriptName} exists`);
+}
+checks.push("mobile workspace keeps build and OTA commands available");
+
+const releaseCandidate = sectionFrom(releaseChecklist, "HWallet release candidate gate:");
+assertOrder(releaseCandidate, "npm run smoke:hwallet-release-candidate", "npm run smoke:supabase-readback-drill", "static gate comes before Supabase drill");
+assertOrder(releaseCandidate, "npm run smoke:supabase-readback-drill", "STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server", "Supabase drill comes before staging server");
+assertOrder(releaseCandidate, "smoke:staging-server", "smoke:staging-storage-summary", "staging server comes before storage summary");
+assertOrder(releaseCandidate, "smoke:staging-storage-summary", "smoke:staging-auth-surface", "storage summary comes before auth surface");
+assertOrder(releaseCandidate, "smoke:staging-auth-surface", "MOBILE_STAGING_READINESS=true", "auth surface comes before mobile staging env");
+assertOrder(releaseCandidate, "MOBILE_STAGING_READINESS=true", "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "mobile staging env comes before device API smoke");
+assertPattern(releaseCandidate, /MOBILE_DEVICE_PRIVY_ACCESS_TOKEN/, "release gate documents primary Privy token");
+assertPattern(releaseCandidate, /MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN/, "release gate documents second-user Privy token");
+assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
+checks.push("release checklist keeps HWallet candidate checks in safe order");
+
+assertIncludes(stagingDeployment, "npm run smoke:hwallet-release-candidate", "staging deployment runs the release candidate gate");
+assertIncludes(stagingDeployment, "STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-auth-surface", "staging deployment keeps auth surface gate");
+assertIncludes(stagingDeployment, "Only after these pass", "staging deployment blocks builds before server gates pass");
+assertIncludes(easRunbook, "npm run smoke:hwallet-release-candidate", "EAS runbook requires the release candidate gate");
+assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface", "EAS runbook checks staging auth surface before OTA");
+assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
+assertIncludes(deviceQa, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device QA names the primary device token env");
+assertIncludes(deviceQa, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device QA names the second-user device token env");
+checks.push("release, staging, EAS, and device docs share the same HWallet candidate gate");
+
+assertIncludes(stagingServerSmoke, "server HWallet store is postgres-only", "staging server smoke verifies postgres-only storage");
+assertIncludes(stagingServerSmoke, "Privy access token is required", "staging server smoke verifies Privy token enforcement");
+assertIncludes(stagingServerSmoke, "Agent real execution is closed", "staging server smoke verifies Agent execution is closed");
+assertIncludes(stagingServerSmoke, "protected mobile wallet API rejects missing Privy token", "staging server smoke probes protected wallet API");
+assertIncludes(stagingAuthSmoke, "protectedEndpoints", "staging auth smoke summarizes protected endpoint count");
+assertIncludes(stagingAuthSmoke, 'expectUnauthorized("POST wallet tx verify"', "staging auth smoke protects tx verification");
+assertIncludes(stagingAuthSmoke, 'expectUnauthorized("POST phase-one action"', "staging auth smoke protects Agent actions");
+checks.push("staging live smokes protect storage, auth, and execution boundaries");
+
+assertIncludes(mobileDeviceSmoke, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device smoke supports authenticated User A path");
+assertIncludes(mobileDeviceSmoke, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device smoke supports authenticated User B path");
+assertIncludes(mobileDeviceSmoke, "other user HWallet address is not first user address", "device smoke verifies distinct user addresses");
+assertIncludes(mobileDeviceSmoke, "other user memory cannot see verified tx", "device smoke verifies memory isolation");
+assertIncludes(mobileDeviceSmoke, "other user audit cannot see verified tx", "device smoke verifies audit isolation");
+assertIncludes(mobileDeviceSmoke, "liveExecutionEnabled", "device smoke reports live execution state");
+checks.push("device live smoke covers multi-user wallet, memory, audit, and execution state");
+
+assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, and HWallet live-smoke gates", "mobile TestFlight smoke includes device QA boundary");
+assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile TestFlight smoke checks public HTTPS API URLs");
+assertIncludes(supabaseReadbackSmoke, "release drill mentions other-user isolation", "Supabase readback smoke enforces other-user isolation docs");
+checks.push("existing release smokes are chained into the HWallet candidate gate");
+
+for (const profileName of ["development-staging", "preview", "production"]) {
+  const profile = easProfiles[profileName];
+  assert(Boolean(profile), `EAS ${profileName} profile exists`);
+  assert(profile.env?.EXPO_PUBLIC_API_BASE_URL === "https://app.hwallet.vip", `EAS ${profileName} points at staging HTTPS API`);
+  assert(profile.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", `EAS ${profileName} ships V2 HWallet UI`);
+  assert(profile.env?.EXPO_PUBLIC_AGENT_WALLET_PREVIEW !== "true", `EAS ${profileName} does not ship preview-only UI`);
+}
+checks.push("EAS profiles point installed builds at the HWallet staging API");
+
+assertNoRawSecrets({
+  "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
+  "docs/STAGING_SERVER_DEPLOYMENT.md": stagingDeployment,
+  "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
+  "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
+  "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
+});
+checks.push("HWallet release candidate docs avoid raw secret material");
+
+console.log(JSON.stringify({
+  ok: true,
+  checks,
+  releaseCandidate: {
+    stagingApi: "https://app.hwallet.vip",
+    requiresPrivyAuth: true,
+    requiresTwoUserDeviceSmoke: true,
+    liveExecutionClosed: true
+  }
+}, null, 2));
+
+function sectionFrom(text, marker) {
+  const start = text.indexOf(marker);
+  assert(start !== -1, `${marker} section exists`);
+  const nextHeading = text.indexOf("\n## ", start + marker.length);
+  return nextHeading === -1 ? text.slice(start) : text.slice(start, nextHeading);
+}
+
+function assertIncludes(text, needle, label) {
+  assert(text.includes(needle), label);
+}
+
+function assertPattern(text, pattern, label) {
+  assert(pattern.test(text), label);
+}
+
+function assertOrder(text, first, second, label) {
+  const firstIndex = text.indexOf(first);
+  const secondIndex = text.indexOf(second);
+  assert(firstIndex !== -1 && secondIndex !== -1 && firstIndex < secondIndex, label);
+}
+
+function assertNoRawSecrets(files) {
+  const forbidden = [
+    /gho_[A-Za-z0-9_]+/,
+    /sk-[A-Za-z0-9_-]{20,}/,
+    /privy_[A-Za-z0-9_-]{20,}/,
+    /postgres(?:ql)?:\/\/(?!\.\.\.|[^:\s]+:<password>|[^:\s]+:\.\.\.)[^@\s]+@/i
+  ];
+
+  for (const [file, text] of Object.entries(files)) {
+    for (const pattern of forbidden) {
+      if (pattern.test(text)) {
+        throw new Error(`HWallet release candidate smoke failed: ${file} must not contain raw secret material`);
+      }
+    }
+  }
+}
+
+function assert(condition, label) {
+  if (!condition) throw new Error(`HWallet release candidate smoke failed: ${label}`);
+  checks.push(label);
+}

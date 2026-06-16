@@ -24,6 +24,10 @@ MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip n
 - Before trusting device multi-user results against staging, run the Supabase readback drill so wallet,
   message, transfer, audit, record, Agent memory, and other-user isolation are
   already checked at the API/storage level.
+- Before marking the installed App as an HWallet release candidate, run the
+  HWallet release candidate gate. The full staging device smoke needs
+  `MOBILE_DEVICE_PRIVY_ACCESS_TOKEN` and `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN`
+  so the backend can verify User A and User B under Privy protection.
 - Keep real execution closed:
   - live transaction broadcast: off
   - Agent real execution: off
