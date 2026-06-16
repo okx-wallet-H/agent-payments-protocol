@@ -7,6 +7,7 @@ import { createPostgresClientOptions } from "./postgres-client-options";
 export type AuditTimelineEventType =
   | "wallet.refresh"
   | "wallet.tx_verified"
+  | "device.evidence"
   | "prediction.analyzed"
   | "tracking.saved"
   | "strategy.saved"

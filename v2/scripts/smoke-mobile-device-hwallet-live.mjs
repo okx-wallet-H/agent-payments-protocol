@@ -70,6 +70,35 @@ const receiveCard = recharge.mobileTurn?.cards?.find((card) => card.type === "re
 assert(receiveCard?.addresses?.length === 1, "receive flow exposes one HWallet address");
 assert(sameHex(receiveCard?.addresses?.[0]?.address, walletAddress), "receive flow uses current HWallet address");
 
+const deviceEvidence = await postJson("/api/v2/mobile/device-evidence", {
+  userId,
+  walletAddress,
+  environment: {
+    platform: "ios",
+    buildChannel: "preview",
+    apiBaseUrl: baseUrl,
+    appVersion: "0.1.0",
+    buildNumber: "9"
+  },
+  checks: {
+    appOpensWithoutCrash: true,
+    hWalletVisible: true,
+    receiveAddressVisible: true,
+    copyFeedbackVisible: true,
+    noWrongUserDataExposure: true,
+    liveExecutionClosed: true
+  },
+  artifacts: [
+    {
+      label: "h-wallet-copy-feedback",
+      redacted: true
+    }
+  ]
+});
+assert(deviceEvidence.ok === true, "device evidence upload accepts App proof");
+assert(deviceEvidence.evidence?.redacted === true, "device evidence upload returns redacted proof");
+assert(deviceEvidence.evidence?.walletAddress?.includes("..."), "device evidence upload redacts wallet address");
+
 const verified = await postJson("/api/v2/mobile/wallet/verify-tx", {
   userId,
   walletAddress,
@@ -91,6 +120,9 @@ assert(followUp.wallet?.agent?.fundsStatus === "ready", "follow-up keeps ready w
 assert(followUp.orchestration?.capability?.liveExecution?.enabled === false, "follow-up keeps live execution disabled");
 
 const audit = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}&limit=20`);
+const deviceEvidenceAudit = audit.events?.find((event) => event.type === "device.evidence");
+assert(deviceEvidenceAudit?.moneyMoved === false, "device evidence audit records no money movement");
+assert(!deviceEvidenceAudit?.txHash, "device evidence audit does not store transaction hash");
 const txAudit = audit.events?.find((event) => event.type === "wallet.tx_verified" && sameHex(event.txHash, txHash));
 assert(txAudit?.moneyMoved === false, "wallet tx audit records no money movement");
 assert(txAudit?.walletRecord?.id === `wallet-tx-${txHash}`, "wallet tx audit includes linked wallet record");

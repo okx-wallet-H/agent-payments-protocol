@@ -668,6 +668,7 @@ export interface V2AuditTimelineEvent {
   type:
     | "wallet.refresh"
     | "wallet.tx_verified"
+    | "device.evidence"
     | "prediction.analyzed"
     | "tracking.saved"
     | "strategy.saved"
@@ -709,4 +710,43 @@ export interface V2PhaseOneRecord {
   note: string;
   card: V2PredictionCard | V2TrackingCard | V2StrategyCard | V2SimulationCard;
   createdAt: string;
+}
+
+export interface V2MobileDeviceEvidenceInput {
+  userId?: string;
+  walletAddress?: `0x${string}`;
+  environment: {
+    platform: string;
+    buildChannel: string;
+    apiBaseUrl: string;
+    appVersion: string;
+    buildNumber: string;
+  };
+  checks: {
+    appOpensWithoutCrash: boolean;
+    hWalletVisible: boolean;
+    receiveAddressVisible: boolean;
+    copyFeedbackVisible: boolean;
+    noWrongUserDataExposure: boolean;
+    liveExecutionClosed: boolean;
+  };
+  artifacts?: Array<{
+    label: string;
+    redacted: true;
+  }>;
+}
+
+export interface V2MobileDeviceEvidenceResponse {
+  ok: true;
+  evidence: {
+    id: string;
+    userId: string;
+    title: string;
+    createdAt: string;
+    redacted: true;
+    walletAddress?: string;
+    environment: V2MobileDeviceEvidenceInput["environment"];
+    checks: V2MobileDeviceEvidenceInput["checks"];
+    artifacts: NonNullable<V2MobileDeviceEvidenceInput["artifacts"]>;
+  };
 }

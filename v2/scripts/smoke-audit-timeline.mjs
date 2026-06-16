@@ -12,6 +12,17 @@ await saveAuditTimelineEvent({
 
 await saveAuditTimelineEvent({
   userId,
+  type: "device.evidence",
+  title: "真机验证已记录",
+  note: "HWallet 真机证据已记录，未发生资金动作。",
+  status: "success",
+  chainId: 196,
+  assetSymbol: "HWallet",
+  amountLabel: "copy-feedback-visible"
+});
+
+await saveAuditTimelineEvent({
+  userId,
   type: "simulation.completed",
   title: "已完成模拟",
   note: "Agent 已完成一次预测模拟，未提交真实订单。",
@@ -22,10 +33,11 @@ await saveAuditTimelineEvent({
 });
 
 const events = await listAuditTimelineEvents(userId);
-assert(events.length === 2, "lists current user's audit events");
+assert(events.length === 3, "lists current user's audit events");
 assert(events.every((event) => event.moneyMoved === false), "audit events do not claim money movement");
 assert(events[0].createdAt >= events[1].createdAt, "events are sorted newest first");
 assert(events.some((event) => event.recordId === "record-worldcup-spain-simulation"), "audit events keep record id links");
+assert(events.some((event) => event.type === "device.evidence"), "audit events keep device evidence type");
 
 console.log(JSON.stringify({
   ok: true,
