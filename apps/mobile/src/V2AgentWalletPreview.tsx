@@ -3,6 +3,7 @@ import * as Clipboard from "expo-clipboard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createApi } from "./api";
+import { createFriendlyWalletNotice } from "./hwallet-entry";
 import type { V2WalletContext, V2WorldCupExploreCategory, V2WorldCupExploreMarketCard, V2WorldCupExploreView } from "./types";
 
 const worldCupPoster = require("../assets/world-cup-agent-poster.png");
@@ -42,6 +43,11 @@ function usePreviewCopyFeedback() {
   }
 
   return { copied, flashCopied };
+}
+
+function formatPreviewWalletError(error: unknown, fallback: string): string {
+  const rawMessage = error instanceof Error ? error.message : undefined;
+  return createFriendlyWalletNotice(rawMessage) || fallback;
 }
 
 const championMarkets = [
@@ -187,7 +193,7 @@ export function V2AgentWalletPreview() {
         setPreviewMessages((items) => [...items, { role: "agent", text: reply }]);
       }
     } catch (error) {
-      setWalletLoadError(error instanceof Error ? error.message : "这笔交易暂时没有识别成功，稍后再试一次。");
+      setWalletLoadError(formatPreviewWalletError(error, "这笔交易暂时没有识别成功，稍后再试一次。"));
     } finally {
       setWalletActionBusy(false);
     }
@@ -224,7 +230,7 @@ export function V2AgentWalletPreview() {
       .catch((error) => {
         if (!cancelled) {
           setPreviewWallet(undefined);
-          setWalletLoadError(error instanceof Error ? error.message : "HWallet 暂时没有同步成功，稍后再刷新一次。");
+          setWalletLoadError(formatPreviewWalletError(error, "HWallet 暂时没有同步成功，稍后再刷新一次。"));
         }
       });
 

@@ -1,5 +1,5 @@
 import { createPrivyHWalletStatus } from "./privy-wallet-status";
-import { createHWalletEntryState } from "./hwallet-entry";
+import { createFriendlyWalletNotice, createHWalletEntryState } from "./hwallet-entry";
 import type { V2WalletContext } from "./types";
 
 const checks: string[] = [];
@@ -141,6 +141,14 @@ const authNotice = authNoticeEntry.walletNotice || "";
 assert(authNotice === "登录状态正在同步，请稍后再试。", "HWallet entry hides raw auth session error");
 assert(!authNotice.includes("Privy"), "HWallet entry hides Privy wording from auth notice");
 assert(!authNotice.includes("access token"), "HWallet entry hides access-token wording from auth notice");
+assert(
+  createFriendlyWalletNotice("Missing Privy access token") === "登录状态正在同步，请稍后再试。",
+  "preview HWallet hides raw missing-token error"
+);
+assert(
+  createFriendlyWalletNotice("Unauthorized") === "登录状态正在同步，请稍后再试。",
+  "preview HWallet hides raw unauthorized error"
+);
 
 const authProvisionNoticeEntry = createHWalletEntryState({
   privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: true, provisionError: "Invalid Privy access token" }),

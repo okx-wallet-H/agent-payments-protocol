@@ -55,7 +55,7 @@ export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletE
   };
 }
 
-function createFriendlyWalletNotice(notice?: string): string | undefined {
+export function createFriendlyWalletNotice(notice?: string): string | undefined {
   const normalized = notice?.trim();
   if (!normalized) return undefined;
 
