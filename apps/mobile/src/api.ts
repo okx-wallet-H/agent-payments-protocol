@@ -41,7 +41,11 @@ export interface ApiClient {
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeResponse>;
   getV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<V2WalletContext>;
   getV2Memory(userId?: string): Promise<V2MobileAgentMemory>;
-  refreshV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
+  refreshV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<{
+    wallet: V2WalletContext;
+    mobileTurn: V2MobileChatTurn;
+    orchestration?: V2AgentOrchestration;
+  }>;
   verifyV2WalletTx(txHash: string, userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
   sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<{
     mobileTurn: V2MobileChatTurn;
@@ -238,7 +242,7 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       return data.memory;
     },
     async refreshV2Wallet(userId, walletAddress) {
-      return request<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>(cleanBaseUrl, "/api/v2/mobile/wallet/refresh", {
+      return request<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn; orchestration?: V2AgentOrchestration }>(cleanBaseUrl, "/api/v2/mobile/wallet/refresh", {
         method: "POST",
         body: JSON.stringify({ userId, walletAddress })
       }, getAccessToken);

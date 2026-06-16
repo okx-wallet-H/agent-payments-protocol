@@ -15,7 +15,11 @@ export interface V2AgentWalletApi {
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeResponse>;
   getV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<V2WalletContext>;
   getV2Memory(userId?: string): Promise<V2MobileAgentMemory>;
-  refreshV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
+  refreshV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<{
+    wallet: V2WalletContext;
+    mobileTurn: V2MobileChatTurn;
+    orchestration?: V2AgentOrchestration;
+  }>;
   verifyV2WalletTx(txHash: string, userId?: string, walletAddress?: `0x${string}`): Promise<{ wallet: V2WalletContext; mobileTurn: V2MobileChatTurn }>;
   sendV2Chat(text: string, userId?: string, walletAddress?: `0x${string}`, candidateMarket?: V2MarketSnapshot): Promise<{
     mobileTurn: V2MobileChatTurn;
@@ -73,6 +77,7 @@ export async function refreshV2AgentWallet(
       ...appendTurn(working, response.mobileTurn),
       wallet: response.wallet,
       memory,
+      orchestration: response.orchestration || session.orchestration,
       audit
     };
   } catch (error) {

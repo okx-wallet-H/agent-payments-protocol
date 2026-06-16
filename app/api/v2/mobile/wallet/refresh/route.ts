@@ -5,6 +5,7 @@ import { createMobileChatTurn } from "@/v2/app/mobile-chat";
 import { resolvePhaseOneUser } from "@/v2/auth/request-user";
 import { getWorldCupCandidateMarket } from "@/v2/execution/polymarket-cli";
 import { saveAuditTimelineEvent } from "@/v2/storage/audit-timeline-store";
+import { savePhaseOneRecord } from "@/v2/storage/phase-one-store";
 import { bindUserWalletSession, rememberUserSession } from "@/v2/storage/user-session-store";
 import { createAgentWalletContext } from "@/v2/wallet/wallet-orchestrator";
 import {
@@ -90,10 +91,40 @@ export async function POST(request: Request) {
     status: "success",
     walletRecordId: syncedWallet.recentRecords[0]?.id
   });
+  if (turn.goal.type === "prediction_market_research") {
+    const predictionCard = turn.cards.find((card) => card.type === "prediction_card");
+    let predictionRecord: Awaited<ReturnType<typeof savePhaseOneRecord>> | undefined;
+    if (predictionCard) {
+      predictionRecord = await savePhaseOneRecord({
+        userId: user.userId,
+        idempotencyKey: `prediction:${user.userId}:${predictionCard.market.marketId}`,
+        type: "prediction.saved",
+        title: predictionCard.title,
+        note: predictionCard.agentNote,
+        card: predictionCard
+      });
+    }
+    await saveAuditTimelineEvent({
+      userId: user.userId,
+      type: "prediction.analyzed",
+      title: "已生成预测分析",
+      note: "HWallet 资金已可用，Agent 已继续生成分析卡，未发生真实下单。",
+      status: "success",
+      marketId: orchestration.candidateMarket?.marketId,
+      marketTitle: orchestration.candidateMarket?.question,
+      recordId: predictionRecord?.id
+    });
+  }
 
   return jsonWithCors({
     wallet: toMobileWalletContext(syncedWallet),
-    mobileTurn: createMobileChatTurn(turn)
+    mobileTurn: createMobileChatTurn(turn),
+    orchestration: {
+      action: orchestration.action,
+      goalType: orchestration.goalType,
+      progressHint: orchestration.progressHint,
+      capability: orchestration.capability
+    }
   });
 }
 
