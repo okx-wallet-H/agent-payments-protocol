@@ -20,7 +20,8 @@ const requiredScripts = [
   "smoke:staging-readiness",
   "smoke:staging-server",
   "smoke:staging-storage-summary",
-  "smoke:staging-auth-surface"
+  "smoke:staging-auth-surface",
+  "smoke:supabase-rollback-plan"
 ];
 
 for (const scriptName of requiredScripts) {
