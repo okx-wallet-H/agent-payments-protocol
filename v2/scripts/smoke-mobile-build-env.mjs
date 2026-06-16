@@ -40,7 +40,7 @@ check(scriptIncludesEnv(productionUpdateScript, "EXPO_PUBLIC_API_BASE_URL=https:
 check(scriptIncludesEnv(stagingUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS staging update ships V2 mobile UI");
 check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS preview update ships V2 mobile UI");
 check(scriptIncludesEnv(productionUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), "EAS production update ships V2 mobile UI");
-check(scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true"), "EAS preview update ships human visual preview UI");
+check(!scriptIncludesEnv(previewUpdateScript, "EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true"), "EAS preview update uses real HWallet login");
 check(mobileAppSource.includes('process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI !== "false"'), "native app defaults to V2 HWallet UI");
 check(expoConfig.orientation === "portrait", "mobile app is locked to portrait orientation");
 check(Boolean(expoConfig.scheme), "mobile deep-link scheme is configured");
@@ -62,7 +62,7 @@ check(Boolean(easConfig.build?.preview?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS pre
 check(Boolean(easConfig.build?.production?.env?.EXPO_PUBLIC_API_BASE_URL), "EAS production API base URL is configured");
 check(easConfig.build?.["development-staging"]?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS staging development uses V2 mobile UI");
 check(easConfig.build?.preview?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS preview uses V2 mobile UI");
-check(easConfig.build?.preview?.env?.EXPO_PUBLIC_AGENT_WALLET_PREVIEW === "true", "EAS preview uses human visual preview UI");
+check(easConfig.build?.preview?.env?.EXPO_PUBLIC_AGENT_WALLET_PREVIEW !== "true", "EAS preview uses real HWallet login");
 check(easConfig.build?.production?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", "EAS production uses V2 mobile UI");
 check(process.env.AGENT_WALLET_REAL_EXECUTION !== "true", "Agent real execution switch is closed");
 check(process.env.ONCHAINOS_LIVE_MODE !== "true", "Onchain OS live mode is closed");

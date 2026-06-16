@@ -16,14 +16,16 @@
 
 ## Preview Update Flow
 
-Use preview first for device testing:
+Use preview first for installable real HWallet / Privy device testing:
 
 ```bash
 cd apps/mobile
 npm run update:preview -- --message "Short update note"
 ```
 
-The installed preview build must already include `expo-updates` and subscribe to the `preview` channel. For this project, that starts with native build number `4`.
+The preview channel should not set `EXPO_PUBLIC_AGENT_WALLET_PREVIEW`. That flag is only for local visual-only demos through `npm run start:v2:preview`.
+
+The installed preview build must already include `expo-updates` and subscribe to the `preview` channel. For real HWallet login testing, use native build number `7` or later.
 
 ## Production Update Flow
 

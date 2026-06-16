@@ -25,8 +25,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://app.hwallet.vip",
-        "EXPO_PUBLIC_AGENT_WALLET_V2_UI": "true",
-        "EXPO_PUBLIC_AGENT_WALLET_PREVIEW": "true"
+        "EXPO_PUBLIC_AGENT_WALLET_V2_UI": "true"
       },
       "channel": "preview"
     },
