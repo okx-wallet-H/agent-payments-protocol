@@ -63,6 +63,7 @@ npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:mobile-store-submission
 npm run smoke:hwallet-store-console-evidence
+npm run smoke:release-owner-packet
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-release-preflight
 npm run smoke:mobile-release-handoff
@@ -84,6 +85,11 @@ HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.
 HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
 HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence
 ```
+
+Use `docs/HWALLET_OWNER_RELEASE_PACKET.md` as the current owner-facing handoff
+before any TestFlight, Google Play internal testing, or final store metadata
+action. It records what the owner may provide, what must stay out of chat and
+git, and which strict evidence commands the controller will run afterward.
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
 preview/production profiles point to localhost or a LAN URL, if the installed

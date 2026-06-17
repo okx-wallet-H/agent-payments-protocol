@@ -84,6 +84,7 @@ for (const command of [
   "npm --prefix apps/mobile run build:android",
   "npm run smoke:mobile-store-submission",
   "npm run smoke:hwallet-store-console-evidence",
+  "npm run smoke:release-owner-packet",
   "npm run smoke:task-review-workflow",
   "npm run smoke:hwallet-release-candidate",
   "npm run smoke:mobile-store-readiness",

@@ -29,6 +29,8 @@ const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
 const releaseTaskLedger = await readFile("docs/HWALLET_RELEASE_TASK_LEDGER.md", "utf8");
 const releaseTaskLedgerSmoke = await readFile("v2/scripts/smoke-release-task-ledger.mjs", "utf8");
+const ownerReleasePacket = await readFile("docs/HWALLET_OWNER_RELEASE_PACKET.md", "utf8");
+const ownerReleasePacketSmoke = await readFile("v2/scripts/smoke-release-owner-packet.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -49,6 +51,7 @@ const requiredScripts = [
   "smoke:mobile-release-handoff",
   "smoke:mobile-store-submission",
   "smoke:hwallet-store-console-evidence",
+  "smoke:release-owner-packet",
   "smoke:release-task-ledger",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
@@ -96,6 +99,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-task-ledger"),
   "verify:merge includes release task ledger gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:release-owner-packet"),
+  "verify:merge includes owner release packet gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -125,6 +132,8 @@ assertIncludes(releaseChecklist, "npm run smoke:hwallet-store-console-evidence",
 assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
 assertIncludes(releaseChecklist, "docs/HWALLET_RELEASE_TASK_LEDGER.md", "release checklist links release task ledger");
 assertIncludes(releaseChecklist, "npm run smoke:release-task-ledger", "release checklist includes release task ledger smoke");
+assertIncludes(releaseChecklist, "docs/HWALLET_OWNER_RELEASE_PACKET.md", "release checklist links owner release packet");
+assertIncludes(releaseChecklist, "npm run smoke:release-owner-packet", "release checklist includes owner release packet smoke");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
@@ -262,7 +271,13 @@ assertIncludes(releaseTaskLedger, "iOS and Android installed-App evidence", "rel
 assertIncludes(releaseTaskLedger, "No fully automatable task remains", "release task ledger records owner-evidence boundary");
 assertIncludes(releaseTaskLedger, "owner/store-console evidence", "release task ledger names next owner action");
 assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger keeps store tasks owner-gated");
-checks.push("release candidate includes controller task ledger for 7x24 work selection");
+assertIncludes(ownerReleasePacket, "HWallet Owner Release Packet", "owner release packet exists");
+assertIncludes(ownerReleasePacket, "R-007 iOS TestFlight", "owner release packet covers iOS owner task");
+assertIncludes(ownerReleasePacket, "R-008 Android Internal Testing", "owner release packet covers Android owner task");
+assertIncludes(ownerReleasePacket, "R-009 Store Metadata", "owner release packet covers store metadata owner task");
+assertIncludes(ownerReleasePacket, "No secret material is needed now", "owner release packet keeps owner ask non-secret");
+assertIncludes(ownerReleasePacketSmoke, "smoke:release-owner-packet", "owner release packet has smoke gate");
+checks.push("release candidate includes controller task ledger and owner packet for 7x24 work selection");
 
 assertIncludes(
   stagingHandoffSmoke,
@@ -329,6 +344,8 @@ assertNoRawSecrets({
   "v2/scripts/smoke-release-task-ledger.mjs": releaseTaskLedgerSmoke,
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": storeSubmissionPacket,
   "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
+  "docs/HWALLET_OWNER_RELEASE_PACKET.md": ownerReleasePacket,
+  "v2/scripts/smoke-release-owner-packet.mjs": ownerReleasePacketSmoke,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
