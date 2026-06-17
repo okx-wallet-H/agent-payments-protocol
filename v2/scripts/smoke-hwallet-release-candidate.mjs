@@ -12,6 +12,7 @@ const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
 const deviceEvidenceExample = await readFile("docs/HWALLET_DEVICE_EVIDENCE.example.json", "utf8");
 const deviceEvidenceInit = await readFile("v2/scripts/init-hwallet-device-evidence.mjs", "utf8");
+const deviceEvidenceRecord = await readFile("v2/scripts/record-hwallet-device-evidence.mjs", "utf8");
 const stagingHandoffSmoke = await readFile("v2/scripts/smoke-hwallet-staging-handoff.mjs", "utf8");
 const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
@@ -36,6 +37,7 @@ const requiredScripts = [
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "hwallet:device-evidence:init",
+  "hwallet:device-evidence:record",
   "mobile:store-build-evidence:init",
   "smoke:hwallet-staging-handoff",
   "smoke:mobile-testflight-readiness",
@@ -85,6 +87,7 @@ assertIncludes(easRunbook, "npm run hwallet:device-evidence:init", "EAS runbook 
 assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface", "EAS runbook checks staging auth surface before OTA");
 assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
 assertIncludes(deviceQa, "npm run hwallet:device-evidence:init", "device QA initializes an ignored evidence file");
+assertIncludes(deviceQa, "npm run hwallet:device-evidence:record", "device QA documents the evidence recorder");
 assertIncludes(deviceQa, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device QA names the primary device token env");
 assertIncludes(deviceQa, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device QA names the second-user device token env");
 assertIncludes(deviceQa, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "device QA validates redacted evidence file");
@@ -131,6 +134,15 @@ assertIncludes(deviceEvidenceInit, "git\", [\"check-ignore\"", "device evidence 
 assertIncludes(deviceEvidenceInit, "observedOnPhysicalDevice: false", "device evidence initializer requires manual physical-device confirmation");
 assertIncludes(deviceEvidenceInit, "observed: false", "device evidence initializer requires ordered flow observations");
 checks.push("device evidence initializer creates an ignored local file that cannot pass strict mode untouched");
+
+assertIncludes(deviceEvidenceRecord, "HWALLET_DEVICE_EVIDENCE_CONFIRM_ALL", "device evidence recorder requires explicit owner confirmation");
+assertIncludes(deviceEvidenceRecord, "HWALLET_DEVICE_USER_A_SHORT_ADDRESS", "device evidence recorder requires User A address");
+assertIncludes(deviceEvidenceRecord, "HWALLET_DEVICE_USER_B_SHORT_ADDRESS", "device evidence recorder requires User B address");
+assertIncludes(deviceEvidenceRecord, ".tmp/hwallet-device-evidence.json", "device evidence recorder writes to ignored .tmp path");
+assertIncludes(deviceEvidenceRecord, "git\", [\"check-ignore\"", "device evidence recorder verifies git ignore coverage");
+assertIncludes(deviceEvidenceRecord, "normalizeAddress", "device evidence recorder normalizes redacted addresses");
+assertIncludes(deviceEvidenceRecord, "assertNoRawSecrets", "device evidence recorder scans for raw secrets");
+checks.push("device evidence recorder converts owner observations into strict local evidence");
 
 assertIncludes(
   stagingHandoffSmoke,
@@ -182,6 +194,7 @@ assertNoRawSecrets({
   "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
   "docs/HWALLET_DEVICE_EVIDENCE.example.json": deviceEvidenceExample,
   "v2/scripts/init-hwallet-device-evidence.mjs": deviceEvidenceInit,
+  "v2/scripts/record-hwallet-device-evidence.mjs": deviceEvidenceRecord,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");
