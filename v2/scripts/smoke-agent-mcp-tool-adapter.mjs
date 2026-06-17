@@ -123,6 +123,16 @@ const okxResult = await executeAgentCapability({
 assert(okxResult.adapterStatus === "disabled", "OKX observe adapter stays disabled until explicitly enabled");
 assert(okxResult.externalCallAttempted === false, "OKX observe should not attempt external calls");
 assert(okxResult.payload.adapter.payload.toolName === "okx.outcomes.market.observe", "OKX adapter payload keeps tool name");
+assert(okxResult.payload.adapter.payload.preview?.serviceId === "okx-outcomes", "OKX adapter preview keeps service id");
+assert(okxResult.payload.adapter.payload.preview?.route === "outcomes.market.observe", "OKX adapter preview keeps route");
+assert(okxResult.payload.adapter.payload.preview?.mode === "observe", "OKX adapter preview stays observe");
+assert(okxResult.payload.adapter.payload.preview?.safety === "read_only", "OKX adapter preview stays read-only");
+assert(okxResult.payload.adapter.payload.preview?.market?.marketId === okxMarket.marketId, "OKX adapter preview includes market summary");
+assert(okxResult.payload.adapter.payload.preview?.inputShape?.redacted?.includes("authorization"), "OKX adapter preview keeps redacted auth field");
+assert(okxResult.payload.adapter.payload.preview?.outputFields?.includes("market"), "OKX adapter preview exposes allowed output fields");
+assert(okxResult.payload.adapter.payload.preview?.externalCallEnabled === false, "OKX adapter preview keeps external calls disabled");
+assert(okxResult.payload.adapter.payload.preview?.moneyMovementEnabled === false, "OKX adapter preview cannot move money");
+assert(!JSON.stringify(okxResult.payload.adapter.payload.preview).includes(wallet.receiveAddress), "OKX adapter preview does not expose wallet address");
 assert(adapterInvoked === false, "disabled contract should not invoke the supplied adapter");
 
 const dryRunPlan = await createAgentOrchestrationPlan({
@@ -139,6 +149,11 @@ const dryRunResult = await executeAgentCapability({
 assert(dryRunResult.adapterStatus === "disabled", "plugin dry-run adapter stays disabled");
 assert(dryRunResult.safety === "dry_run_only", "plugin dry-run remains dry-run only");
 assert(dryRunResult.externalCallAttempted === false, "plugin dry-run should not attempt external calls");
+assert(dryRunResult.payload.adapter.payload.preview?.serviceId === "polymarket-plugin", "plugin dry-run preview keeps service id");
+assert(dryRunResult.payload.adapter.payload.preview?.route === "prediction.order.dry_run", "plugin dry-run preview keeps route");
+assert(dryRunResult.payload.adapter.payload.preview?.mode === "dry_run", "plugin dry-run preview stays dry-run");
+assert(dryRunResult.payload.adapter.payload.preview?.safety === "dry_run_only", "plugin dry-run preview keeps dry-run safety");
+assert(dryRunResult.payload.adapter.payload.preview?.moneyMovementEnabled === false, "plugin dry-run preview cannot move money");
 assert(adapterInvoked === false, "dry-run disabled contract should not invoke adapter");
 
 const blockedPlan = await createAgentOrchestrationPlan({
@@ -212,6 +227,8 @@ console.log(JSON.stringify({
   checks: [
     "internal HWallet actions do not need adapter",
     "read-only and dry-run contracts keep adapter disabled",
+    "disabled adapters return safe read-only or dry-run preview payloads",
+    "adapter previews do not expose wallet addresses",
     "disabled contracts do not invoke supplied adapter",
     "blocked plans stop before adapter invocation",
     "adapter invocation maps toolName and redacted fields",

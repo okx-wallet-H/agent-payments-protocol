@@ -100,10 +100,7 @@ export async function runAgentMcpToolAdapterSafely(input: {
     return createAdapterResult(invocation, {
       status: "disabled",
       summary: "真实 MCP 调用尚未启用，本次只生成安全预览结果。",
-      payload: {
-        stage: input.contract.stage,
-        toolName: input.contract.toolName
-      }
+      payload: createSafePreviewPayload(invocation, input.contract)
     });
   }
 
@@ -156,5 +153,51 @@ function createAdapterResult(
       externalCallEnabled: invocation.externalCallEnabled,
       redactedInputs: invocation.redactedInputs
     }
+  };
+}
+
+function createSafePreviewPayload(
+  invocation: AgentMcpToolAdapterInvocation,
+  contract: AgentMcpToolContract
+): Record<string, unknown> {
+  return {
+    stage: contract.stage,
+    toolName: contract.toolName,
+    preview: {
+      serviceId: invocation.serviceId,
+      route: invocation.route,
+      mode: invocation.mode,
+      safety: invocation.safety,
+      market: createMarketPreview(invocation.input.market),
+      inputShape: {
+        required: contract.input.required,
+        optional: contract.input.optional,
+        redacted: contract.input.redacted
+      },
+      outputFields: contract.output.fields,
+      outputNotes: contract.output.notes,
+      externalCallEnabled: false,
+      liveExecutionEnabled: false,
+      moneyMovementEnabled: false
+    }
+  };
+}
+
+function createMarketPreview(market: unknown): Record<string, unknown> | undefined {
+  if (!market || typeof market !== "object") return undefined;
+  const value = market as {
+    provider?: unknown;
+    chainId?: unknown;
+    eventId?: unknown;
+    marketId?: unknown;
+    question?: unknown;
+  };
+
+  return {
+    provider: typeof value.provider === "string" ? value.provider : undefined,
+    chainId: typeof value.chainId === "number" ? value.chainId : undefined,
+    eventId: typeof value.eventId === "string" ? value.eventId : undefined,
+    marketId: typeof value.marketId === "string" ? value.marketId : undefined,
+    question: typeof value.question === "string" ? value.question : undefined
   };
 }

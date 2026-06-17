@@ -155,6 +155,9 @@ assert(okxResult.toolName === "okx.outcomes.market.observe", "OKX executor resul
 assert(okxResult.externalCallEnabled === false, "OKX executor result keeps external call disabled");
 assert(okxResult.payload.toolContract?.redactedInputs?.includes("authorization"), "OKX contract keeps auth redacted");
 assert(okxResult.moneyMoved === false, "OKX contract result cannot move money");
+assert(okxResult.payload.adapter?.payload?.preview?.serviceId === "okx-outcomes", "OKX executor result includes safe adapter preview");
+assert(okxResult.payload.adapter?.payload?.preview?.outputFields?.includes("market"), "OKX adapter preview exposes allowed output fields");
+assert(okxResult.payload.adapter?.payload?.preview?.moneyMovementEnabled === false, "OKX adapter preview cannot move money");
 
 const dryRunPlan = await createAgentOrchestrationPlan({
   userText: "先模拟一下法国",
@@ -170,6 +173,7 @@ assert(dryRunResult.contractId === "polymarket-plugin:prediction.order.dry_run:d
 assert(dryRunResult.toolName === "polymarket.order.dry_run", "dry-run result includes plugin tool name");
 assert(dryRunResult.safety === "dry_run_only", "dry-run result stays dry-run only");
 assert(dryRunResult.payload.toolContract?.moneyMovementEnabled === false, "dry-run contract keeps money movement disabled");
+assert(dryRunResult.payload.adapter?.payload?.preview?.mode === "dry_run", "dry-run executor result includes safe adapter preview");
 
 console.log(JSON.stringify({
   ok: true,
@@ -179,6 +183,7 @@ console.log(JSON.stringify({
     "contracts do not require private keys",
     "route safety matches contract safety",
     "executor results expose contract id and tool name",
+    "executor results expose safe adapter preview payloads",
     "auth/access token inputs are redacted in contract metadata"
   ],
   contracts: AGENT_MCP_TOOL_CONTRACTS.map((contract) => ({
