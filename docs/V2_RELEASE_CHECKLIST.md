@@ -168,6 +168,7 @@ Supabase staging readback drill:
 
 ```sh
 npm run smoke:supabase-closeout
+npm run smoke:supabase-live-closeout-log
 HWALLET_SESSION_STORE=dual npm run dev
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-observation:live
 AGENT_WALLET_BASE_URL=http://localhost:3000 npm run smoke:hwallet-dual-consistency:live
@@ -183,6 +184,11 @@ record, and Agent memory readback, plus other user isolation. If any readback
 or other user isolation check fails, keep `HWALLET_SESSION_STORE=dual` or
 `jsonl`, do not publish an EAS Update, do not enable live execution, and
 investigate the affected API/storage path before retrying.
+
+The current HWallet Supabase live closeout is recorded in
+`docs/HWALLET_SUPABASE_LIVE_CLOSEOUT.md`. Keep this log aligned with the latest
+green `dual` and `postgres` validation before treating Supabase as the active
+storage path for an installable App build.
 
 Supabase staging stability gate:
 
