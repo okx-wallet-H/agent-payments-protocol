@@ -19,6 +19,12 @@
 - [ ] Relevant smoke tests:
 - [ ] Device / OTA evidence, if mobile-facing:
 
+## Owner Evidence
+
+- [ ] No owner evidence required
+- [ ] Owner/device/dashboard evidence attached or linked
+- [ ] Blocked waiting for owner evidence
+
 ## Safety
 
 - [ ] No secrets, passwords, API keys, private keys, raw database URLs, or unredacted tokens are included.

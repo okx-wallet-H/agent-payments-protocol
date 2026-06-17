@@ -1,0 +1,109 @@
+# HWallet 7x24 Work Queue
+
+This queue keeps the first installable iOS and Android App moving without
+mixing unfinished wallet, Agent, data, and release work into one branch.
+
+## Controller Loop
+
+Each autonomous development cycle should:
+
+1. Read the newest user instruction and current repo state.
+2. Pick one small task from the highest-priority unblocked lane.
+3. Create or reuse exactly one `codex/*` branch for that task.
+4. Implement the smallest change that moves the first App release forward.
+5. Run the task-specific validation plus the relevant merge gates.
+6. Open a PR with validation evidence.
+7. Merge only after CI and review criteria pass.
+8. Leave a short status note with completed work, validation, and next action.
+
+The controller may continue 7x24 when work is local, deterministic, and covered
+by smoke tests. It must stop for owner input when credentials, dashboards,
+device evidence, paid services, App Store / Google Play actions, domain DNS, or
+real transaction authority are required.
+
+## Priority Order
+
+1. **HWallet wallet flow stability**
+   - Login and logout.
+   - Per-user wallet binding.
+   - One visible receive address.
+   - Copy feedback.
+   - Deposit recognition by refresh and optional tx hash.
+   - Audit and memory isolation.
+
+2. **Supabase production data layer**
+   - JSONL to dual observation.
+   - Postgres readback.
+   - Multi-user isolation.
+   - Backup and rollback.
+   - Staging proof before production switch.
+
+3. **Agent orchestration**
+   - Intent recognition.
+   - Wallet context.
+   - Capability routing.
+   - Friendly replies.
+   - Transparent audit.
+   - Live execution closed.
+
+4. **OKX Onchain Skill and plugin integration**
+   - Read-only market and portfolio data first.
+   - Dry-run previews second.
+   - Live signing and orders only after a separate policy, signer, compliance,
+     and audit gate is approved.
+
+5. **Mobile release**
+   - EAS development / preview / production profiles.
+   - iOS and Android installable builds.
+   - OTA update runbook.
+   - Device evidence.
+   - TestFlight and Android internal testing readiness.
+
+## Parallelism Rule
+
+Keep at most three implementation branches active:
+
+- One wallet / mobile branch.
+- One backend / data / Agent branch.
+- One docs / workflow branch.
+
+Do not run two branches that both change wallet auth, storage schema, release
+config, or mobile native config at the same time. Those tasks are serialized.
+
+## Task Packet
+
+Every task needs:
+
+- Lane.
+- Goal.
+- In scope.
+- Out of scope.
+- Acceptance checks.
+- Validation commands.
+- Rollback path.
+- Whether owner evidence is required.
+
+## Evidence Rules
+
+- Commit source, docs, and tests.
+- Do not commit `.tmp` evidence files.
+- Do not paste secrets, access tokens, private keys, raw database URLs, Apple
+  credentials, Google Play keys, verification codes, or unredacted user data.
+- Device evidence must be redacted and validated by the evidence smoke before
+  it can support release decisions.
+- Build evidence must record iOS and Android EAS build ids and URLs without
+  credentials.
+
+## Stop Conditions
+
+Pause and ask the owner when:
+
+- A real iPhone or Android install must be tested.
+- A Privy, Supabase, OKX, Apple, Google, DNS, or server dashboard action is
+  needed.
+- A real deposit, transaction, signing permission, or live execution approval is
+  needed.
+- The same external blocker repeats across work cycles.
+
+Continue without owner input when the task is local code, docs, smoke tests,
+mocked adapters, or non-secret release scaffolding.
