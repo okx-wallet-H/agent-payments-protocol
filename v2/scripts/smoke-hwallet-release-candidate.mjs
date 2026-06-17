@@ -6,6 +6,7 @@ const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 const mobilePackage = JSON.parse(await readFile("apps/mobile/package.json", "utf8"));
 const easConfig = JSON.parse(await readFile("apps/mobile/eas.json", "utf8"));
 const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
+const mobileReleaseHandoff = await readFile("docs/HWALLET_MOBILE_RELEASE_HANDOFF.md", "utf8");
 const stagingDeployment = await readFile("docs/STAGING_SERVER_DEPLOYMENT.md", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
@@ -68,6 +69,7 @@ assertPattern(releaseCandidate, /MOBILE_DEVICE_PRIVY_ACCESS_TOKEN/, "release gat
 assertPattern(releaseCandidate, /MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN/, "release gate documents second-user Privy token");
 assertIncludes(releaseCandidate, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "release gate requires real device evidence");
 assertIncludes(releaseCandidate, "npm run hwallet:device-evidence:init", "release gate initializes local device evidence");
+assertIncludes(releaseChecklist, "docs/HWALLET_MOBILE_RELEASE_HANDOFF.md", "release checklist links mobile release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-staging-handoff", "release checklist includes staging handoff gate");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
@@ -149,6 +151,20 @@ assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile store s
 assertIncludes(supabaseReadbackSmoke, "release drill mentions other-user isolation", "Supabase readback smoke enforces other-user isolation docs");
 checks.push("existing release smokes are chained into the HWallet candidate gate");
 
+assertIncludes(mobileReleaseHandoff, "HWallet wallet entry plus Agent experience", "mobile release handoff names the product body");
+assertIncludes(mobileReleaseHandoff, "https://app.hwallet.vip", "mobile release handoff records staging API");
+assertIncludes(mobileReleaseHandoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "mobile release handoff records current main commit");
+assertIncludes(mobileReleaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "mobile release handoff records current iOS preview build");
+assertIncludes(mobileReleaseHandoff, "ab124aea-fbe7-47e1-aea8-b69ceddae248", "mobile release handoff records current Android preview build");
+assertIncludes(mobileReleaseHandoff, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live", "mobile release handoff records staging device auth boundary smoke");
+assertIncludes(mobileReleaseHandoff, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true", "mobile release handoff records strict store-build evidence smoke");
+assertIncludes(mobileReleaseHandoff, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "mobile release handoff points to device multi-user QA");
+assertIncludes(mobileReleaseHandoff, "User B has a different receive address", "mobile release handoff requires distinct user addresses");
+assertIncludes(mobileReleaseHandoff, "Sign out and confirm no stale receive address", "mobile release handoff requires signed-out clearing");
+assertIncludes(mobileReleaseHandoff, "real execution closed", "mobile release handoff keeps live execution closed");
+assertPattern(mobileReleaseHandoff, /Do not|must not/i, "mobile release handoff includes no-secret handling guidance");
+checks.push("mobile release handoff captures current dual-platform build and device-test requirements");
+
 for (const profileName of ["development-staging", "preview", "production"]) {
   const profile = easProfiles[profileName];
   assert(Boolean(profile), `EAS ${profileName} profile exists`);
@@ -160,6 +176,7 @@ checks.push("EAS profiles point installed builds at the HWallet staging API");
 
 assertNoRawSecrets({
   "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
+  "docs/HWALLET_MOBILE_RELEASE_HANDOFF.md": mobileReleaseHandoff,
   "docs/STAGING_SERVER_DEPLOYMENT.md": stagingDeployment,
   "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
   "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
