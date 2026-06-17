@@ -66,9 +66,13 @@ npm run hwallet:store-console-evidence:init
 
 Check the current status without requiring owner evidence yet. This prints
 whether `.tmp/hwallet-store-console-evidence.json` is missing, pending, or ready
-for strict validation:
+for strict validation. The owner-status command is the controller-friendly view:
+it summarizes device evidence, store-console evidence, and the next safe action
+without printing emails, full wallet addresses, credentials, or verification
+codes:
 
 ```sh
+npm run smoke:owner-release-status
 npm run smoke:hwallet-store-console-evidence
 npm run smoke:release-next-action
 ```

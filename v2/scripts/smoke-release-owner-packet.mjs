@@ -60,6 +60,7 @@ for (const forbiddenBoundary of [
 }
 
 for (const command of [
+  "npm run smoke:owner-release-status",
   "npm run hwallet:store-console-evidence:init",
   "npm run hwallet:store-console-evidence:record",
   "HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence",
