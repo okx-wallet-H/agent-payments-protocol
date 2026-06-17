@@ -77,6 +77,12 @@ npm run smoke:hwallet-store-console-evidence
 npm run smoke:release-next-action
 ```
 
+Use the `recordingGuide` section from `npm run smoke:owner-release-status` when
+the owner provides Apple / Google console confirmations. It lists the safe
+environment variables for iOS, Android, and shared confirmations, so the
+controller can update `.tmp/hwallet-store-console-evidence.json` without
+guessing field names and without collecting secrets.
+
 Record redacted console observations after the owner confirms the dashboard
 actions. If `.tmp/hwallet-mobile-store-build-evidence.json` exists, the
 recorder automatically imports the already recorded iOS and Android EAS build

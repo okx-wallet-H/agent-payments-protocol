@@ -313,6 +313,10 @@ assertIncludes(ownerReleasePacketSmoke, "smoke:release-owner-packet", "owner rel
 assertIncludes(ownerReleaseStatusSmoke, "smoke:owner-release-status", "owner release status has smoke gate");
 assertIncludes(ownerReleaseStatusSmoke, "ownerGatedTaskIds", "owner release status summarizes owner-gated tasks");
 assertIncludes(ownerReleaseStatusSmoke, "distinctAddresses", "owner release status summarizes distinct device addresses without printing them");
+assertIncludes(ownerReleaseStatusSmoke, "recordingGuide", "owner release status exposes a safe recording guide");
+assertIncludes(ownerReleaseStatusSmoke, "HWALLET_STORE_CONSOLE_IOS_INTERNAL_READY", "owner release status names iOS internal testing flag");
+assertIncludes(ownerReleaseStatusSmoke, "HWALLET_STORE_CONSOLE_ANDROID_TRACK_READY", "owner release status names Android testing-track flag");
+assertIncludes(ownerReleaseStatusSmoke, "HWALLET_STORE_CONSOLE_READY_FOR_INTERNAL_REVIEW", "owner release status names final internal-review confirmation");
 checks.push("release candidate includes controller task ledger and owner packet for 7x24 work selection");
 
 assertIncludes(

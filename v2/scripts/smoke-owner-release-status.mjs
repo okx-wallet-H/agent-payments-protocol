@@ -99,6 +99,7 @@ const result = {
     storeConsole: storeConsoleEvidence,
     device: deviceEvidence
   },
+  recordingGuide: buildRecordingGuide(),
   nextAction
 };
 
@@ -253,6 +254,55 @@ function missingStoreStrictFields(evidence) {
   if (!Array.isArray(evidence.artifacts) || evidence.artifacts.length < 2) missing.push("redacted console artifacts");
 
   return missing.slice(0, 12);
+}
+
+function buildRecordingGuide() {
+  return {
+    command:
+      "HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json " +
+      "HWALLET_STORE_CONSOLE_EVIDENCE_CONFIRM_ALL=true " +
+      "HWALLET_STORE_CONSOLE_IOS_STATUS=ready " +
+      "HWALLET_STORE_CONSOLE_ANDROID_STATUS=ready " +
+      "npm run hwallet:store-console-evidence:record",
+    note: "Only record redacted console status labels and owner confirmations. Do not paste credentials, verification codes, access tokens, or unredacted personal data.",
+    ios: [
+      "HWALLET_STORE_CONSOLE_IOS_STATUS=ready",
+      "HWALLET_STORE_CONSOLE_IOS_APP_LABEL=<redacted-app-store-label>",
+      "HWALLET_STORE_CONSOLE_IOS_BUILD_UPLOADED=true",
+      "HWALLET_STORE_CONSOLE_IOS_PROCESSING_COMPLETE=true",
+      "HWALLET_STORE_CONSOLE_IOS_INTERNAL_READY=true",
+      "HWALLET_STORE_CONSOLE_IOS_RETESTED=true",
+      "HWALLET_STORE_CONSOLE_IOS_PRIVACY_URL_SET=true",
+      "HWALLET_STORE_CONSOLE_IOS_SUPPORT_URL_SET=true",
+      "HWALLET_STORE_CONSOLE_IOS_REVIEW_NOTES_SET=true",
+      "HWALLET_STORE_CONSOLE_IOS_SCREENSHOTS_APPROVED=true"
+    ],
+    android: [
+      "HWALLET_STORE_CONSOLE_ANDROID_STATUS=ready",
+      "HWALLET_STORE_CONSOLE_ANDROID_APP_LABEL=<redacted-google-play-label>",
+      "HWALLET_STORE_CONSOLE_ANDROID_BUILD_UPLOADED=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_PROCESSING_COMPLETE=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_TRACK_READY=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_RETESTED=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_PRIVACY_URL_SET=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_SUPPORT_URL_SET=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_DATA_SAFETY_DONE=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_CONTENT_RATING_DONE=true",
+      "HWALLET_STORE_CONSOLE_ANDROID_SCREENSHOTS_APPROVED=true"
+    ],
+    shared: [
+      "HWALLET_STORE_CONSOLE_OPERATOR=<redacted-operator-label>",
+      "HWALLET_STORE_CONSOLE_STRICT_HANDOFF_PASSED=true",
+      "HWALLET_STORE_CONSOLE_SUBMISSION_SMOKE_PASSED=true",
+      "HWALLET_STORE_CONSOLE_DUAL_DEVICE_PASSED=true",
+      "HWALLET_STORE_CONSOLE_LIVE_EXECUTION_CLOSED=true",
+      "HWALLET_STORE_CONSOLE_NO_SECRETS_COMMITTED=true",
+      "HWALLET_STORE_CONSOLE_NO_CREDENTIALS=true",
+      "HWALLET_STORE_CONSOLE_NO_CODES=true",
+      "HWALLET_STORE_CONSOLE_SCREENSHOTS_REDACTED=true",
+      "HWALLET_STORE_CONSOLE_READY_FOR_INTERNAL_REVIEW=true"
+    ]
+  };
 }
 
 async function exists(path) {
