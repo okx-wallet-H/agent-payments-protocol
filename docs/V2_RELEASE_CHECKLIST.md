@@ -53,10 +53,10 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Run the real-device multi-user HWallet QA checklist in `docs/HWALLET_DEVICE_MULTI_USER_QA.md`: User A login, User B login, switch back to User A, signed-out boundary, copy feedback, tx verification, memory, and audit.
 - Run a mobile visual pass in 390x844 and simulator sizes: Agent empty chat, World Cup campaign page, World Cup Explore categories, Mine page, bottom fixed CTA behavior, and World Cup Home return behavior.
 
-Mobile TestFlight readiness gate:
+Mobile store readiness gate (iOS + Android):
 
 ```sh
-npm run smoke:mobile-testflight-readiness
+npm run smoke:mobile-store-readiness
 npm run smoke:hwallet-release-candidate
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
@@ -67,13 +67,15 @@ npm run smoke:mobile-api-auth
 npm run smoke:mobile-hwallet-ux
 npm run mobile:typecheck
 npm run mobile:build:ios
+npm run mobile:build:android
 ```
 
-Do not submit to TestFlight if the gate fails, if preview/production profiles
-point to localhost or a LAN URL, if the installed App still shows preview-only
-screens, if HWallet copy feedback is missing, if User A and User B can see each
-other's wallet state, or if live execution switches are open. For safe JS/UI
-fixes after a checked preview build, publish through:
+Do not submit to TestFlight or internal Android testing if the gate fails, if
+preview/production profiles point to localhost or a LAN URL, if the installed
+App still shows preview-only screens, if HWallet copy feedback is missing, if
+User A and User B can see each other's wallet state, or if live execution
+switches are open. For safe JS/UI fixes after a checked preview build, publish
+through:
 
 ```sh
 npm --prefix apps/mobile run update:preview -- --message "Short update note"

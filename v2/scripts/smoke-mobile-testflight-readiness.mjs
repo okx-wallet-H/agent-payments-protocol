@@ -16,6 +16,7 @@ const expoConfig = mobileAppConfig.expo || {};
 const profiles = easConfig.build || {};
 
 const requiredRootScripts = [
+  "smoke:mobile-store-readiness",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-build-env",
   "smoke:mobile-staging-env",
@@ -28,6 +29,7 @@ const requiredRootScripts = [
   "smoke:privy-wallet-status",
   "mobile:typecheck",
   "mobile:build:ios",
+  "mobile:build:android",
   "verify:merge"
 ];
 
@@ -35,26 +37,34 @@ for (const scriptName of requiredRootScripts) {
   assert(typeof rootScripts[scriptName] === "string", `root package script ${scriptName} exists`);
 }
 assert(
-  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-testflight-readiness"),
-  "verify:merge includes mobile TestFlight readiness gate"
+  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-store-readiness"),
+  "verify:merge includes mobile store readiness gate"
 );
-checks.push("root scripts expose and run the mobile TestFlight readiness gate");
+assert(
+  String(rootScripts["smoke:mobile-testflight-readiness"] || "").includes("smoke:mobile-store-readiness"),
+  "legacy TestFlight readiness script delegates to mobile store readiness"
+);
+checks.push("root scripts expose and run the iOS and Android mobile store readiness gate");
 
 const requiredMobileScripts = [
   "eas:whoami",
   "build:ios:development-staging",
+  "build:android:development-staging",
   "build:ios:preview",
+  "build:android:preview",
   "build:ios",
+  "build:android",
   "update:development-staging",
   "update:preview",
   "update:production",
-  "submit:ios"
+  "submit:ios",
+  "submit:android"
 ];
 
 for (const scriptName of requiredMobileScripts) {
   assert(typeof mobileScripts[scriptName] === "string", `mobile package script ${scriptName} exists`);
 }
-checks.push("mobile workspace exposes EAS build, update, and submit commands");
+checks.push("mobile workspace exposes EAS iOS/Android build, update, and submit commands");
 
 assert(String(mobilePackage.dependencies?.expo || "").startsWith("56."), "mobile Expo SDK 56 is pinned");
 assert(Boolean(mobilePackage.dependencies?.["expo-updates"]), "expo-updates dependency is configured");
@@ -100,13 +110,15 @@ assertUpdateScript("update:preview", "preview", "preview");
 assertUpdateScript("update:production", "production", "production");
 checks.push("EAS Update scripts target the expected channels and environments");
 
-assertIncludes(releaseChecklist, "npm run smoke:mobile-testflight-readiness", "release checklist includes mobile TestFlight readiness smoke");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-store-readiness", "release checklist includes mobile store readiness smoke");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
 assertIncludes(releaseChecklist, "npm run mobile:build:ios", "release checklist includes iOS build command");
+assertIncludes(releaseChecklist, "npm run mobile:build:android", "release checklist includes Android build command");
 assertIncludes(releaseChecklist, "npm --prefix apps/mobile run update:preview", "release checklist includes preview OTA update command");
 assertIncludes(releaseChecklist, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "release checklist points to the device multi-user QA");
 assertPattern(releaseChecklist, /Do not submit to TestFlight/i, "release checklist blocks TestFlight on failed gates");
-checks.push("release checklist documents the mobile release gate");
+assertPattern(releaseChecklist, /internal Android/i, "release checklist blocks internal Android testing on failed gates");
+checks.push("release checklist documents the iOS and Android mobile release gate");
 
 assertIncludes(deviceQa, "User A", "device QA includes User A");
 assertIncludes(deviceQa, "User B", "device QA includes User B");
@@ -229,7 +241,7 @@ function assertNoRawSecrets(files) {
   for (const [file, text] of Object.entries(files)) {
     for (const pattern of forbidden) {
       if (pattern.test(text)) {
-        throw new Error(`Mobile TestFlight readiness smoke failed: ${file} must not contain raw secret material`);
+        throw new Error(`Mobile store readiness smoke failed: ${file} must not contain raw secret material`);
       }
     }
   }
@@ -241,6 +253,6 @@ async function readJson(path) {
 }
 
 function assert(condition, label) {
-  if (!condition) throw new Error(`Mobile TestFlight readiness smoke failed: ${label}`);
+  if (!condition) throw new Error(`Mobile store readiness smoke failed: ${label}`);
   checks.push(label);
 }
