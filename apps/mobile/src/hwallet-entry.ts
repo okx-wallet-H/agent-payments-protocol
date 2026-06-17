@@ -1,5 +1,6 @@
 import type { PrivyHWalletStatus } from "./privy-wallet-status";
 import type { V2WalletContext } from "./types";
+import { createFriendlyMobileWalletNotice } from "./friendly-auth-error";
 
 export interface HWalletEntryStateInput {
   busy?: boolean;
@@ -56,13 +57,5 @@ export function createHWalletEntryState(input: HWalletEntryStateInput): HWalletE
 }
 
 export function createFriendlyWalletNotice(notice?: string): string | undefined {
-  const normalized = notice?.trim();
-  if (!normalized) return undefined;
-
-  const lower = normalized.toLowerCase();
-  if (lower.includes("privy") || lower.includes("access token") || lower.includes("unauthorized")) {
-    return "登录状态正在同步，请稍后再试。";
-  }
-
-  return normalized;
+  return createFriendlyMobileWalletNotice(notice);
 }
