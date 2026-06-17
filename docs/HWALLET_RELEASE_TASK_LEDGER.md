@@ -36,7 +36,7 @@ audit task.
 
 ### R-001 Installed App two-user wallet regression
 
-- **Status**: Ready.
+- **Status**: Blocked waiting for owner.
 - **Owner evidence**: Required for final proof; local smoke remains
   automatable.
 - **Goal**: prove User A and User B can log in, receive distinct HWallet
@@ -52,8 +52,10 @@ audit task.
   npm run smoke:privy-wallet-status
   HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
   ```
-- **Done evidence**: redacted iOS and Android observations pass the device
-  evidence smoke; raw access tokens and unredacted addresses are not committed.
+- **Done evidence**: iOS installed-App evidence was captured in ignored local
+  evidence and passed `smoke:hwallet-device-evidence`; Android evidence is still
+  required before this task can be marked merged. raw access tokens and
+  unredacted addresses must not be committed.
 - **Rollback**: revert the PR or return to the previous EAS update/build.
 
 ### R-002 Deposit recognition without mandatory hash paste
@@ -241,9 +243,12 @@ audit task.
 
 ## Current Next Best Tasks
 
-When no new owner instruction is present, pick in this order:
+No fully automatable task remains in the current first-release queue. The next
+step needs owner/device evidence:
 
-1. R-001 Installed App two-user wallet regression.
+1. R-001 Installed App two-user wallet regression: provide Android installed-App evidence,
+   or confirm the first release is iOS-only so the ledger can be
+   rescoped.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is

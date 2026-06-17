@@ -66,6 +66,7 @@ for (const [id, title] of Object.entries(requiredTasks)) {
   ]);
 }
 
+assertTaskStatus(ledger, "R-001", "Blocked waiting for owner");
 assertTaskStatus(ledger, "R-002", "Merged");
 assertTaskStatus(ledger, "R-003", "Merged");
 assertTaskStatus(ledger, "R-004", "Merged");
@@ -97,9 +98,8 @@ assertIncludes(ledger, ".tmp", "ledger keeps local evidence in ignored temp file
 assertIncludes(ledger, "raw access tokens", "ledger blocks token leakage");
 assertIncludes(ledger, "https://app.hwallet.vip", "ledger uses current staging API");
 
-for (const taskId of ["R-001"]) {
-  assertIncludes(ledger, taskId, `ledger next-best queue includes ${taskId}`);
-}
+assertIncludes(ledger, "No fully automatable task remains", "ledger declares no fully automatable task remains");
+assertIncludes(ledger, "Android installed-App evidence", "ledger names Android evidence as the next owner action");
 
 assertIncludes(workQueue, "HWallet 7x24 Work Queue", "work queue exists");
 assertIncludes(workflow, "HWallet Task Review Workflow", "task review workflow exists");
@@ -117,9 +117,9 @@ console.log(JSON.stringify({
   ok: true,
   checks,
   ledger: {
-    readyAutomatableTasks: ["R-001"],
+    readyAutomatableTasks: [],
     mergedTasks: ["R-002", "R-003", "R-004", "R-005", "R-006"],
-    ownerGatedTasks: ["R-007", "R-008", "R-009"],
+    ownerGatedTasks: ["R-001", "R-007", "R-008", "R-009"],
     liveExecutionClosed: true
   }
 }, null, 2));
