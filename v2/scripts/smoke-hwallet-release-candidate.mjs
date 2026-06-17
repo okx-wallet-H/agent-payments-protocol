@@ -19,6 +19,7 @@ const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs",
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
 const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet-live.mjs", "utf8");
 const mobileTestflightSmoke = await readFile("v2/scripts/smoke-mobile-testflight-readiness.mjs", "utf8");
+const mobileReleasePreflightSmoke = await readFile("v2/scripts/smoke-mobile-release-preflight.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -35,6 +36,7 @@ const requiredScripts = [
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
   "smoke:mobile-store-readiness",
+  "smoke:mobile-release-preflight",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "smoke:hwallet-dual-device-evidence",
@@ -59,6 +61,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:hwallet-dual-device-evidence"),
   "verify:merge includes dual-device evidence gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:mobile-release-preflight"),
+  "verify:merge includes mobile release preflight gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -79,6 +85,8 @@ assertIncludes(releaseCandidate, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run 
 assertIncludes(releaseCandidate, "npm run hwallet:device-evidence:init", "release gate initializes local device evidence");
 assertIncludes(releaseChecklist, "docs/HWALLET_MOBILE_RELEASE_HANDOFF.md", "release checklist links mobile release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-staging-handoff", "release checklist includes staging handoff gate");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-release-preflight", "release checklist includes mobile release preflight gate");
+assertIncludes(releaseChecklist, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "release checklist documents strict mobile release preflight");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
@@ -89,6 +97,7 @@ assertIncludes(stagingDeployment, "npm run hwallet:device-evidence:init", "stagi
 assertIncludes(stagingDeployment, "STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-auth-surface", "staging deployment keeps auth surface gate");
 assertIncludes(stagingDeployment, "Only after these pass", "staging deployment blocks builds before server gates pass");
 assertIncludes(easRunbook, "npm run smoke:hwallet-release-candidate", "EAS runbook requires the release candidate gate");
+assertIncludes(easRunbook, "npm run smoke:mobile-release-preflight", "EAS runbook requires the mobile release preflight gate");
 assertIncludes(easRunbook, "npm run hwallet:device-evidence:init", "EAS runbook initializes local device evidence");
 assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface", "EAS runbook checks staging auth surface before OTA");
 assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
@@ -162,6 +171,17 @@ assertIncludes(dualDeviceEvidenceSmoke, "Android evidence records android platfo
 assertIncludes(dualDeviceEvidenceSmoke, "assertGitIgnored", "dual-device evidence smoke keeps local evidence ignored");
 checks.push("dual-device evidence smoke blocks external testers until iOS and Android evidence pass together");
 
+assertIncludes(mobileReleasePreflightSmoke, "HWALLET_RELEASE_PREFLIGHT_STRICT", "mobile release preflight has strict mode");
+assertIncludes(mobileReleasePreflightSmoke, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE", "mobile release preflight requires store-build evidence in strict mode");
+assertIncludes(mobileReleasePreflightSmoke, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "mobile release preflight requires iOS device evidence in strict mode");
+assertIncludes(mobileReleasePreflightSmoke, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "mobile release preflight requires Android device evidence in strict mode");
+assertIncludes(mobileReleasePreflightSmoke, "smoke:mobile-store-readiness", "mobile release preflight runs store readiness");
+assertIncludes(mobileReleasePreflightSmoke, "smoke:mobile-distribution-readiness", "mobile release preflight runs distribution readiness");
+assertIncludes(mobileReleasePreflightSmoke, "smoke:hwallet-release-candidate", "mobile release preflight runs HWallet release candidate");
+assertIncludes(mobileReleasePreflightSmoke, "smoke:mobile-store-build-evidence", "mobile release preflight runs store-build evidence");
+assertIncludes(mobileReleasePreflightSmoke, "smoke:hwallet-dual-device-evidence", "mobile release preflight runs dual-device evidence");
+checks.push("mobile release preflight aggregates store, distribution, release, build, and dual-device gates");
+
 assertIncludes(
   stagingHandoffSmoke,
   "const requireRealDeviceEvidence = strict || evidenceFile.length > 0",
@@ -215,6 +235,7 @@ assertNoRawSecrets({
   "v2/scripts/init-hwallet-device-evidence.mjs": deviceEvidenceInit,
   "v2/scripts/record-hwallet-device-evidence.mjs": deviceEvidenceRecord,
   "v2/scripts/smoke-hwallet-dual-device-evidence.mjs": dualDeviceEvidenceSmoke,
+  "v2/scripts/smoke-mobile-release-preflight.mjs": mobileReleasePreflightSmoke,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");

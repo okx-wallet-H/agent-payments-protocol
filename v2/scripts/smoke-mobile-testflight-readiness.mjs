@@ -21,6 +21,7 @@ const requiredRootScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-store-build-evidence",
   "smoke:mobile-distribution-readiness",
+  "smoke:mobile-release-preflight",
   "smoke:mobile-testflight-readiness",
   "smoke:hwallet-dual-device-evidence",
   "smoke:mobile-build-env",
@@ -64,6 +65,7 @@ const requiredMobileScripts = [
   "build:android:preview",
   "build:ios",
   "build:android",
+  "release:preflight",
   "update:development-staging",
   "update:preview",
   "update:production",
@@ -75,6 +77,26 @@ for (const scriptName of requiredMobileScripts) {
   assert(typeof mobileScripts[scriptName] === "string", `mobile package script ${scriptName} exists`);
 }
 checks.push("mobile workspace exposes EAS iOS/Android build, update, and submit commands");
+
+const preflightedMobileScripts = [
+  "prebuild:ios:development-staging",
+  "prebuild:android:development-staging",
+  "prebuild:ios:preview",
+  "prebuild:android:preview",
+  "prebuild:ios",
+  "prebuild:android",
+  "preupdate:development-staging",
+  "preupdate:preview",
+  "preupdate:production",
+  "presubmit:ios",
+  "presubmit:android"
+];
+
+assertIncludes(mobileScripts["release:preflight"], "smoke:mobile-release-preflight", "mobile release preflight calls root smoke");
+for (const scriptName of preflightedMobileScripts) {
+  assertIncludes(mobileScripts[scriptName], "release:preflight", `${scriptName} runs release preflight`);
+}
+checks.push("mobile build, update, and submit scripts run release preflight first");
 
 assert(String(mobilePackage.dependencies?.expo || "").startsWith("56."), "mobile Expo SDK 56 is pinned");
 assert(Boolean(mobilePackage.dependencies?.["expo-updates"]), "expo-updates dependency is configured");
@@ -121,6 +143,8 @@ assertUpdateScript("update:production", "production", "production");
 checks.push("EAS Update scripts target the expected channels and environments");
 
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-readiness", "release checklist includes mobile store readiness smoke");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-release-preflight", "release checklist includes mobile release preflight smoke");
+assertIncludes(releaseChecklist, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "release checklist documents strict release preflight");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-distribution-readiness", "release checklist includes mobile distribution readiness smoke");
 assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");
@@ -157,6 +181,8 @@ checks.push("device QA covers multi-user, signed-out, copy, HWallet live-smoke, 
 
 assertIncludes(easRunbook, "update:preview", "EAS runbook documents preview update");
 assertIncludes(easRunbook, "update:production", "EAS runbook documents production update");
+assertIncludes(easRunbook, "npm run smoke:mobile-release-preflight", "EAS runbook runs mobile release preflight");
+assertIncludes(easRunbook, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "EAS runbook documents strict release preflight");
 assertPattern(easRunbook, /What Still Needs A New Build/i, "EAS runbook distinguishes native-build changes");
 assertPattern(easRunbook, /Validation Before Publishing/i, "EAS runbook includes validation before publishing");
 checks.push("EAS Update runbook is present for OTA-safe fixes");

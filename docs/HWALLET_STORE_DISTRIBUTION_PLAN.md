@@ -39,6 +39,13 @@ HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json HWALLET_D
 HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-dual-device-evidence
 ```
 
+- Run the strict release preflight so store-build evidence and both physical
+  device evidence files are enforced in one command:
+
+```sh
+HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
+```
+
 - Run the HWallet release candidate and staging gates:
 
 ```sh

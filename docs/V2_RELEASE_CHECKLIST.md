@@ -59,6 +59,7 @@ Mobile store readiness gate (iOS + Android):
 npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:hwallet-release-candidate
+npm run smoke:mobile-release-preflight
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
@@ -71,6 +72,7 @@ npm run mobile:build:ios
 npm run mobile:build:android
 npm run mobile:store-build-evidence:init
 HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
+HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 ```
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
@@ -89,6 +91,11 @@ npm --prefix apps/mobile run update:preview -- --message "Short update note"
 
 Only promote the same fix to production after preview is checked on device and
 the rollback path in `docs/HWALLET_EAS_UPDATE_RUNBOOK.md` is understood.
+The mobile workspace also runs `npm run release:preflight` automatically before
+`build:*`, `update:*`, and `submit:*` scripts. Use
+`HWALLET_RELEASE_PREFLIGHT_STRICT=true` for external tester, TestFlight, internal
+Android, or production handoff so build evidence and both platform device
+evidence are enforced together.
 
 HWallet release candidate gate:
 

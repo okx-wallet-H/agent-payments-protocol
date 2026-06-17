@@ -61,6 +61,7 @@ Run these before publishing an update:
 
 ```bash
 npm run smoke:mobile-store-readiness
+npm run smoke:mobile-release-preflight
 npm run smoke:hwallet-release-candidate
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
@@ -70,6 +71,17 @@ npm run smoke:mobile-store-build-evidence
 npm --prefix apps/mobile run typecheck
 EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
+```
+
+Before publishing to production or handing an update to external testers, rerun
+the same preflight in strict mode:
+
+```bash
+HWALLET_RELEASE_PREFLIGHT_STRICT=true \
+HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json \
+HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json \
+HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json \
+npm run smoke:mobile-release-preflight
 ```
 
 For larger changes, run:
