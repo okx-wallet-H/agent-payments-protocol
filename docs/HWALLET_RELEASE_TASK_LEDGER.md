@@ -192,12 +192,12 @@ audit task.
 
 ### R-007 iOS TestFlight candidate build
 
-- **Status**: Blocked waiting for owner.
-- **Owner evidence**: Apple Developer account, registered device/build review,
-  TestFlight console action.
-- **Current blocker class**: owner-side Apple Developer sign-in, distribution
-  certificate validation, device/profile confirmation, or App Store Connect
-  action. Do not collect Apple credentials in chat or git.
+- **Status**: In Apple processing / TestFlight console handoff.
+- **Owner evidence**: Apple Developer account, App Store Connect/TestFlight
+  processing status, internal testing action, installed-App retest.
+- **Current blocker class**: Apple-side build processing, TestFlight internal
+  testing availability, metadata/review material completion, and owner
+  installed-App retest. Do not collect Apple credentials in chat or git.
 - **Goal**: produce and record an iOS build candidate that uses
   `https://app.hwallet.vip`, passes HWallet device evidence, and is ready for
   TestFlight internal review.
@@ -210,8 +210,13 @@ audit task.
   npm --prefix apps/mobile run build:ios
   HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
   ```
-- **Done evidence**: EAS iOS build id and URL are recorded in ignored evidence,
-  and device evidence passes with redacted values.
+- **Current evidence**: EAS iOS production build
+  `60425e71-5a50-4143-92df-5aefc7499aab` completed as build version `10`,
+  EAS Submit job `281cbee1-d288-45d4-a3d3-15ed92c9aef4` finished, and
+  `.tmp/hwallet-mobile-store-build-evidence.json` passed strict validation.
+- **Done evidence**: TestFlight processing complete, internal testing ready,
+  installed-App retest completed, and store-console evidence passes strict
+  validation with redacted values.
 - **Rollback**: do not submit the build; use prior EAS build/update.
 
 ### R-008 Android internal testing candidate build

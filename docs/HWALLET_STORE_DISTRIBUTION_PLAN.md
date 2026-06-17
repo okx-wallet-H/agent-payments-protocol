@@ -1,16 +1,16 @@
 # HWallet Store Distribution Plan
 
-This plan covers the path from internal preview builds to the first public App
-distribution track. It is intentionally separate from product copy and UI polish:
-the release objective is a working HWallet App on iOS and Android with safe
-multi-user wallet boundaries.
+This plan covers the path from current production store builds to internal
+testing and the first public App distribution track. It is intentionally
+separate from product copy and UI polish: the release objective is a working
+HWallet App on iOS and Android with safe multi-user wallet boundaries.
 
 Do not put Apple credentials, Google Play service-account JSON, access tokens,
 API keys, private keys, database URLs, or verification codes in this file.
 
 ## Current State
 
-- Current installable preview builds are recorded in
+- Current production store-build handoff is recorded in
   `docs/HWALLET_MOBILE_RELEASE_HANDOFF.md`.
 - Current backend target is `https://app.hwallet.vip`.
 - Staging HWallet storage is Postgres-backed.
@@ -103,8 +103,8 @@ HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWA
 
 ## iOS Path
 
-1. Keep using internal/ad-hoc preview builds until the owner confirms the
-   current iPhone pass.
+1. Wait for the submitted iOS production build to finish Apple processing, then
+   enable it for TestFlight internal testing.
 2. Prepare App Store Connect:
    - App name.
    - Bundle id: `com.agentwallet.xlayer`.

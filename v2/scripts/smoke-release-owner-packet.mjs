@@ -46,9 +46,9 @@ for (const required of [
 }
 
 for (const blocker of [
-  "Apple Developer sign-in",
-  "certificate validation",
-  "interactive EAS prompt",
+  "submitted to App Store Connect",
+  "Apple-side processing",
+  "TestFlight internal-testing availability",
   "Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed",
   "Google Play Console upload",
   "internal-testing readiness",
@@ -103,7 +103,8 @@ assertIncludes(packet, "No secret material is needed now", "owner packet keeps c
 
 assertIncludes(ledger, "R-007, R-008, and R-009 are intentionally owner-gated", "ledger keeps owner-gated release tasks");
 assertIncludes(ledger, "owner/store-console evidence", "ledger names owner evidence next");
-assertIncludes(ledger, "Apple Developer sign-in", "ledger records iOS owner-side build blocker");
+assertIncludes(ledger, "Apple-side build processing", "ledger records iOS owner-side processing gate");
+assertIncludes(ledger, "TestFlight internal", "ledger records iOS TestFlight gate");
 assertIncludes(ledger, "Google Play Console/internal testing action", "ledger records Android owner-side console gate");
 assertIncludes(
   ledger,

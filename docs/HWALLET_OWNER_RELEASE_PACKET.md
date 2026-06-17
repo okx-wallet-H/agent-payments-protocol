@@ -19,11 +19,12 @@ secrets, dashboard credentials, verification codes, or raw personal data.
 
 ## Current Known External Gates
 
-- iOS production builds can require owner-side Apple Developer sign-in,
-  certificate validation, device/profile confirmation, or App Store Connect
-  action. The controller must not ask for Apple credentials in chat; the owner
-  runs the interactive EAS prompt locally when needed and reports only redacted
-  status labels or build ids.
+- iOS production build `60425e71-5a50-4143-92df-5aefc7499aab` has been
+  submitted to App Store Connect. The remaining iOS gate is Apple-side processing,
+  TestFlight internal-testing availability, metadata/review
+  material completion, and installed-App retest. The controller must not ask
+  for Apple credentials in chat; the owner reports only redacted status labels
+  or build ids.
 - Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed
   after the owner replenished Expo/EAS build capacity. The remaining Android
   gate is Google Play Console upload, processing, internal-testing readiness,
@@ -43,10 +44,9 @@ verification codes, or unredacted personal data.
 ### R-007 iOS TestFlight
 
 - Apple Developer / App Store Connect access must stay with the owner.
-- The likely current blocker is Apple Developer sign-in / distribution
-  certificate validation. Use the interactive EAS build prompt on the owner's
-  Mac when the controller asks; do not paste Apple credentials or one-time
-  codes into chat.
+- Current status: iOS production build `60425e71-5a50-4143-92df-5aefc7499aab`
+  finished as build `10`, and EAS Submit job
+  `281cbee1-d288-45d4-a3d3-15ed92c9aef4` finished for App Store Connect.
 - Required owner action: confirm the iOS build is uploaded, processed, visible
   in TestFlight internal testing, installed, and retested on the real iPhone.
 - Required safe evidence: iOS EAS build id or build URL, TestFlight status

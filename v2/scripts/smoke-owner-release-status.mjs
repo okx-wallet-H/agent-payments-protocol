@@ -45,7 +45,8 @@ for (const required of [
   "Apple/TestFlight",
   "Google Play internal testing",
   "Current Known External Gates",
-  "Apple Developer sign-in",
+  "submitted to App Store Connect",
+  "TestFlight internal-testing availability",
   "Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed",
   "Approve final store copy and screenshots",
   "Store evidence in ignored `.tmp` files only"
@@ -56,7 +57,8 @@ for (const required of [
 assertIncludes(workQueue, "npm run smoke:owner-release-status", "work queue exposes owner release status command");
 assertIncludes(workQueue, "Stop and ask the owner", "work queue preserves owner stop rule");
 assertIncludes(taskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release ledger keeps owner-gated tasks");
-assertIncludes(taskLedger, "Apple Developer sign-in", "release ledger records iOS build blocker");
+assertIncludes(taskLedger, "Apple-side build processing", "release ledger records iOS processing gate");
+assertIncludes(taskLedger, "TestFlight internal", "release ledger records iOS TestFlight gate");
 assertIncludes(taskLedger, "Google Play Console/internal testing action", "release ledger records Android console gate");
 assertIncludes(screenshotPlan, "Owner Approval Checklist", "screenshot plan keeps owner approval checklist");
 
@@ -85,8 +87,7 @@ const nextAction = storeConsoleEvidence.strictReady
       asks: [
         "确认 iOS TestFlight 是否上传、处理完成、可内测、已安装复测",
         "确认 Android 内测是否上传、处理完成、可测试、已安装复测",
-        "确认商店文案、截图、隐私/支持链接和审核说明",
-        "如 iOS 需要 Apple 登录/证书验证，请在本机交互式 EAS 流程里完成"
+        "确认商店文案、截图、隐私/支持链接和审核说明"
       ],
       statusCommand: "npm run smoke:owner-release-status"
     };
@@ -101,7 +102,7 @@ const result = {
     ownerGatedTaskIds,
     automatableReleaseTasksRemaining: 0,
     knownExternalBuildBlockers: [
-      "iOS owner-side Apple Developer sign-in / certificate validation",
+      "iOS Apple-side processing / TestFlight internal testing action",
       "Android Google Play Console upload / internal testing action"
     ]
   },

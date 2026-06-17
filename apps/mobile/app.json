@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agentwallet.xlayer",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDisplayName": "海豚社区"
