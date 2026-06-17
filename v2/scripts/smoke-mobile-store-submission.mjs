@@ -8,6 +8,7 @@ const easConfig = await readJson("apps/mobile/eas.json");
 const distributionPlan = await readFile("docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "utf8");
 const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const screenshotPlan = await readFile("docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "utf8");
 const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
@@ -17,6 +18,7 @@ const expo = mobileApp.expo || {};
 const production = easConfig.build?.production || {};
 
 assert(typeof scripts["smoke:mobile-store-submission"] === "string", "package exposes mobile store submission smoke");
+assert(typeof scripts["smoke:store-screenshot-plan"] === "string", "package exposes store screenshot plan smoke");
 assert(typeof scripts["smoke:hwallet-store-console-evidence"] === "string", "package exposes store console evidence smoke");
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
@@ -42,8 +44,21 @@ assertIncludes(submissionPacket, "observe/simulate only", "submission packet rec
 assertIncludes(submissionPacket, "Live execution status: closed", "submission packet records closed execution");
 assertIncludes(submissionPacket, "Data safety answers", "submission packet records Play data safety baseline");
 assertIncludes(submissionPacket, "Store screenshots are approved by the owner", "submission packet keeps owner screenshot approval gate");
+assertIncludes(submissionPacket, "docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "submission packet links screenshot plan");
 assertIncludes(submissionPacket, "Store console evidence", "submission packet keeps store console evidence gate");
 checks.push("submission packet records metadata, review notes, data safety, and blockers");
+
+assertIncludes(screenshotPlan, "Agent Home", "screenshot plan covers Agent home");
+assertIncludes(screenshotPlan, "HWallet Receive", "screenshot plan covers HWallet receive");
+assertIncludes(screenshotPlan, "Assets Ready", "screenshot plan covers assets ready");
+assertIncludes(screenshotPlan, "Agent Analysis", "screenshot plan covers Agent analysis");
+assertIncludes(screenshotPlan, "Audit / Records", "screenshot plan covers audit records");
+assertIncludes(screenshotPlan, "iPhone 6.7-inch portrait", "screenshot plan covers iOS required frame");
+assertIncludes(screenshotPlan, "Android phone portrait", "screenshot plan covers Android frame");
+assertIncludes(screenshotPlan, "Full wallet addresses", "screenshot plan blocks full wallet address exposure");
+assertIncludes(screenshotPlan, "Raw email addresses", "screenshot plan blocks raw email exposure");
+assertIncludes(screenshotPlan, "Owner approves final visual order and copy", "screenshot plan keeps owner approval");
+checks.push("store screenshot plan covers required screens, frames, redaction, and owner approval");
 
 assertIncludes(privacyPage, "Privacy Policy", "privacy page exists");
 assertIncludes(privacyPage, "autonomous money movement are disabled", "privacy page states live execution boundary");
@@ -74,6 +89,7 @@ checks.push("store console evidence example covers review metadata and internal 
 
 assertNoRawSecrets({
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": submissionPacket,
+  "docs/HWALLET_STORE_SCREENSHOT_PLAN.md": screenshotPlan,
   "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,

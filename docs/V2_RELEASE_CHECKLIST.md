@@ -61,6 +61,7 @@ Mobile store readiness gate (iOS + Android):
 ```sh
 npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
+npm run smoke:store-screenshot-plan
 npm run smoke:mobile-store-submission
 npm run smoke:hwallet-store-console-evidence
 npm run smoke:release-owner-packet
@@ -90,6 +91,11 @@ Use `docs/HWALLET_OWNER_RELEASE_PACKET.md` as the current owner-facing handoff
 before any TestFlight, Google Play internal testing, or final store metadata
 action. It records what the owner may provide, what must stay out of chat and
 git, and which strict evidence commands the controller will run afterward.
+Store screenshots must follow `docs/HWALLET_STORE_SCREENSHOT_PLAN.md`: capture
+the Agent home, HWallet receive, assets-ready, Agent analysis, and audit/records
+story on iOS and Android, with raw emails, full wallet addresses, full
+transaction hashes, verification codes, tokens, and local `.tmp` evidence paths
+redacted before owner approval.
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
 preview/production profiles point to localhost or a LAN URL, if the installed

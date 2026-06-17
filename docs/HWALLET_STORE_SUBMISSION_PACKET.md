@@ -55,7 +55,8 @@ Reviewer note:
 - Export compliance: current Expo config sets
   `ITSAppUsesNonExemptEncryption=false`.
 - Review notes must include the observe/simulate-only boundary.
-- Screenshots still need final owner-approved visual pass before public release.
+- Screenshots follow `docs/HWALLET_STORE_SCREENSHOT_PLAN.md` and still need
+  final owner-approved visual pass before public release.
 
 ## Google Play Console Baseline
 
@@ -67,7 +68,8 @@ Reviewer note:
   transaction hashes supplied by users, Agent messages, records, and audit
   entries.
 - Content rating must be completed in Play Console before production release.
-- Screenshots still need final owner-approved visual pass before public release.
+- Screenshots follow `docs/HWALLET_STORE_SCREENSHOT_PLAN.md` and still need
+  final owner-approved visual pass before public release.
 
 ## Data Safety Baseline
 
@@ -94,6 +96,8 @@ Do not submit to public production tracks until all are true:
 - Strict build and dual-device evidence gates pass.
 - TestFlight and Android internal testing are installed and rechecked.
 - Store screenshots are approved by the owner.
+- Screenshot capture and redaction follow
+  `docs/HWALLET_STORE_SCREENSHOT_PLAN.md`.
 - Store console evidence is recorded in ignored local evidence and passes
   `smoke:hwallet-store-console-evidence` in strict mode.
 - Store account credentials and service-account files remain outside git.
