@@ -35,7 +35,8 @@ npm run hwallet:device-evidence:init
 ```
 
 - After the manual device pass, fill `.tmp/hwallet-device-evidence.json` with
-  only redacted observations, set all confirmation fields to `true`, and run:
+  only redacted observations, set every required flow step and confirmation
+  field to `true`, and run:
 
 ```sh
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
@@ -60,6 +61,9 @@ Record only non-sensitive observations:
 - Whether a HWallet receive address appeared.
 - Whether the short address changed between users.
 - Whether memory/audit/records stayed scoped to the active user.
+- Whether the ordered flow was completed: App open, User A login, User A
+  HWallet ready, copy feedback, switch to User B, User B login, User B HWallet
+  ready, switch back to User A, signed-out boundary.
 
 ## Installed-App Regression Gate
 
@@ -181,6 +185,7 @@ Capture screenshots or notes for:
 - User B HWallet ready state.
 - Signed-out HWallet state.
 - Copy feedback visible as `已复制`.
+- Ordered flow notes for A -> B -> A -> signed out, using short labels only.
 - Any failed login, stuck wallet creation, or wrong-user data exposure.
 
 Do not capture or share:
@@ -224,8 +229,9 @@ npm run verify:merge
   `MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN` it also verifies User B gets a
   distinct HWallet receive address and cannot see User A wallet records.
 - `smoke:hwallet-device-evidence` validates the redacted manual evidence file
-  for no-crash login, account switching, distinct receive addresses, visible
-  copy feedback, signed-out clearing, and closed live execution.
+  for no-crash login, ordered A -> B -> A account switching, distinct receive
+  addresses, visible copy feedback, signed-out clearing, and closed live
+  execution.
 
 The real device pass is still required because Privy native login, embedded
 wallet creation, clipboard behavior, keyboard behavior, and Expo Updates must be

@@ -42,6 +42,10 @@ const initialized = {
     containsNoSecrets: false,
     liveExecutionStillClosed: false
   },
+  flow: source.flow.map((item) => ({
+    ...item,
+    observed: false
+  })),
   artifacts: [
     {
       label: "fill-user-a-hwallet-ready",

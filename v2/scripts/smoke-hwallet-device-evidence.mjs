@@ -54,6 +54,28 @@ for (const checkName of requiredChecks) {
   assert(evidence.checks?.[checkName] === true, `${checkName} passed`);
 }
 
+const requiredFlowSteps = [
+  "app-opened",
+  "user-a-login",
+  "user-a-hwallet-ready",
+  "copy-feedback",
+  "switch-to-user-b",
+  "user-b-login",
+  "user-b-hwallet-ready",
+  "switch-back-user-a",
+  "signed-out-boundary"
+];
+assert(Array.isArray(evidence.flow), "ordered device flow is present");
+let previousFlowIndex = -1;
+for (const stepName of requiredFlowSteps) {
+  const flowIndex = evidence.flow.findIndex((item) => item?.step === stepName);
+  assert(flowIndex > previousFlowIndex, `${stepName} appears in device flow order`);
+  const item = evidence.flow[flowIndex];
+  assert(item.observed === true, `${stepName} observed`);
+  assert(typeof item.label === "string" && item.label.length > 0, `${stepName} label is recorded`);
+  previousFlowIndex = flowIndex;
+}
+
 assert(Array.isArray(evidence.artifacts), "artifacts list is present");
 assert(evidence.artifacts.length >= 2, "at least two redacted artifacts are recorded");
 for (const artifact of evidence.artifacts) {
@@ -96,6 +118,7 @@ console.log(JSON.stringify({
     distinctUsers: userA.emailLabel !== userB.emailLabel,
     distinctAddresses: userA.shortAddress !== userB.shortAddress,
     artifacts: evidence.artifacts.length,
+    flowSteps: evidence.flow.length,
     realEvidenceRequired: requireRealEvidence
   }
 }, null, 2));
