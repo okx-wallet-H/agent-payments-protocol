@@ -17,9 +17,8 @@ import { bindUserWalletSession, findVerifiedWalletTransfer, loadUserSession, rem
 import { createAgentWalletContext } from "@/v2/wallet/wallet-orchestrator";
 import { toUserSessionVerifiedWalletTransfer, toXLayerInboundTransfer } from "@/v2/wallet/wallet-transfer-memory";
 import {
+  createAgentWalletReplyContext,
   createMobileWalletKnowledgeNotes,
-  createWalletFundReply,
-  createWalletStatusReply,
   createWalletTxReply,
   syncAgentWalletContext,
   toMobileWalletContext,
@@ -132,13 +131,14 @@ export async function POST(request: Request) {
     ? withVerifiedInboundTransfer(syncedWallet, txVerification)
     : syncedWallet;
   const walletTxText = txVerification ? createWalletTxReply(txVerification) : undefined;
+  const walletReplyContext = createAgentWalletReplyContext(walletAfterTxVerification);
   const orchestration = await createAgentOrchestrationPlan({
     userText: text,
     wallet: walletAfterTxVerification,
     candidateMarket: suppliedMarket,
     getCandidateMarket: getWorldCupCandidateSafely,
-    walletStatusText: createWalletStatusReply(walletAfterTxVerification),
-    walletFundText: walletTxText || createWalletFundReply(walletAfterTxVerification)
+    walletStatusText: walletReplyContext.statusText,
+    walletFundText: walletTxText || walletReplyContext.summaryText
   });
   const capabilityResult = await executeAgentCapabilitySafely({
     userText: text,

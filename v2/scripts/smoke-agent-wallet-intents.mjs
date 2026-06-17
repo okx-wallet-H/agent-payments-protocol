@@ -1,5 +1,6 @@
 import { handlePhaseOneUserText } from "../agent/conversation-turn.ts";
 import { createAgentOrchestrationPlan } from "../agent/orchestrator.ts";
+import { createAgentWalletReplyContext } from "../wallet/mobile-wallet.ts";
 import { createAgentWalletContext, withSyncedAgentWalletState } from "../wallet/wallet-orchestrator.ts";
 
 const xLayerAddress = "0x1111111111111111111111111111111111111111";
@@ -130,6 +131,23 @@ assert(executeLikePlan.goalType === "prediction_market_research", "execute-like 
 assert(executeLikePlan.capability.policyDecision?.action === "analyze", "execute-like text should not become policy execute");
 assert(executeLikePlan.capability.liveExecution.enabled === false, "execute-like text should keep live execution closed");
 
+const fundedReplyContext = createAgentWalletReplyContext(fundedWallet);
+assert(fundedReplyContext.summaryText.includes("0.005 USDT0"), "wallet reply context should include available funds");
+assert(fundedReplyContext.summaryText.includes("下一步"), "wallet reply context should include next safe action");
+assert(fundedReplyContext.summaryText.includes("不开放真实下单"), "wallet reply context should include live-execution boundary");
+
+const executeLikeTurn = handlePhaseOneUserText({
+  userText: "买西班牙冠军 500U",
+  xLayerAddress,
+  polygonAddress,
+  candidateMarket: market,
+  walletStatusText: fundedReplyContext.statusText,
+  walletFundText: fundedReplyContext.summaryText,
+  goalType: executeLikePlan.goalType
+});
+assert(executeLikeTurn.finalText?.includes("只做分析和模拟"), "execute-like reply should explain downgrade to analysis/simulation");
+assert(executeLikeTurn.finalText?.includes("不会真实下单"), "execute-like reply should keep live execution closed in user copy");
+
 const dryRunPlan = await createAgentOrchestrationPlan({
   userText: "先模拟一下西班牙",
   wallet: fundedWallet,
@@ -160,7 +178,9 @@ console.log(JSON.stringify({
     "transaction hash routes to wallet verification",
     "transfer-done text refreshes wallet funds",
     "funded follow-up enters read-only analysis",
+    "wallet context summarizes funds and safety",
     "execute-like text downgrades to analysis",
+    "execute-like reply explains no live order",
     "dry-run stays simulated",
     "unfunded dry-run blocks Skill usage"
   ],

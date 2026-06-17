@@ -9,10 +9,9 @@ import { savePhaseOneRecord } from "@/v2/storage/phase-one-store";
 import { bindUserWalletSession, rememberUserSession } from "@/v2/storage/user-session-store";
 import { createAgentWalletContext } from "@/v2/wallet/wallet-orchestrator";
 import {
+  createAgentWalletReplyContext,
   createMobileWalletKnowledgeNotes,
   createWalletAuditNote,
-  createWalletFundReply,
-  createWalletStatusReply,
   syncAgentWalletContext,
   toMobileWalletContext
 } from "@/v2/wallet/mobile-wallet";
@@ -56,13 +55,13 @@ export async function POST(request: Request) {
     memory
   });
   const syncedWallet = await syncWalletAssetsSafely(wallet, memory);
-  const walletFundText = createWalletFundReply(syncedWallet);
+  const walletReplyContext = createAgentWalletReplyContext(syncedWallet);
   const orchestration = await createAgentOrchestrationPlan({
     userText: "好了，我充完了",
     wallet: syncedWallet,
     getCandidateMarket: getWorldCupCandidateSafely,
-    walletStatusText: createWalletStatusReply(syncedWallet),
-    walletFundText
+    walletStatusText: walletReplyContext.statusText,
+    walletFundText: walletReplyContext.summaryText
   });
 
   const turn = handlePhaseOneUserText({
