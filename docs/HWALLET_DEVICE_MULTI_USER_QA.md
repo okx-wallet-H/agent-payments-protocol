@@ -111,7 +111,8 @@ wallet state rendering.
 7. Confirm User B email is visible.
 8. Confirm User B receives a different short HWallet address than User A.
 9. Tap copy and confirm the button changes to `已复制`.
-10. Switch back to User A and confirm User A's original HWallet address returns.
+10. Confirm the quick action row shows `刷新到账` before the hash check action.
+11. Switch back to User A and confirm User A's original HWallet address returns.
 
 Pass criteria:
 
@@ -119,6 +120,7 @@ Pass criteria:
 - User A and User B have different HWallet receive addresses.
 - HWallet never shows the previous user's receive address after switching.
 - Copy feedback is visible before any transaction hash check.
+- `刷新到账` is the normal deposit recognition action.
 - The transaction hash check remains optional; normal receive flow works without
   pasting a hash.
 
@@ -142,16 +144,18 @@ Pass criteria:
 
 ## User A Wallet Activity
 
-1. Refresh HWallet.
-2. Paste or enter a known X Layer transaction hash for User A's wallet, if
-   available.
-3. Confirm the App shows a friendly result.
-4. Confirm audit/records include the wallet check.
-5. Ask Agent to continue after funds are recognized.
+1. Tap `刷新到账` after a transfer or after copying the receive address.
+2. Confirm the App can show either new funds or a friendly no-new-funds state.
+3. Open `高级核对` only if you want to verify one known X Layer transaction hash.
+4. Paste or enter the hash for User A's wallet, if available.
+5. Confirm the App shows a friendly result.
+6. Confirm audit/records include the wallet check.
+7. Ask Agent to continue after funds are recognized.
 
 Pass criteria:
 
-- The tx check requires an active HWallet.
+- 刷新到账不需要交易哈希。
+- The tx check requires an active HWallet and remains optional.
 - Duplicate tx checks remain idempotent.
 - Audit says no Agent money movement unless live execution is explicitly
   enabled in a later release.

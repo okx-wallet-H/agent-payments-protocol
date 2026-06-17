@@ -22,8 +22,11 @@ checks.push("HWallet account switch and logout are wired");
 assertIncludes(screen, 'accessibilityLabel="复制 HWallet 收款地址"', "HWallet receive address has an accessible copy button");
 assertIncludes(screen, 'addressCopied ? "已复制" : "复制地址"', "HWallet copy button changes label after copy");
 assertIncludes(screen, 'accessibilityLiveRegion="polite"', "HWallet copy feedback is announced politely");
-assertIncludes(screen, '收款地址已复制，可以去交易所或钱包转入。', "HWallet page shows human copy feedback");
+assertIncludes(screen, '收款地址已复制。转入后点刷新到账，Agent 会识别可用资金。', "HWallet page shows human copy feedback");
 assertIncludes(screen, '地址已复制，转入后 Agent 会自动识别资金。', "Agent receive card shows copy feedback");
+assertIncludes(screen, 'label="刷新到账"', "HWallet action strip exposes refresh-deposit as the main recognition path");
+assertIncludes(screen, 'label="哈希"', "HWallet action strip keeps transaction hash as a short secondary action");
+assertOrder(screen, 'label="刷新到账"', 'label="哈希"', "refresh-deposit action appears before hash verification");
 checks.push("receive-address copy feedback is visible and accessible");
 
 assertIncludes(screen, "const displayAddress = entryState.displayAddress", "HWallet page renders the current entry display address");
@@ -37,6 +40,7 @@ checks.push("signed-out and pending wallet states cannot expose stale receive ad
 assertIncludes(screen, "高级核对", "transaction hash check stays secondary");
 assertIncludes(screen, "到账会自动识别，哈希只用来核对单笔。", "hash check explains it is optional");
 assertIncludes(screen, "showTxCheck", "hash check stays collapsed unless opened");
+assertIncludes(screen, "刷新到账状态", "manual refresh remains available without a transaction hash");
 checks.push("hash verification remains optional, not required for normal receive flow");
 
 assertIncludes(deviceQa, "## Installed-App Regression Gate", "device QA includes installed-app regression gate");
@@ -44,6 +48,8 @@ assertIncludes(deviceQa, "Confirm the App does not crash or return to the launch
 assertIncludes(deviceQa, "Confirm User B receives a different short HWallet address than User A.", "device QA checks distinct user receive addresses");
 assertIncludes(deviceQa, "Switch back to User A and confirm User A's original HWallet address returns.", "device QA checks switch-back address restore");
 assertIncludes(deviceQa, "Copy feedback is visible before any transaction hash check.", "device QA checks copy feedback before hash check");
+assertIncludes(deviceQa, "`刷新到账` is the normal deposit recognition action.", "device QA makes refresh-deposit the normal path");
+assertIncludes(deviceQa, "刷新到账不需要交易哈希。", "device QA states refresh does not require hash");
 assertIncludes(deviceQa, "The transaction hash check remains optional", "device QA keeps hash verification optional");
 checks.push("installed-app regression gate captures no-crash switching, distinct addresses, and copy feedback");
 
@@ -54,6 +60,12 @@ console.log(JSON.stringify({
 
 function assertIncludes(source, needle, label) {
   assert(source.includes(needle), label);
+}
+
+function assertOrder(source, first, second, label) {
+  const firstIndex = source.indexOf(first);
+  const secondIndex = source.indexOf(second);
+  assert(firstIndex !== -1 && secondIndex !== -1 && firstIndex < secondIndex, label);
 }
 
 function assert(condition, label) {
