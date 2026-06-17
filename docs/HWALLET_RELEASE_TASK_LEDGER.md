@@ -131,7 +131,7 @@ audit task.
 
 ### R-005 Agent wallet context and friendly replies
 
-- **Status**: Ready.
+- **Status**: Merged.
 - **Owner evidence**: Not required.
 - **Goal**: keep Agent focused on user intent, wallet context, friendly replies,
   and transparent audit while real execution remains closed.
@@ -144,8 +144,9 @@ audit task.
   npm run smoke:agent-capability-executor
   npm run smoke:audit-timeline
   ```
-- **Done evidence**: Agent can explain wallet state and next safe actions
-  without exposing strategy addresses or moving funds.
+- **Done evidence**: PR #94 merged after `npm run verify:merge`; Agent can
+  explain wallet state, recognized funds, next safe actions, and the live
+  execution boundary without exposing strategy addresses or moving funds.
 - **Rollback**: revert the Agent branch and keep existing wallet flow.
 
 ## Lane 4 - OKX Onchain Skill And Plugin Integration
@@ -237,9 +238,9 @@ audit task.
 
 When no new owner instruction is present, pick in this order:
 
-1. R-005 Agent wallet context and friendly replies.
-2. R-006 Read-only OKX capability adapter.
-3. R-003 Supabase postgres cutover candidate.
+1. R-006 Read-only OKX capability adapter.
+2. R-003 Supabase postgres cutover candidate.
+3. R-001 Installed App two-user wallet regression.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
