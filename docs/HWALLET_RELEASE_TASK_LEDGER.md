@@ -36,9 +36,9 @@ audit task.
 
 ### R-001 Installed App two-user wallet regression
 
-- **Status**: Blocked waiting for owner.
-- **Owner evidence**: Required for final proof; local smoke remains
-  automatable.
+- **Status**: Merged.
+- **Owner evidence**: Completed through ignored, redacted local evidence; refresh
+  required after any new installable binary.
 - **Goal**: prove User A and User B can log in, receive distinct HWallet
   addresses, switch accounts without leaking state, copy a receive address with
   visible feedback, and keep live execution closed.
@@ -52,10 +52,12 @@ audit task.
   npm run smoke:privy-wallet-status
   HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
   ```
-- **Done evidence**: iOS installed-App evidence was captured in ignored local
-  evidence and passed `smoke:hwallet-device-evidence`; Android evidence is still
-  required before this task can be marked merged. raw access tokens and
-  unredacted addresses must not be committed.
+- **Done evidence**: iOS and Android installed-App evidence were captured in
+  ignored local evidence and passed strict `smoke:hwallet-device-evidence`,
+  `smoke:hwallet-dual-device-evidence`, `smoke:mobile-release-preflight`, and
+  `smoke:mobile-release-handoff`. Only redacted labels are recorded in repo;
+  raw access tokens, emails, verification codes, and unredacted addresses must
+  not be committed.
 - **Rollback**: revert the PR or return to the previous EAS update/build.
 
 ### R-002 Deposit recognition without mandatory hash paste
@@ -244,11 +246,14 @@ audit task.
 ## Current Next Best Tasks
 
 No fully automatable task remains in the current first-release queue. The next
-step needs owner/device evidence:
+steps need owner/store-console evidence:
 
-1. R-001 Installed App two-user wallet regression: provide Android installed-App evidence,
-   or confirm the first release is iOS-only so the ledger can be
-   rescoped.
+1. R-007 iOS TestFlight candidate build: prepare Apple/TestFlight action when
+   the owner is ready.
+2. R-008 Android internal testing candidate build: prepare Google Play internal
+   testing action when the owner is ready.
+3. R-009 Store metadata final owner pass: collect final copy, screenshots,
+   support contact, privacy review, and store-console answers.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
