@@ -22,6 +22,7 @@ const requiredRootScripts = [
   "smoke:mobile-store-build-evidence",
   "smoke:mobile-distribution-readiness",
   "smoke:mobile-release-preflight",
+  "smoke:mobile-release-handoff",
   "smoke:mobile-testflight-readiness",
   "smoke:hwallet-dual-device-evidence",
   "smoke:mobile-build-env",
@@ -145,6 +146,8 @@ checks.push("EAS Update scripts target the expected channels and environments");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-readiness", "release checklist includes mobile store readiness smoke");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-release-preflight", "release checklist includes mobile release preflight smoke");
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "release checklist documents strict release preflight");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-release-handoff", "release checklist includes mobile release handoff smoke");
+assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release checklist documents strict release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-distribution-readiness", "release checklist includes mobile distribution readiness smoke");
 assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");

@@ -60,6 +60,7 @@ npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-release-preflight
+npm run smoke:mobile-release-handoff
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
@@ -73,6 +74,7 @@ npm run mobile:build:android
 npm run mobile:store-build-evidence:init
 HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
+HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
 ```
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
@@ -96,6 +98,9 @@ The mobile workspace also runs `npm run release:preflight` automatically before
 `HWALLET_RELEASE_PREFLIGHT_STRICT=true` for external tester, TestFlight, internal
 Android, or production handoff so build evidence and both platform device
 evidence are enforced together.
+Use `HWALLET_RELEASE_HANDOFF_STRICT=true` after the same evidence is filled to
+prove the release handoff document, build evidence, and dual-device evidence all
+describe the same candidate.
 
 HWallet release candidate gate:
 

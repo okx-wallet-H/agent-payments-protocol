@@ -19,6 +19,7 @@ const submitProfiles = easConfig.submit || {};
 
 assert(typeof rootScripts["smoke:mobile-distribution-readiness"] === "string", "root exposes distribution readiness smoke");
 assert(typeof rootScripts["smoke:mobile-release-preflight"] === "string", "root exposes mobile release preflight smoke");
+assert(typeof rootScripts["smoke:mobile-release-handoff"] === "string", "root exposes mobile release handoff smoke");
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-distribution-readiness"),
   "verify:merge includes distribution readiness smoke"
@@ -26,6 +27,10 @@ assert(
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-release-preflight"),
   "verify:merge includes mobile release preflight smoke"
+);
+assert(
+  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-release-handoff"),
+  "verify:merge includes mobile release handoff smoke"
 );
 
 assert(typeof mobileScripts["build:ios"] === "string", "mobile iOS production build script exists");
@@ -72,6 +77,9 @@ assertIncludes(releaseChecklist, "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "rel
 assertIncludes(releaseHandoff, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "release handoff points to device QA");
 assertIncludes(releaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "release handoff records current iOS preview build");
 assertIncludes(releaseHandoff, "ab124aea-fbe7-47e1-aea8-b69ceddae248", "release handoff records current Android preview build");
+assertIncludes(releaseHandoff, ".tmp/hwallet-device-evidence-ios.json", "release handoff records iOS device evidence path");
+assertIncludes(releaseHandoff, ".tmp/hwallet-device-evidence-android.json", "release handoff records Android device evidence path");
+assertIncludes(releaseHandoff, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release handoff documents strict handoff gate");
 assertIncludes(deviceQa, "Installed-App Regression Gate", "device QA includes installed-App regression gate");
 assertIncludes(deviceQa, "Android", "device QA covers Android expectations");
 checks.push("distribution readiness is tied to handoff and device QA evidence");
@@ -91,6 +99,8 @@ assertIncludes(distributionPlan, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "distributi
 assertIncludes(distributionPlan, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "distribution plan requires Android device evidence");
 assertIncludes(distributionPlan, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "distribution plan requires strict release preflight");
 assertIncludes(distributionPlan, "npm run smoke:mobile-release-preflight", "distribution plan documents release preflight");
+assertIncludes(distributionPlan, "HWALLET_RELEASE_HANDOFF_STRICT=true", "distribution plan requires strict release handoff");
+assertIncludes(distributionPlan, "npm run smoke:mobile-release-handoff", "distribution plan documents release handoff");
 assertIncludes(distributionPlan, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "distribution plan requires staging device auth boundary smoke");
 assertIncludes(distributionPlan, "npm run submit:ios", "distribution plan documents iOS submit command");
 assertIncludes(distributionPlan, "npm run submit:android", "distribution plan documents Android submit command");
