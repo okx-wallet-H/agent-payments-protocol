@@ -58,6 +58,7 @@ Mobile store readiness gate (iOS + Android):
 ```sh
 npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
+npm run smoke:mobile-store-submission
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-release-preflight
 npm run smoke:mobile-release-handoff
@@ -213,6 +214,11 @@ recorded in `docs/HWALLET_STORE_DISTRIBUTION_PLAN.md`. Keep this plan aligned
 with the latest production build, submit, store metadata, privacy, and device
 evidence requirements before using `npm run submit:ios` or
 `npm run submit:android`.
+The public store metadata, privacy/support URLs, data-safety baseline, and
+review-note boundary are recorded in
+`docs/HWALLET_STORE_SUBMISSION_PACKET.md`. Keep `npm run
+smoke:mobile-store-submission` green before TestFlight, Android internal
+testing, or public store submission.
 
 Supabase staging stability gate:
 

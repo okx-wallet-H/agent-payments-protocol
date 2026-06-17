@@ -9,6 +9,9 @@ const easConfig = await readJson("apps/mobile/eas.json");
 const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
+const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
+const supportPage = await readFile("app/support/page.tsx", "utf8");
 const storeBuildEvidenceExample = await readFile("docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json", "utf8");
 const storeBuildEvidenceSmoke = await readFile("v2/scripts/smoke-mobile-store-build-evidence.mjs", "utf8");
 
@@ -21,6 +24,7 @@ const requiredRootScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-store-build-evidence",
   "smoke:mobile-distribution-readiness",
+  "smoke:mobile-store-submission",
   "smoke:mobile-release-preflight",
   "smoke:mobile-release-handoff",
   "smoke:mobile-testflight-readiness",
@@ -149,6 +153,7 @@ assertIncludes(releaseChecklist, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "relea
 assertIncludes(releaseChecklist, "npm run smoke:mobile-release-handoff", "release checklist includes mobile release handoff smoke");
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release checklist documents strict release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-distribution-readiness", "release checklist includes mobile distribution readiness smoke");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist includes mobile store submission smoke");
 assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
@@ -160,6 +165,16 @@ assertIncludes(releaseChecklist, "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "rel
 assertPattern(releaseChecklist, /Do not submit to TestFlight/i, "release checklist blocks TestFlight on failed gates");
 assertPattern(releaseChecklist, /internal Android/i, "release checklist blocks internal Android testing on failed gates");
 checks.push("release checklist documents the iOS and Android mobile release gate");
+
+assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
+assertIncludes(submissionPacket, "https://app.hwallet.vip/privacy", "submission packet records privacy URL");
+assertIncludes(submissionPacket, "https://app.hwallet.vip/support", "submission packet records support URL");
+assertIncludes(submissionPacket, "App Store Connect Baseline", "submission packet includes App Store baseline");
+assertIncludes(submissionPacket, "Google Play Console Baseline", "submission packet includes Google Play baseline");
+assertIncludes(submissionPacket, "Data Safety Baseline", "submission packet includes data safety baseline");
+assertIncludes(privacyPage, "Private keys or seed phrases", "privacy page has private-key boundary");
+assertIncludes(supportPage, "does not submit live orders", "support page has live-order boundary");
+checks.push("mobile store readiness includes submission packet and public legal pages");
 
 const storeBuildEvidence = JSON.parse(storeBuildEvidenceExample);
 assert(storeBuildEvidence.kind === "hwallet-mobile-store-build-evidence", "store build evidence example has expected kind");
@@ -195,6 +210,9 @@ assertNoRawSecrets({
   "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
   "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
   "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
+  "docs/HWALLET_STORE_SUBMISSION_PACKET.md": submissionPacket,
+  "app/privacy/page.tsx": privacyPage,
+  "app/support/page.tsx": supportPage,
   "docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json": storeBuildEvidenceExample,
   "v2/scripts/smoke-mobile-store-build-evidence.mjs": storeBuildEvidenceSmoke
 });
