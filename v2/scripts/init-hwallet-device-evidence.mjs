@@ -5,20 +5,28 @@ import { spawnSync } from "node:child_process";
 const sourcePath = "docs/HWALLET_DEVICE_EVIDENCE.example.json";
 const outputPath = process.env.HWALLET_DEVICE_EVIDENCE_FILE || ".tmp/hwallet-device-evidence.json";
 const force = process.env.HWALLET_DEVICE_EVIDENCE_INIT_FORCE === "true";
+const source = JSON.parse(await readFile(sourcePath, "utf8"));
 
 if (!force && await exists(outputPath)) {
   assertGitIgnored(outputPath);
+  const existing = JSON.parse(await readFile(outputPath, "utf8"));
+  const upgraded = upgradeEvidenceFlow(existing, source.flow);
+  if (upgraded.updated) {
+    await writeFile(outputPath, `${JSON.stringify(upgraded.evidence, null, 2)}\n`, "utf8");
+  }
   console.log(JSON.stringify({
     ok: true,
     created: false,
+    updated: upgraded.updated,
     outputPath,
-    note: "Existing ignored evidence file left untouched.",
+    note: upgraded.updated
+      ? "Existing ignored evidence file was upgraded with missing ordered flow steps."
+      : "Existing ignored evidence file left untouched.",
     nextSteps: nextSteps(outputPath)
   }, null, 2));
   process.exit(0);
 }
 
-const source = JSON.parse(await readFile(sourcePath, "utf8"));
 const initialized = {
   ...source,
   tester: {
@@ -80,6 +88,31 @@ async function exists(path) {
   } catch {
     return false;
   }
+}
+
+function upgradeEvidenceFlow(evidence, sourceFlow) {
+  const currentFlow = Array.isArray(evidence.flow) ? evidence.flow : [];
+  const mergedFlow = sourceFlow.map((sourceStep) => {
+    const existingStep = currentFlow.find((item) => item?.step === sourceStep.step);
+    return {
+      ...sourceStep,
+      ...existingStep,
+      observed: existingStep?.observed === true
+    };
+  });
+
+  const hasAllSteps = sourceFlow.every((sourceStep, index) => currentFlow[index]?.step === sourceStep.step);
+  const hasBooleanObservations = mergedFlow.every((step) => typeof step.observed === "boolean");
+  const updated = !hasAllSteps || !hasBooleanObservations;
+  return {
+    updated,
+    evidence: updated
+      ? {
+          ...evidence,
+          flow: mergedFlow
+        }
+      : evidence
+  };
 }
 
 function assertGitIgnored(path) {
