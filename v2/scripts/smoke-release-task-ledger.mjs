@@ -87,6 +87,7 @@ for (const command of [
   "npm run smoke:mobile-store-submission",
   "npm run smoke:hwallet-store-console-evidence",
   "npm run smoke:release-owner-packet",
+  "npm run smoke:release-next-action",
   "npm run smoke:task-review-workflow",
   "npm run smoke:hwallet-release-candidate",
   "npm run smoke:mobile-store-readiness",

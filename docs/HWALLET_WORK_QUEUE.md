@@ -122,3 +122,17 @@ Pause and ask the owner when:
 
 Continue without owner input when the task is local code, docs, smoke tests,
 mocked adapters, or non-secret release scaffolding.
+
+## Next-Action Status
+
+The controller can print the current release action state without opening a
+dashboard or exposing secrets:
+
+```sh
+npm run smoke:release-next-action
+```
+
+The command returns a JSON summary of merged tasks, owner-gated tasks, local
+store-console evidence status, and the next safe action. If it reports owner
+evidence is required, continue only with unrelated local scaffolding or pause
+for the owner.

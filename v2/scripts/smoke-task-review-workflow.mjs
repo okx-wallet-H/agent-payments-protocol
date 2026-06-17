@@ -64,6 +64,7 @@ assertIncludes(workQueueDoc, "Parallelism Rule", "work queue documents paralleli
 assertIncludes(workQueueDoc, "Task Packet", "work queue documents task packet");
 assertIncludes(workQueueDoc, "Claimed", "work queue records claimed task state");
 assertIncludes(workQueueDoc, "Only the controller stages", "work queue keeps controller write authority");
+assertIncludes(workQueueDoc, "npm run smoke:release-next-action", "work queue exposes release next-action status");
 assertIncludes(workQueueDoc, "Evidence Rules", "work queue documents evidence rules");
 assertIncludes(workQueueDoc, "Stop Conditions", "work queue documents owner stop conditions");
 assertIncludes(workQueueDoc, "Live execution closed", "work queue keeps live execution closed");
