@@ -65,6 +65,8 @@ npm run smoke:hwallet-release-candidate
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 npm run smoke:hwallet-staging-handoff
+npm run mobile:store-build-evidence:init
+npm run smoke:mobile-store-build-evidence
 npm --prefix apps/mobile run typecheck
 EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface

@@ -9,6 +9,8 @@ const easConfig = await readJson("apps/mobile/eas.json");
 const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
+const storeBuildEvidenceExample = await readFile("docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json", "utf8");
+const storeBuildEvidenceSmoke = await readFile("v2/scripts/smoke-mobile-store-build-evidence.mjs", "utf8");
 
 const rootScripts = rootPackage.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -17,6 +19,7 @@ const profiles = easConfig.build || {};
 
 const requiredRootScripts = [
   "smoke:mobile-store-readiness",
+  "smoke:mobile-store-build-evidence",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-build-env",
   "smoke:mobile-staging-env",
@@ -30,6 +33,7 @@ const requiredRootScripts = [
   "mobile:typecheck",
   "mobile:build:ios",
   "mobile:build:android",
+  "mobile:store-build-evidence:init",
   "verify:merge"
 ];
 
@@ -39,6 +43,10 @@ for (const scriptName of requiredRootScripts) {
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-store-readiness"),
   "verify:merge includes mobile store readiness gate"
+);
+assert(
+  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-store-build-evidence"),
+  "verify:merge includes mobile store build evidence gate"
 );
 assert(
   String(rootScripts["smoke:mobile-testflight-readiness"] || "").includes("smoke:mobile-store-readiness"),
@@ -111,6 +119,8 @@ assertUpdateScript("update:production", "production", "production");
 checks.push("EAS Update scripts target the expected channels and environments");
 
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-readiness", "release checklist includes mobile store readiness smoke");
+assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
 assertIncludes(releaseChecklist, "npm run mobile:build:ios", "release checklist includes iOS build command");
 assertIncludes(releaseChecklist, "npm run mobile:build:android", "release checklist includes Android build command");
@@ -119,6 +129,18 @@ assertIncludes(releaseChecklist, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "releas
 assertPattern(releaseChecklist, /Do not submit to TestFlight/i, "release checklist blocks TestFlight on failed gates");
 assertPattern(releaseChecklist, /internal Android/i, "release checklist blocks internal Android testing on failed gates");
 checks.push("release checklist documents the iOS and Android mobile release gate");
+
+const storeBuildEvidence = JSON.parse(storeBuildEvidenceExample);
+assert(storeBuildEvidence.kind === "hwallet-mobile-store-build-evidence", "store build evidence example has expected kind");
+assert(storeBuildEvidence.builds?.ios?.platform === "ios", "store build evidence example covers iOS");
+assert(storeBuildEvidence.builds?.android?.platform === "android", "store build evidence example covers Android");
+assert(storeBuildEvidence.checks?.iosBuildFinished === true, "store build evidence example checks iOS build completion");
+assert(storeBuildEvidence.checks?.androidBuildFinished === true, "store build evidence example checks Android build completion");
+assert(storeBuildEvidence.confirmations?.bothPlatformsRecorded === true, "store build evidence example confirms both platforms");
+assertIncludes(storeBuildEvidenceSmoke, "iosInstallableOrSubmitted", "store build evidence smoke checks iOS install or submit status");
+assertIncludes(storeBuildEvidenceSmoke, "androidInstallableOrSubmitted", "store build evidence smoke checks Android install or submit status");
+assertIncludes(storeBuildEvidenceSmoke, "containsNoSecrets", "store build evidence smoke requires no-secret confirmation");
+checks.push("mobile store build evidence covers iOS and Android build artifacts");
 
 assertIncludes(deviceQa, "User A", "device QA includes User A");
 assertIncludes(deviceQa, "User B", "device QA includes User B");
@@ -139,7 +161,9 @@ assertNoRawSecrets({
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2),
   "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
   "docs/HWALLET_DEVICE_MULTI_USER_QA.md": deviceQa,
-  "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook
+  "docs/HWALLET_EAS_UPDATE_RUNBOOK.md": easRunbook,
+  "docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json": storeBuildEvidenceExample,
+  "v2/scripts/smoke-mobile-store-build-evidence.mjs": storeBuildEvidenceSmoke
 });
 checks.push("release docs and EAS profile avoid raw secret material");
 
