@@ -11,6 +11,7 @@ const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
 const deviceEvidenceExample = await readFile("docs/HWALLET_DEVICE_EVIDENCE.example.json", "utf8");
 const deviceEvidenceInit = await readFile("v2/scripts/init-hwallet-device-evidence.mjs", "utf8");
+const stagingHandoffSmoke = await readFile("v2/scripts/smoke-hwallet-staging-handoff.mjs", "utf8");
 const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
 const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet-live.mjs", "utf8");
@@ -125,6 +126,18 @@ assertIncludes(deviceEvidenceInit, "git\", [\"check-ignore\"", "device evidence 
 assertIncludes(deviceEvidenceInit, "observedOnPhysicalDevice: false", "device evidence initializer requires manual physical-device confirmation");
 assertIncludes(deviceEvidenceInit, "observed: false", "device evidence initializer requires ordered flow observations");
 checks.push("device evidence initializer creates an ignored local file that cannot pass strict mode untouched");
+
+assertIncludes(
+  stagingHandoffSmoke,
+  "const requireRealDeviceEvidence = strict || evidenceFile.length > 0",
+  "staging handoff requires real evidence when an evidence file is supplied"
+);
+assertIncludes(
+  stagingHandoffSmoke,
+  "suppliedDeviceEvidenceMustBeReal: true",
+  "staging handoff summary reports supplied evidence strictness"
+);
+checks.push("staging handoff cannot treat a supplied device evidence file as an example template");
 
 assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile TestFlight smoke includes device QA boundary");
 assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile TestFlight smoke checks public HTTPS API URLs");
