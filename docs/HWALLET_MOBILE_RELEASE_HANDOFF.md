@@ -10,22 +10,24 @@ codes, or raw build artifact signed URLs.
 - Product body: HWallet wallet entry plus Agent experience.
 - Sample capability: prediction/market screens may remain as examples, but they
   are not the product body.
-- Current release mode: internal preview builds for iOS and Android.
+- Current release mode: iOS internal preview build plus Android production
+  store build.
 - API target: `https://app.hwallet.vip`.
 - Live execution state: closed. Real trading, Onchain OS live mode, prediction
   trading, and transaction broadcast remain disabled.
 
-## Current Preview Builds
+## Current Build Handoff
 
-Both builds below are the current installable internal preview candidates for
-build version `9`. They share the same app version, channel, API target, and
-live-execution boundary; source commits are recorded per platform because the
-builds may be refreshed independently.
+The builds below are the current mobile release handoff candidates. iOS remains
+on the installable preview build used for device evidence, while Android now has
+the production `aab` build for Google Play Console internal testing. They share
+the same app version, API target, and live-execution boundary; source commits
+are recorded per platform because the builds may be refreshed independently.
 
 | Platform | EAS profile | Channel | Build version | Source commit | Status | Build page |
 | --- | --- | --- | --- | --- | --- | --- |
 | iOS | `preview` | `preview` | `9` | `253ef6830dc894137701d0ee35aef3340b09a57d` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/e4603d5d-2123-4502-94f9-3e9035ba3c9e` |
-| Android | `preview` | `preview` | `9` | `948988fa67e7b4e74991b349a86673a91d7df311` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/7819a79e-b831-4b65-bbf4-e50211eb16d1` |
+| Android | `production` | `production` | `10` | `e546726d5d6626a164990bde80ae2befa4438ba9` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` |
 
 The ignored local file `.tmp/hwallet-mobile-store-build-evidence.json` was
 updated with the two build ids and passed the strict store-build evidence smoke.
@@ -106,7 +108,9 @@ Before calling this release candidate ready for external testers, complete the
 installed-App checks from `docs/HWALLET_DEVICE_MULTI_USER_QA.md`:
 
 1. Install the iOS preview build on the registered iPhone.
-2. Install the Android preview build on an Android device.
+2. Install the Android preview build on an Android device for direct device QA,
+   or upload the Android production `aab` to Google Play internal testing before
+   testing the store-distributed binary.
 3. Log in as User A.
 4. Open HWallet and confirm a receive address is visible.
 5. Tap copy and confirm the button changes to `已复制`.

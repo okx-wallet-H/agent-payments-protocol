@@ -19,7 +19,7 @@ assert(
 
 for (const section of [
   "Current Release State",
-  "Current Known Build Blockers",
+  "Current Known External Gates",
   "What The Owner May Need To Provide",
   "R-007 iOS TestFlight",
   "R-008 Android Internal Testing",
@@ -49,11 +49,12 @@ for (const blocker of [
   "Apple Developer sign-in",
   "certificate validation",
   "interactive EAS prompt",
-  "Expo/EAS build credits",
-  "monthly Android build limit",
+  "Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed",
+  "Google Play Console upload",
+  "internal-testing readiness",
   "external-state gates"
 ]) {
-  assertIncludes(packet, blocker, `owner packet records build blocker: ${blocker}`);
+  assertIncludes(packet, blocker, `owner packet records external gate: ${blocker}`);
 }
 
 for (const forbiddenBoundary of [
@@ -103,7 +104,12 @@ assertIncludes(packet, "No secret material is needed now", "owner packet keeps c
 assertIncludes(ledger, "R-007, R-008, and R-009 are intentionally owner-gated", "ledger keeps owner-gated release tasks");
 assertIncludes(ledger, "owner/store-console evidence", "ledger names owner evidence next");
 assertIncludes(ledger, "Apple Developer sign-in", "ledger records iOS owner-side build blocker");
-assertIncludes(ledger, "Expo/EAS Android build quota", "ledger records Android quota build blocker");
+assertIncludes(ledger, "Google Play Console/internal testing action", "ledger records Android owner-side console gate");
+assertIncludes(
+  ledger,
+  "Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed",
+  "ledger records completed Android production build"
+);
 assertIncludes(workQueue, "Stop Conditions", "work queue has owner stop conditions");
 assertIncludes(workQueue, "Continue without owner input", "work queue has continue rules");
 assertIncludes(distributionPlan, "Store console evidence", "distribution plan keeps store console evidence gate");

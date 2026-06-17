@@ -219,9 +219,9 @@ audit task.
 - **Status**: Blocked waiting for owner.
 - **Owner evidence**: Google Play Console access, internal testing track, signed
   Android build evidence.
-- **Current blocker class**: Expo/EAS Android build quota or plan capacity plus
-  Google Play Console/internal testing action. If quota is exhausted, wait for
-  reset or owner capacity upgrade before building the next Android candidate.
+- **Current blocker class**: Google Play Console/internal testing action.
+  Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed as
+  build version `10` after owner replenished Expo/EAS build capacity.
 - **Goal**: produce and record an Android build candidate that uses
   `https://app.hwallet.vip` and passes the same HWallet multi-user evidence.
 - **In scope**: EAS Android production/preview build, store build evidence,
@@ -233,8 +233,8 @@ audit task.
   npm --prefix apps/mobile run build:android
   HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
   ```
-- **Done evidence**: EAS Android build id and URL are recorded in ignored
-  evidence, and Android device evidence passes with redacted values.
+- **Done evidence**: EAS Android production build id and URL are recorded in
+  ignored evidence, and Android device evidence passes with redacted values.
 - **Rollback**: do not promote the build; use prior EAS build/update.
 
 ### R-009 Store metadata final owner pass
@@ -267,8 +267,9 @@ steps need owner/store-console evidence:
 
 1. R-007 iOS TestFlight candidate build: prepare Apple/TestFlight action when
    the owner is ready.
-2. R-008 Android internal testing candidate build: prepare Google Play internal
-   testing action when the owner is ready.
+2. R-008 Android internal testing candidate build: upload the production AAB to
+   Google Play internal testing and record redacted console evidence when the
+   owner is ready.
 3. R-009 Store metadata final owner pass: collect final copy, screenshots,
    support contact, privacy review, store-console answers, redacted
    store-console evidence, and `docs/HWALLET_OWNER_RELEASE_PACKET.md`.

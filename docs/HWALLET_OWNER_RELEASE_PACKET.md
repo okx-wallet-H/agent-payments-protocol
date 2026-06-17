@@ -17,17 +17,17 @@ secrets, dashboard credentials, verification codes, or raw personal data.
 - Remaining release tasks: R-007 iOS TestFlight candidate build, R-008 Android
   internal testing candidate build, and R-009 store metadata final owner pass.
 
-## Current Known Build Blockers
+## Current Known External Gates
 
 - iOS production builds can require owner-side Apple Developer sign-in,
   certificate validation, device/profile confirmation, or App Store Connect
   action. The controller must not ask for Apple credentials in chat; the owner
   runs the interactive EAS prompt locally when needed and reports only redacted
   status labels or build ids.
-- Android production builds can be blocked by Expo/EAS build credits or plan
-  quota. If EAS reports the monthly Android build limit is exhausted, the owner
-  either upgrades/adds build capacity or waits for the quota reset before the
-  controller can produce the next Android candidate.
+- Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed
+  after the owner replenished Expo/EAS build capacity. The remaining Android
+  gate is Google Play Console upload, processing, internal-testing readiness,
+  and installed-App retest.
 - These blockers are external-state gates, not product logic failures. Local
   smoke gates and preview/device evidence can continue to run while waiting,
   but TestFlight or Google Play evidence cannot become strict-ready until the
@@ -56,9 +56,8 @@ verification codes, or unredacted personal data.
 ### R-008 Android Internal Testing
 
 - Google Play Console access and upload credentials must stay with the owner.
-- The likely current blocker is Expo/EAS Android build quota. If EAS says the
-  free monthly Android build allowance is exhausted, build production only
-  after the owner upgrades/adds EAS capacity or waits for the reset.
+- The current Android production `aab` is ready for Google Play Console internal
+  testing. Do not paste Google credentials or service-account JSON into chat.
 - Required owner action: confirm the Android build is uploaded, processed,
   assigned to internal testing, installed, and retested on the real Android
   device.
