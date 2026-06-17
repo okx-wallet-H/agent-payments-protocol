@@ -36,9 +36,24 @@ MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip n
 npm run hwallet:device-evidence:init
 ```
 
+- If the installed-App pass is complete, you can record the redacted evidence
+  without hand-editing JSON. Use short labels, not verification codes or raw
+  tokens:
+
+```sh
+HWALLET_DEVICE_EVIDENCE_CONFIRM_ALL=true \
+HWALLET_DEVICE_PLATFORM=ios \
+HWALLET_DEVICE_USER_A_LABEL=user-a-label \
+HWALLET_DEVICE_USER_A_SHORT_ADDRESS=0x123456...abcdef \
+HWALLET_DEVICE_USER_B_LABEL=user-b-label \
+HWALLET_DEVICE_USER_B_SHORT_ADDRESS=0x654321...fedcba \
+npm run hwallet:device-evidence:record
+```
+
 - After the manual device pass, fill `.tmp/hwallet-device-evidence.json` with
   only redacted observations, set every required flow step and confirmation
-  field to `true`, and run:
+  field to `true`, or generate it with `npm run hwallet:device-evidence:record`,
+  and run:
 
 ```sh
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
