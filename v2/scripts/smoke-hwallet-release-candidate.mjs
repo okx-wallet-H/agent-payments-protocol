@@ -341,11 +341,12 @@ checks.push("existing release smokes are chained into the HWallet candidate gate
 
 assertIncludes(mobileReleaseHandoff, "HWallet wallet entry plus Agent experience", "mobile release handoff names the product body");
 assertIncludes(mobileReleaseHandoff, "https://app.hwallet.vip", "mobile release handoff records staging API");
-assertIncludes(mobileReleaseHandoff, "source commits are recorded per platform", "mobile release handoff labels per-platform source commits");
+assertIncludes(mobileReleaseHandoff, "source commits", "mobile release handoff labels source commits");
+assertIncludes(mobileReleaseHandoff, "recorded per platform", "mobile release handoff labels per-platform source commits");
 assertIncludes(mobileReleaseHandoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "mobile release handoff records iOS preview source commit");
-assertIncludes(mobileReleaseHandoff, "948988fa67e7b4e74991b349a86673a91d7df311", "mobile release handoff records Android preview source commit");
+assertIncludes(mobileReleaseHandoff, "e546726d5d6626a164990bde80ae2befa4438ba9", "mobile release handoff records Android production source commit");
 assertIncludes(mobileReleaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "mobile release handoff records current iOS preview build");
-assertIncludes(mobileReleaseHandoff, "7819a79e-b831-4b65-bbf4-e50211eb16d1", "mobile release handoff records current Android preview build");
+assertIncludes(mobileReleaseHandoff, "6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547", "mobile release handoff records current Android production build");
 assertIncludes(mobileReleaseHandoff, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live", "mobile release handoff records staging device auth boundary smoke");
 assertIncludes(mobileReleaseHandoff, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true", "mobile release handoff records strict store-build evidence smoke");
 assertIncludes(mobileReleaseHandoff, "HWALLET_RELEASE_HANDOFF_STRICT=true", "mobile release handoff records strict release handoff smoke");

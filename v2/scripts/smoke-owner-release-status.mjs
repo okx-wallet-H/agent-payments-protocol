@@ -44,9 +44,9 @@ for (const required of [
   "npm run smoke:owner-release-status",
   "Apple/TestFlight",
   "Google Play internal testing",
-  "Current Known Build Blockers",
+  "Current Known External Gates",
   "Apple Developer sign-in",
-  "Expo/EAS build credits",
+  "Android production build `6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` completed",
   "Approve final store copy and screenshots",
   "Store evidence in ignored `.tmp` files only"
 ]) {
@@ -57,7 +57,7 @@ assertIncludes(workQueue, "npm run smoke:owner-release-status", "work queue expo
 assertIncludes(workQueue, "Stop and ask the owner", "work queue preserves owner stop rule");
 assertIncludes(taskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release ledger keeps owner-gated tasks");
 assertIncludes(taskLedger, "Apple Developer sign-in", "release ledger records iOS build blocker");
-assertIncludes(taskLedger, "Expo/EAS Android build quota", "release ledger records Android build blocker");
+assertIncludes(taskLedger, "Google Play Console/internal testing action", "release ledger records Android console gate");
 assertIncludes(screenshotPlan, "Owner Approval Checklist", "screenshot plan keeps owner approval checklist");
 
 const storeConsoleEvidence = await inspectStoreConsoleEvidence(storeConsoleEvidencePath);
@@ -86,7 +86,6 @@ const nextAction = storeConsoleEvidence.strictReady
         "确认 iOS TestFlight 是否上传、处理完成、可内测、已安装复测",
         "确认 Android 内测是否上传、处理完成、可测试、已安装复测",
         "确认商店文案、截图、隐私/支持链接和审核说明",
-        "如 Android EAS 构建额度用完，请确认升级/加额度或等待额度重置",
         "如 iOS 需要 Apple 登录/证书验证，请在本机交互式 EAS 流程里完成"
       ],
       statusCommand: "npm run smoke:owner-release-status"
@@ -103,7 +102,7 @@ const result = {
     automatableReleaseTasksRemaining: 0,
     knownExternalBuildBlockers: [
       "iOS owner-side Apple Developer sign-in / certificate validation",
-      "Android Expo/EAS build quota or plan capacity"
+      "Android Google Play Console upload / internal testing action"
     ]
   },
   evidence: {
