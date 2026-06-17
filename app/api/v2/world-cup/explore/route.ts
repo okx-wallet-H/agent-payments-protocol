@@ -68,6 +68,10 @@ async function readMarketsSafely(mode: ReturnType<typeof readDataMode>): Promise
     }
   }
 
+  if (mode === "live") {
+    return sampleData("OKX 数据暂时不可用，先展示赛事样例。");
+  }
+
   return sampleData();
 }
 

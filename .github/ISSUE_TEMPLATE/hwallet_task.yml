@@ -1,0 +1,85 @@
+name: HWallet task
+description: Claim one small, verifiable HWallet or Agent Wallet task.
+title: "[HWallet Task] "
+labels:
+  - hwallet
+  - task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to claim one small task. Keep the scope narrow enough that it can be reviewed, tested, and merged independently.
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Work lane
+      description: Pick the main lane for this task.
+      options:
+        - HWallet wallet flow
+        - Supabase data layer
+        - Agent orchestration
+        - OKX Onchain Skill integration
+        - Mobile release / TestFlight
+        - Docs / workflow
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this task is done?
+      placeholder: >-
+        Example: record device evidence after a successful address copy and expose it in audit history.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: List the files or behavior this task may change.
+      placeholder: >-
+        Example: mobile API client, v2 audit route, smoke tests.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: State what must not be changed.
+      placeholder: >-
+        Example: no real trading, no production secrets, no unrelated UI redesign.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: Concrete checks a reviewer can use to approve or reject this task.
+      placeholder: |
+        - [ ] User-facing behavior is clear.
+        - [ ] Multi-user isolation is preserved.
+        - [ ] Audit record is written and redacted.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: Commands, smoke tests, OTA checks, or manual device checks required before review.
+      placeholder: |
+        npm run typecheck
+        npm run mobile:typecheck
+        npm run smoke:mobile-api-auth
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety gate
+      options:
+        - label: This task does not add secrets, passwords, API keys, private keys, or raw database URLs.
+          required: true
+        - label: Real trading, swapping, signing, and money movement stay disabled unless a separate approved task opens them.
+          required: true
+        - label: The task has a rollback path or can be reverted cleanly.
+          required: true

@@ -96,6 +96,14 @@ function getBearerToken(request: Request): string | undefined {
 }
 
 async function verifyPrivyRequestUser(accessToken: string): Promise<AccessCheck> {
+  if (!looksLikeJwt(accessToken)) {
+    return {
+      ok: false,
+      status: 401,
+      error: "Invalid Privy access token"
+    };
+  }
+
   const appId = getPrivyAppId();
   if (!appId) {
     return {
@@ -119,6 +127,10 @@ async function verifyPrivyRequestUser(accessToken: string): Promise<AccessCheck>
       error: "Invalid Privy access token"
     };
   }
+}
+
+function looksLikeJwt(accessToken: string): boolean {
+  return accessToken.split(".").length === 3;
 }
 
 function getPrivyJwks(appId: string) {
