@@ -127,11 +127,14 @@ audit task.
   STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
   STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
   STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
+  STAGING_API_BASE_URL=https://app.hwallet.vip npm run hwallet:staging-evidence:record
+  HWALLET_STAGING_STORAGE_EVIDENCE_FILE=.tmp/hwallet-staging-storage-evidence.json HWALLET_STAGING_STORAGE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-staging-evidence
   npm run smoke:hwallet-staging-handoff
   ```
 - **Done evidence**: staging server, storage summary, auth surface, and handoff
-  smokes passed against `https://app.hwallet.vip`; no raw secret was printed or
-  stored.
+  smokes passed against `https://app.hwallet.vip`; the ignored staging evidence
+  snapshot can be refreshed and validated from public status endpoints; no raw
+  secret was printed or stored.
 - **Rollback**: restore the previous deployed backend or storage mode.
 
 ## Lane 3 - Agent Orchestration

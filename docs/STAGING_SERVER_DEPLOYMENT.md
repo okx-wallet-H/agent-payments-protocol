@@ -99,6 +99,8 @@ Run remote server readiness:
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-server
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-storage-summary
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-auth-surface
+STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run hwallet:staging-evidence:record
+HWALLET_STAGING_STORAGE_EVIDENCE_FILE=.tmp/hwallet-staging-storage-evidence.json HWALLET_STAGING_STORAGE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-staging-evidence
 ```
 
 Then update `apps/mobile/eas.json` preview and production
@@ -124,6 +126,11 @@ HWALLET_STAGING_HANDOFF_STRICT=true HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-de
 
 The strict mode is the release handoff: it requires staging auth/storage/server
 checks, the device-facing API smoke, and redacted manual device evidence.
+
+The staging evidence recorder writes a redacted status snapshot to `.tmp`. Keep
+that file local and ignored; it records endpoint health and pass/fail flags only,
+not credentials, database URLs, tokens, private keys, verification codes, or user
+data.
 
 For a Supabase storage switch rehearsal, keep the staging server live execution
 switches closed and run the local sequence from `docs/V2_RELEASE_CHECKLIST.md`:
