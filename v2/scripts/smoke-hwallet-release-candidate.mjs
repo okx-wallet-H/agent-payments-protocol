@@ -22,7 +22,9 @@ const mobileTestflightSmoke = await readFile("v2/scripts/smoke-mobile-testflight
 const mobileReleasePreflightSmoke = await readFile("v2/scripts/smoke-mobile-release-preflight.mjs", "utf8");
 const mobileReleaseHandoffSmoke = await readFile("v2/scripts/smoke-mobile-release-handoff.mjs", "utf8");
 const mobileStoreSubmissionSmoke = await readFile("v2/scripts/smoke-mobile-store-submission.mjs", "utf8");
+const storeScreenshotPlanSmoke = await readFile("v2/scripts/smoke-store-screenshot-plan.mjs", "utf8");
 const storeSubmissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const screenshotPlan = await readFile("docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "utf8");
 const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const storeConsoleEvidenceSmoke = await readFile("v2/scripts/smoke-hwallet-store-console-evidence.mjs", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
@@ -49,6 +51,7 @@ const requiredScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-release-preflight",
   "smoke:mobile-release-handoff",
+  "smoke:store-screenshot-plan",
   "smoke:mobile-store-submission",
   "smoke:hwallet-store-console-evidence",
   "smoke:release-owner-packet",
@@ -91,6 +94,10 @@ assert(
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
   "verify:merge includes mobile store submission gate"
+);
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:store-screenshot-plan"),
+  "verify:merge includes store screenshot plan gate"
 );
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:hwallet-store-console-evidence"),
@@ -244,12 +251,17 @@ checks.push("mobile release handoff verifies docs, build evidence, dual-device e
 
 assertIncludes(mobileStoreSubmissionSmoke, "Privacy Policy", "mobile store submission smoke checks privacy page");
 assertIncludes(mobileStoreSubmissionSmoke, "Support", "mobile store submission smoke checks support page");
+assertIncludes(mobileStoreSubmissionSmoke, "docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "mobile store submission smoke checks screenshot plan");
 assertIncludes(mobileStoreSubmissionSmoke, "App Store Connect Baseline", "mobile store submission smoke checks App Store baseline");
 assertIncludes(mobileStoreSubmissionSmoke, "Google Play Console Baseline", "mobile store submission smoke checks Google Play baseline");
+assertIncludes(storeScreenshotPlanSmoke, "Full wallet addresses", "store screenshot plan smoke blocks full wallet addresses");
+assertIncludes(storeScreenshotPlanSmoke, "Raw email addresses", "store screenshot plan smoke blocks raw email addresses");
+assertIncludes(storeScreenshotPlanSmoke, "Owner approves final visual order and copy", "store screenshot plan smoke keeps owner visual approval");
 assertIncludes(storeConsoleEvidenceSmoke, "HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED", "store console evidence smoke has strict mode");
 assertIncludes(storeConsoleEvidenceSmoke, "App Store Connect", "store console evidence smoke checks App Store Connect");
 assertIncludes(storeConsoleEvidenceSmoke, "Google Play Console", "store console evidence smoke checks Google Play Console");
 assertIncludes(storeSubmissionPacket, "Product: HWallet", "store submission packet names HWallet");
+assertIncludes(storeSubmissionPacket, "docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "store submission packet links screenshot plan");
 assertIncludes(storeSubmissionPacket, "Store console evidence", "store submission packet records store console evidence");
 assertIncludes(storeSubmissionPacket, "https://app.hwallet.vip/privacy", "store submission packet records privacy URL");
 assertIncludes(storeSubmissionPacket, "https://app.hwallet.vip/support", "store submission packet records support URL");
@@ -261,6 +273,15 @@ assert(storeConsoleEvidence.checks?.strictReleaseHandoffPassed === true, "store 
 assert(storeConsoleEvidence.checks?.dualDeviceEvidencePassed === true, "store console evidence covers dual-device evidence");
 assert(storeConsoleEvidence.confirmations?.noCredentialsInEvidence === true, "store console evidence covers no-credential confirmation");
 checks.push("mobile store submission packet, store console evidence, public legal pages, and review boundaries are part of the release candidate");
+
+assertIncludes(screenshotPlan, "Agent Home", "screenshot plan covers Agent home");
+assertIncludes(screenshotPlan, "HWallet Receive", "screenshot plan covers HWallet receive");
+assertIncludes(screenshotPlan, "Assets Ready", "screenshot plan covers assets ready");
+assertIncludes(screenshotPlan, "Agent Analysis", "screenshot plan covers Agent analysis");
+assertIncludes(screenshotPlan, "Audit / Records", "screenshot plan covers audit records");
+assertIncludes(screenshotPlan, "Full wallet addresses", "screenshot plan blocks full wallet addresses");
+assertIncludes(screenshotPlan, "Raw email addresses", "screenshot plan blocks raw email addresses");
+checks.push("release candidate includes the store screenshot story, redaction, and owner approval gate");
 
 assertIncludes(releaseTaskLedgerSmoke, "Controller Selection Rule", "release task ledger smoke checks controller selection");
 assertIncludes(releaseTaskLedgerSmoke, "iOS TestFlight candidate build", "release task ledger smoke checks iOS task");
@@ -345,10 +366,12 @@ assertNoRawSecrets({
   "v2/scripts/smoke-mobile-release-preflight.mjs": mobileReleasePreflightSmoke,
   "v2/scripts/smoke-mobile-release-handoff.mjs": mobileReleaseHandoffSmoke,
   "v2/scripts/smoke-mobile-store-submission.mjs": mobileStoreSubmissionSmoke,
+  "v2/scripts/smoke-store-screenshot-plan.mjs": storeScreenshotPlanSmoke,
   "v2/scripts/smoke-hwallet-store-console-evidence.mjs": storeConsoleEvidenceSmoke,
   "docs/HWALLET_RELEASE_TASK_LEDGER.md": releaseTaskLedger,
   "v2/scripts/smoke-release-task-ledger.mjs": releaseTaskLedgerSmoke,
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": storeSubmissionPacket,
+  "docs/HWALLET_STORE_SCREENSHOT_PLAN.md": screenshotPlan,
   "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
   "docs/HWALLET_OWNER_RELEASE_PACKET.md": ownerReleasePacket,
   "v2/scripts/smoke-release-owner-packet.mjs": ownerReleasePacketSmoke,
