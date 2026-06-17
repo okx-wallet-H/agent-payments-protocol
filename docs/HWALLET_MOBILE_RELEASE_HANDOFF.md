@@ -62,6 +62,8 @@ npm run smoke:hwallet-release-candidate
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
+STAGING_API_BASE_URL=https://app.hwallet.vip npm run hwallet:staging-evidence:record
+HWALLET_STAGING_STORAGE_EVIDENCE_FILE=.tmp/hwallet-staging-storage-evidence.json HWALLET_STAGING_STORAGE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-staging-evidence
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
@@ -88,6 +90,11 @@ The staging API reported:
 - Onchain OS live mode: closed.
 - Prediction trading live mode: closed.
 - Public trading API execution: closed.
+
+The ignored local file `.tmp/hwallet-staging-storage-evidence.json` can be
+refreshed before each release handoff. It records public staging status and
+pass/fail booleans only, never credentials, tokens, database URLs, private keys,
+verification codes, or user data.
 
 The unauthenticated device-facing smoke intentionally stops after proving that
 staging rejects missing Privy access tokens. The authenticated two-user path

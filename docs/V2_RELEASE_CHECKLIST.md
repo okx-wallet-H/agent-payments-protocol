@@ -126,6 +126,8 @@ npm run smoke:supabase-readback-drill
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
+STAGING_API_BASE_URL=https://app.hwallet.vip npm run hwallet:staging-evidence:record
+HWALLET_STAGING_STORAGE_EVIDENCE_FILE=.tmp/hwallet-staging-storage-evidence.json HWALLET_STAGING_STORAGE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-staging-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live
 MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip MOBILE_DEVICE_PRIVY_ACCESS_TOKEN=<short-lived-user-a-token> MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN=<short-lived-user-b-token> npm run smoke:mobile-device-hwallet:live
@@ -183,6 +185,8 @@ EXPO_PUBLIC_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-readines
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-server
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-storage-summary
 STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run smoke:staging-auth-surface
+STAGING_API_BASE_URL=https://YOUR_STAGING_API npm run hwallet:staging-evidence:record
+HWALLET_STAGING_STORAGE_EVIDENCE_FILE=.tmp/hwallet-staging-storage-evidence.json HWALLET_STAGING_STORAGE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-staging-evidence
 ```
 
 The staging readiness smoke must not print secrets. It checks Privy token
@@ -192,6 +196,9 @@ The storage summary smoke is a read-only HTTPS check for the production storage
 shape; it prints only non-sensitive mode, table-count, and readiness fields.
 The auth surface smoke verifies every mobile-facing HWallet and Agent endpoint
 rejects unauthenticated staging traffic before any wallet or Agent work can run.
+The staging evidence recorder turns those public status checks into an ignored,
+redacted `.tmp` snapshot so release review can verify the same facts without
+copying secrets into the repository.
 
 Supabase staging readback drill:
 

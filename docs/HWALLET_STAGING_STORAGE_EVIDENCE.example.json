@@ -1,0 +1,49 @@
+{
+  "kind": "hwallet-staging-storage-evidence",
+  "version": 1,
+  "environment": {
+    "apiBaseUrl": "https://app.hwallet.vip",
+    "checkedAt": "2026-06-17T00:00:00.000Z",
+    "source": "example-template"
+  },
+  "storage": {
+    "service": "hwallet-v2",
+    "mode": "postgres",
+    "activeWritePath": "postgres",
+    "productionReady": true,
+    "postgresStatus": "ready",
+    "expectedTables": 13,
+    "presentTables": 13,
+    "missingTables": 0,
+    "warnings": 0
+  },
+  "accessControl": {
+    "requireOwner": true,
+    "requirePrivyToken": true,
+    "enforcement": "privy_access_token"
+  },
+  "execution": {
+    "canBroadcastTransactions": false,
+    "realExecutionEnabled": false,
+    "onchainOsLiveMode": false,
+    "predictionTradingLiveMode": false,
+    "publicTradingApiConfigured": false
+  },
+  "protectedProbe": {
+    "mobileWalletRejectsMissingToken": true,
+    "errorCode": "Missing Privy access token"
+  },
+  "checks": {
+    "storageEndpointHealthy": true,
+    "authEndpointHealthy": true,
+    "executionEndpointHealthy": true,
+    "postgresReady": true,
+    "allTablesPresent": true,
+    "authRequired": true,
+    "ownerGuardEnabled": true,
+    "liveExecutionClosed": true,
+    "protectedEndpointRequiresToken": true,
+    "containsNoSecrets": true
+  },
+  "notes": "Example only. Real staging evidence belongs in .tmp/hwallet-staging-storage-evidence.json and must contain only endpoint status, redacted configuration labels, and pass/fail booleans. Do not paste API keys, Privy access tokens, database URLs, private keys, verification codes, or unredacted user data."
+}
