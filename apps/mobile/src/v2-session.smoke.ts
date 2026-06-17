@@ -430,6 +430,16 @@ const authExpiredApi = {
   }
 };
 
+const jwtExpiredApi = {
+  ...api,
+  getV2Wallet: async () => {
+    throw Object.assign(new Error("JWT expired"), {
+      code: "jwt_expired",
+      status: 403
+    });
+  }
+};
+
 const verifiedReadyApi = {
   ...api,
   verifyV2WalletTx: async () => ({
@@ -603,6 +613,13 @@ async function main() {
   if (afterAuthExpired.error.includes("Privy") || afterAuthExpired.error.includes("access token")) {
     throw new Error("Expected auth failure copy to hide implementation details.");
   }
+  const afterJwtExpired = await loadV2AgentWalletState(jwtExpiredApi, afterChat, "demo-user");
+  if (afterJwtExpired.error !== "登录已过期，请重新登录后再试。") {
+    throw new Error("Expected JWT expiry to use friendly login-expired mobile copy.");
+  }
+  if (afterJwtExpired.error.includes("JWT") || afterJwtExpired.error.includes("token")) {
+    throw new Error("Expected JWT expiry copy to hide implementation details.");
+  }
 
   const afterReadyVerifyTx = await verifyV2AgentWalletTx(
     verifiedReadyApi,
@@ -750,6 +767,7 @@ async function main() {
     walletConflictCopy: afterWalletConflict.error,
     walletRequiredCopy: afterMissingWalletTx.error,
     authExpiredCopy: afterAuthExpired.error,
+    jwtExpiredCopy: afterJwtExpired.error,
     error: afterAction.error
   }, null, 2));
 }

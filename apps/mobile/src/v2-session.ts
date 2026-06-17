@@ -10,6 +10,7 @@ import type {
   V2MobileHomeView,
   V2WalletContext
 } from "./types";
+import { createFriendlyMobileSessionError, isMobileAuthError } from "./friendly-auth-error";
 
 export interface V2AgentWalletApi {
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeResponse>;
@@ -380,9 +381,8 @@ function withSessionError(session: V2AgentWalletSession, error: unknown): V2Agen
 }
 
 function createFriendlySessionError(error: unknown): string {
-  if (isApiAuthError(error)) {
-    return "登录已过期，请重新登录后再试。";
-  }
+  const authError = createFriendlyMobileSessionError(error);
+  if (authError) return authError;
 
   if (isApiErrorCode(error, "wallet_address_conflict")) {
     return "这个账号已经绑定了 HWallet。请使用当前账号的钱包，或切换账号后再试。";
@@ -397,18 +397,7 @@ function createFriendlySessionError(error: unknown): string {
 }
 
 function isApiAuthError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const candidate = error as { status?: unknown; code?: unknown; message?: unknown };
-  const status = candidate.status;
-  if (status === 401) return true;
-
-  const code = typeof candidate.code === "string" ? candidate.code.toLowerCase() : "";
-  const message = typeof candidate.message === "string" ? candidate.message.toLowerCase() : "";
-  return [code, message].some((value) =>
-    value.includes("privy") ||
-    value.includes("access token") ||
-    value.includes("unauthorized")
-  );
+  return isMobileAuthError(error);
 }
 
 function isApiErrorCode(error: unknown, code: string): boolean {

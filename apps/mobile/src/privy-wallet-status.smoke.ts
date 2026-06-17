@@ -149,6 +149,14 @@ assert(
   createFriendlyWalletNotice("Unauthorized") === "登录状态正在同步，请稍后再试。",
   "preview HWallet hides raw unauthorized error"
 );
+assert(
+  createFriendlyWalletNotice("JWT expired") === "登录状态正在同步，请稍后再试。",
+  "preview HWallet hides raw expired-session error"
+);
+assert(
+  createFriendlyWalletNotice("Missing authorization bearer token") === "登录状态正在同步，请稍后再试。",
+  "preview HWallet hides raw bearer-token error"
+);
 
 const authProvisionNoticeEntry = createHWalletEntryState({
   privyStatus: createPrivyHWalletStatus({ isReady: true, hasUser: true, provisionError: "Invalid Privy access token" }),
