@@ -1,0 +1,81 @@
+name: HWallet Review Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NEXT_TELEMETRY_DISABLED: "1"
+
+concurrency:
+  group: hwallet-review-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  merge-gate:
+    name: HWallet Merge Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/mobile/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install mobile dependencies
+        run: npm --prefix apps/mobile ci
+
+      - name: Check whitespace
+        run: git diff --check origin/main...HEAD
+
+      - name: Typecheck root
+        run: npm run typecheck
+
+      - name: Typecheck mobile
+        run: npm run mobile:typecheck
+
+      - name: HWallet release candidate smoke
+        run: npm run smoke:hwallet-release-candidate
+
+      - name: Mobile API auth smoke
+        run: npm run smoke:mobile-api-auth
+
+      - name: Audit timeline smoke
+        run: npm run smoke:audit-timeline
+
+      - name: Start local Next server
+        run: |
+          mkdir -p .tmp
+          npm run dev > .tmp/hwallet-review-next.log 2>&1 &
+          echo $! > .tmp/hwallet-review-next.pid
+          for attempt in {1..40}; do
+            if curl -fsS http://localhost:3000/api/v2/system/storage >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat .tmp/hwallet-review-next.log
+          exit 1
+
+      - name: Full merge verification
+        run: npm run verify:merge

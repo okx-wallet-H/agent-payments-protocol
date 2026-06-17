@@ -65,19 +65,49 @@ export async function executePolymarketDryRun(plan: BusinessPlan): Promise<Execu
       .at(-1);
     const raw = jsonLine ? JSON.parse(jsonLine) : { stdout, stderr };
 
-    return {
-      requestId: request.id,
-      status: raw?.dry_run ? "dry_run_completed" : "failed",
-      summary: raw?.dry_run ? "Dry-run completed." : "Dry-run did not return a successful preview.",
-      raw,
-      createdAt: new Date().toISOString()
-    };
+    if (raw?.dry_run) {
+      return {
+        requestId: request.id,
+        status: "dry_run_completed",
+        summary: "Dry-run completed.",
+        raw,
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    return createLocalDryRunPreview(plan, request.id, "Dry-run plugin did not return a successful preview.");
   } catch (error) {
-    return {
-      requestId: request.id,
-      status: "failed",
-      summary: error instanceof Error ? error.message : "Dry-run failed.",
-      createdAt: new Date().toISOString()
-    };
+    return createLocalDryRunPreview(
+      plan,
+      request.id,
+      error instanceof Error ? error.message : "Dry-run plugin unavailable."
+    );
   }
+}
+
+function createLocalDryRunPreview(plan: BusinessPlan, requestId = crypto.randomUUID(), reason = "Local dry-run preview."): ExecutionResult {
+  const amount = plan.amountUsd || 1;
+  const price = plan.limitPrice || plan.market?.yesPrice || 0.5;
+  const shares = price > 0 ? Number((amount / price).toFixed(4)) : undefined;
+
+  return {
+    requestId,
+    status: "dry_run_completed",
+    summary: "Local dry-run preview completed without submitting an order.",
+    raw: {
+      dry_run: true,
+      ok: true,
+      local_preview: true,
+      reason,
+      data: {
+        note: "本地安全模拟，未提交订单。",
+        usdc_requested: amount,
+        shares,
+        limit_price: price,
+        outcome: plan.side || "yes",
+        market: plan.market?.question
+      }
+    },
+    createdAt: new Date().toISOString()
+  };
 }

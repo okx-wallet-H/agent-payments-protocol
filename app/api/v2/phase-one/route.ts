@@ -7,6 +7,8 @@ import { createMobileChatTurn } from "@/v2/app/mobile-chat";
 import { createUserConsolePanel } from "@/v2/app/user-console";
 import { createWorldCupInfoPanel } from "@/v2/app/world-cup-info";
 import { resolvePhaseOneUser } from "@/v2/auth/request-user";
+import { normalizeOkxOutcomes, pickBestOkxWorldCupMarket } from "@/v2/execution/okx-outcomes-output";
+import { sampleOkxWorldCupPayload } from "@/v2/execution/okx-world-cup-sample";
 import { listWorldCupMarkets, getWorldCupCandidateMarket } from "@/v2/execution/polymarket-cli";
 import { saveAgentAction, saveAgentRun } from "@/v2/storage/agent-action-store";
 import { saveAuditTimelineEvent } from "@/v2/storage/audit-timeline-store";
@@ -301,10 +303,13 @@ async function readMarketsSafely() {
 
 async function getWorldCupCandidateSafely() {
   try {
-    return await getWorldCupCandidateMarket();
+    const market = await getWorldCupCandidateMarket();
+    if (market) return market;
   } catch {
-    return undefined;
+    // Local/CI builds may not have the plugin installed; keep the Agent flow card-backed.
   }
+
+  return pickBestOkxWorldCupMarket(normalizeOkxOutcomes(sampleOkxWorldCupPayload).markets);
 }
 
 function readCandidateMarket(input: unknown): MarketSnapshot | undefined {

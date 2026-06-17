@@ -34,6 +34,9 @@ export function handlePhaseOneUserText(input: {
 
   if (goal.type === "prediction_market_research") {
     const plan = createPredictionResearchPlan(goal, input.candidateMarket);
+    const walletSyncPrefix = shouldIncludeWalletFundText(input.userText, input.walletFundText)
+      ? `${input.walletFundText} `
+      : "";
 
     return {
       id: crypto.randomUUID(),
@@ -41,10 +44,8 @@ export function handlePhaseOneUserText(input: {
       progress: input.candidateMarket ? createSelectedMarketProgress(goal) : createStrategyProgress(goal),
       cards: input.candidateMarket ? [createPredictionCard(input.candidateMarket)] : [],
       finalText: plan.market
-        ? input.walletFundText?.includes("到账")
-          ? `${input.walletFundText} 这场我先建议观察，点卡片可以继续跟踪或先模拟。`
-          : "这场我先建议观察，点卡片可以继续跟踪或先模拟。"
-        : "我先去找世界杯相关市场。",
+        ? `${walletSyncPrefix}这场我先建议观察，点卡片可以继续跟踪或先模拟。`
+        : `${walletSyncPrefix}我先去找世界杯相关市场。`,
       createdAt: new Date().toISOString()
     };
   }
@@ -100,4 +101,9 @@ export function handlePhaseOneUserText(input: {
     finalText: "你可以直接说：我要充值，或者帮我看看世界杯机会。",
     createdAt: new Date().toISOString()
   };
+}
+
+function shouldIncludeWalletFundText(userText: string, walletFundText?: string): walletFundText is string {
+  if (!walletFundText) return false;
+  return /好了|充完|已充|已转|转了|到账|到了|到帐|done|finished|arrived/i.test(userText);
 }

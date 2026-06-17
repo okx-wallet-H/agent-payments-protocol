@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: HWallet task workflow
+    url: https://github.com/okx-wallet-H/agent-payments-protocol/blob/main/docs/TASK_REVIEW_WORKFLOW.md
+    about: Read the task intake, review, and merge workflow before opening a task.
