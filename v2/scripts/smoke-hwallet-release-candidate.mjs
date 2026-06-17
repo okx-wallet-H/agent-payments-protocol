@@ -238,7 +238,8 @@ assertIncludes(releaseTaskLedger, "R-003 Supabase postgres cutover candidate", "
 assertIncludes(releaseTaskLedger, "R-004 Staging API auth and storage handoff", "release task ledger records completed staging task");
 assertIncludes(releaseTaskLedger, "R-005 Agent wallet context and friendly replies", "release task ledger records completed Agent context task");
 assertIncludes(releaseTaskLedger, "R-006 Read-only OKX capability adapter", "release task ledger records completed OKX adapter task");
-assertIncludes(releaseTaskLedger, "R-001 Installed App two-user wallet regression", "release task ledger names next unblocked task");
+assertIncludes(releaseTaskLedger, "No fully automatable task remains", "release task ledger records owner-evidence boundary");
+assertIncludes(releaseTaskLedger, "Android installed-App evidence", "release task ledger names next owner action");
 assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger keeps store tasks owner-gated");
 checks.push("release candidate includes controller task ledger for 7x24 work selection");
 
