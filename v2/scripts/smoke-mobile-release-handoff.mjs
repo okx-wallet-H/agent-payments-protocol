@@ -30,8 +30,10 @@ assert(
 assertIncludes(handoff, "HWallet wallet entry plus Agent experience", "handoff names HWallet product body");
 assertIncludes(handoff, "https://app.hwallet.vip", "handoff records public staging API");
 assertIncludes(handoff, "Current Preview Builds", "handoff records current preview builds");
+assertIncludes(handoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "handoff records iOS preview source commit");
+assertIncludes(handoff, "948988fa67e7b4e74991b349a86673a91d7df311", "handoff records Android preview source commit");
 assertIncludes(handoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "handoff records iOS preview build id");
-assertIncludes(handoff, "ab124aea-fbe7-47e1-aea8-b69ceddae248", "handoff records Android preview build id");
+assertIncludes(handoff, "7819a79e-b831-4b65-bbf4-e50211eb16d1", "handoff records Android preview build id");
 assertIncludes(handoff, ".tmp/hwallet-mobile-store-build-evidence.json", "handoff points to local store-build evidence");
 assertIncludes(handoff, ".tmp/hwallet-device-evidence-ios.json", "handoff points to local iOS device evidence");
 assertIncludes(handoff, ".tmp/hwallet-device-evidence-android.json", "handoff points to local Android device evidence");
@@ -61,7 +63,7 @@ if (strict) {
 
   assert(storeEvidence.kind === "hwallet-mobile-store-build-evidence", "strict handoff store-build evidence kind is valid");
   assert(storeEvidence.builds?.ios?.buildId === "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "strict handoff iOS build matches handoff");
-  assert(storeEvidence.builds?.android?.buildId === "ab124aea-fbe7-47e1-aea8-b69ceddae248", "strict handoff Android build matches handoff");
+  assert(storeEvidence.builds?.android?.buildId === "7819a79e-b831-4b65-bbf4-e50211eb16d1", "strict handoff Android build matches handoff");
   assert(iosEvidence.environment?.platform === "ios", "strict handoff iOS evidence is ios");
   assert(androidEvidence.environment?.platform === "android", "strict handoff Android evidence is android");
   assert(iosEvidence.confirmations?.liveExecutionStillClosed === true, "strict handoff iOS confirms live execution closed");
