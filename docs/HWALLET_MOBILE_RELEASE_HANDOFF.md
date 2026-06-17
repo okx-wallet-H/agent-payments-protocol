@@ -17,13 +17,15 @@ codes, or raw build artifact signed URLs.
 
 ## Current Preview Builds
 
-Both builds below were created from the same preview build source commit:
-`253ef6830dc894137701d0ee35aef3340b09a57d`.
+Both builds below are the current installable internal preview candidates for
+build version `9`. They share the same app version, channel, API target, and
+live-execution boundary; source commits are recorded per platform because the
+builds may be refreshed independently.
 
-| Platform | EAS profile | Channel | Build version | Status | Build page |
-| --- | --- | --- | --- | --- | --- |
-| iOS | `preview` | `preview` | `9` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/e4603d5d-2123-4502-94f9-3e9035ba3c9e` |
-| Android | `preview` | `preview` | `9` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/ab124aea-fbe7-47e1-aea8-b69ceddae248` |
+| Platform | EAS profile | Channel | Build version | Source commit | Status | Build page |
+| --- | --- | --- | --- | --- | --- | --- |
+| iOS | `preview` | `preview` | `9` | `253ef6830dc894137701d0ee35aef3340b09a57d` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/e4603d5d-2123-4502-94f9-3e9035ba3c9e` |
+| Android | `preview` | `preview` | `9` | `948988fa67e7b4e74991b349a86673a91d7df311` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/7819a79e-b831-4b65-bbf4-e50211eb16d1` |
 
 The ignored local file `.tmp/hwallet-mobile-store-build-evidence.json` was
 updated with the two build ids and passed the strict store-build evidence smoke.
