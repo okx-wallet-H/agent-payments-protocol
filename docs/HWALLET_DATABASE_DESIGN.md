@@ -81,6 +81,11 @@ pooler，再调整这个值。
 
 真实 `DATABASE_URL` 已完成多轮 `dual` 写入和 `postgres` 回读对比，确认多用户会话、钱包绑定、充值验证记录、Agent 消息、钱包记录、知识笔记和审计记录能稳定落库。
 
+2026-06-17 已完成 HWallet Supabase live closeout，记录见
+`docs/HWALLET_SUPABASE_LIVE_CLOSEOUT.md`。本轮验证覆盖 `dual`
+观察、JSONL/Postgres 一致性、`postgres` 主读写、性能阈值、其他用户隔离、
+`money_moved=false` 审计边界和回滚路径。
+
 Phase-one 记录层也已接入同一套切换开关：默认继续写本地 JSONL，`dual`
 模式额外镜像到 `hwallet_agent_records`，`postgres` 模式直接从 Supabase
 读写预测卡、跟踪卡、策略卡和模拟卡。
