@@ -58,7 +58,7 @@ audit task.
 
 ### R-002 Deposit recognition without mandatory hash paste
 
-- **Status**: Ready.
+- **Status**: Merged.
 - **Owner evidence**: Not required for local contract; required for real-chain
   proof.
 - **Goal**: make the product contract explicit that a deposit can be discovered
@@ -74,8 +74,9 @@ audit task.
   npm run smoke:audit-timeline
   npm run smoke:mobile-hwallet-ux
   ```
-- **Done evidence**: smoke proves hash verification is optional, refresh can
-  surface recognized assets, and audit stays user-scoped.
+- **Done evidence**: PR #91 merged after `npm run verify:merge`; smoke proves
+  hash verification is optional, refresh can surface recognized assets, and
+  audit stays user-scoped.
 - **Rollback**: revert wallet sync contract and mobile copy changes.
 
 ## Lane 2 - Supabase Production Data Layer
@@ -234,11 +235,10 @@ audit task.
 
 When no new owner instruction is present, pick in this order:
 
-1. R-002 Deposit recognition without mandatory hash paste.
-2. R-004 Staging API auth and storage handoff.
-3. R-005 Agent wallet context and friendly replies.
-4. R-006 Read-only OKX capability adapter.
-5. R-003 Supabase postgres cutover candidate.
+1. R-004 Staging API auth and storage handoff.
+2. R-005 Agent wallet context and friendly replies.
+3. R-006 Read-only OKX capability adapter.
+4. R-003 Supabase postgres cutover candidate.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
