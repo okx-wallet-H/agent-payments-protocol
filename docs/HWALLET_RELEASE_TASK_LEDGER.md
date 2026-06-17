@@ -106,7 +106,7 @@ audit task.
 
 ### R-004 Staging API auth and storage handoff
 
-- **Status**: Ready.
+- **Status**: Merged.
 - **Owner evidence**: Required if staging env variables or server restart are
   needed.
 - **Goal**: prove `https://app.hwallet.vip` rejects unauthenticated wallet and
@@ -122,7 +122,9 @@ audit task.
   STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-auth-surface
   npm run smoke:hwallet-staging-handoff
   ```
-- **Done evidence**: staging smokes pass and no raw secret is printed or stored.
+- **Done evidence**: staging server, storage summary, auth surface, and handoff
+  smokes passed against `https://app.hwallet.vip`; no raw secret was printed or
+  stored.
 - **Rollback**: restore the previous deployed backend or storage mode.
 
 ## Lane 3 - Agent Orchestration
@@ -235,10 +237,9 @@ audit task.
 
 When no new owner instruction is present, pick in this order:
 
-1. R-004 Staging API auth and storage handoff.
-2. R-005 Agent wallet context and friendly replies.
-3. R-006 Read-only OKX capability adapter.
-4. R-003 Supabase postgres cutover candidate.
+1. R-005 Agent wallet context and friendly replies.
+2. R-006 Read-only OKX capability adapter.
+3. R-003 Supabase postgres cutover candidate.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is

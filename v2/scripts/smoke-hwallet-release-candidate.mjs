@@ -234,7 +234,8 @@ assertIncludes(releaseTaskLedgerSmoke, "iOS TestFlight candidate build", "releas
 assertIncludes(releaseTaskLedgerSmoke, "Android internal testing candidate build", "release task ledger smoke checks Android task");
 assertIncludes(releaseTaskLedger, "HWallet Release Task Ledger", "release task ledger names release task ledger");
 assertIncludes(releaseTaskLedger, "R-002 Deposit recognition without mandatory hash paste", "release task ledger records completed deposit task");
-assertIncludes(releaseTaskLedger, "R-004 Staging API auth and storage handoff", "release task ledger names next unblocked task");
+assertIncludes(releaseTaskLedger, "R-004 Staging API auth and storage handoff", "release task ledger records completed staging task");
+assertIncludes(releaseTaskLedger, "R-005 Agent wallet context and friendly replies", "release task ledger names next unblocked task");
 assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger keeps store tasks owner-gated");
 checks.push("release candidate includes controller task ledger for 7x24 work selection");
 
