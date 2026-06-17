@@ -10,6 +10,9 @@ const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const releaseHandoff = await readFile("docs/HWALLET_MOBILE_RELEASE_HANDOFF.md", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const distributionPlan = await readFile("docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "utf8");
+const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
+const supportPage = await readFile("app/support/page.tsx", "utf8");
 
 const rootScripts = rootPackage.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -20,6 +23,7 @@ const submitProfiles = easConfig.submit || {};
 assert(typeof rootScripts["smoke:mobile-distribution-readiness"] === "string", "root exposes distribution readiness smoke");
 assert(typeof rootScripts["smoke:mobile-release-preflight"] === "string", "root exposes mobile release preflight smoke");
 assert(typeof rootScripts["smoke:mobile-release-handoff"] === "string", "root exposes mobile release handoff smoke");
+assert(typeof rootScripts["smoke:mobile-store-submission"] === "string", "root exposes mobile store submission smoke");
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-distribution-readiness"),
   "verify:merge includes distribution readiness smoke"
@@ -31,6 +35,10 @@ assert(
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-release-handoff"),
   "verify:merge includes mobile release handoff smoke"
+);
+assert(
+  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
+  "verify:merge includes mobile store submission smoke"
 );
 
 assert(typeof mobileScripts["build:ios"] === "string", "mobile iOS production build script exists");
@@ -101,6 +109,8 @@ assertIncludes(distributionPlan, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "distr
 assertIncludes(distributionPlan, "npm run smoke:mobile-release-preflight", "distribution plan documents release preflight");
 assertIncludes(distributionPlan, "HWALLET_RELEASE_HANDOFF_STRICT=true", "distribution plan requires strict release handoff");
 assertIncludes(distributionPlan, "npm run smoke:mobile-release-handoff", "distribution plan documents release handoff");
+assertIncludes(distributionPlan, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "distribution plan links store submission packet");
+assertIncludes(distributionPlan, "npm run smoke:mobile-store-submission", "distribution plan documents store submission gate");
 assertIncludes(distributionPlan, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "distribution plan requires staging device auth boundary smoke");
 assertIncludes(distributionPlan, "npm run submit:ios", "distribution plan documents iOS submit command");
 assertIncludes(distributionPlan, "npm run submit:android", "distribution plan documents Android submit command");
@@ -108,12 +118,25 @@ assertIncludes(distributionPlan, "Live execution remains closed", "distribution 
 assertIncludes(distributionPlan, "No secrets are committed", "distribution plan keeps secret hygiene visible");
 checks.push("distribution plan documents store metadata, evidence, submit, and safety requirements");
 
+assertIncludes(submissionPacket, "Product: HWallet", "submission packet names HWallet");
+assertIncludes(submissionPacket, "Privacy policy URL: `https://app.hwallet.vip/privacy`", "submission packet records privacy URL");
+assertIncludes(submissionPacket, "Support URL: `https://app.hwallet.vip/support`", "submission packet records support URL");
+assertIncludes(submissionPacket, "Review notes must include the observe/simulate-only boundary", "submission packet records App Store review boundary");
+assertIncludes(submissionPacket, "Data safety answers must include", "submission packet records Play data safety boundary");
+assertIncludes(submissionPacket, "Live execution remains closed", "submission packet keeps live execution closed");
+assertIncludes(privacyPage, "Privacy Policy", "privacy page exists");
+assertIncludes(supportPage, "Support", "support page exists");
+checks.push("distribution readiness includes public store submission packet and legal pages");
+
 assertNoRawSecrets({
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2),
   "apps/mobile/app.json": JSON.stringify(mobileApp, null, 2),
   "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md": distributionPlan,
+  "docs/HWALLET_STORE_SUBMISSION_PACKET.md": submissionPacket,
   "docs/HWALLET_MOBILE_RELEASE_HANDOFF.md": releaseHandoff,
-  "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist
+  "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
+  "app/privacy/page.tsx": privacyPage,
+  "app/support/page.tsx": supportPage
 });
 checks.push("distribution readiness docs avoid raw secret material");
 

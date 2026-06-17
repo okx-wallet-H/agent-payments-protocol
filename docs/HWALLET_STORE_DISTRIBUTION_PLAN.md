@@ -66,6 +66,12 @@ MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-h
 - Keep the strict authenticated two-user device smoke pending until short-lived
   Privy device tokens are available, or satisfy the same requirement through
   redacted physical-device evidence.
+- Keep the public store metadata, privacy, support, and review-note packet in
+  `docs/HWALLET_STORE_SUBMISSION_PACKET.md` green:
+
+```sh
+npm run smoke:mobile-store-submission
+```
 
 ## iOS Path
 
@@ -74,8 +80,8 @@ MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-h
 2. Prepare App Store Connect:
    - App name.
    - Bundle id: `com.agentwallet.xlayer`.
-   - Privacy policy URL.
-   - Support URL.
+   - Privacy policy URL: `https://app.hwallet.vip/privacy`.
+   - Support URL: `https://app.hwallet.vip/support`.
    - App category.
    - Age rating answers.
    - Export compliance answer. Current app config sets
@@ -108,8 +114,9 @@ npm run submit:ios -- --latest --non-interactive
 2. Prepare Google Play Console:
    - App name.
    - Package name: `com.agentwallet.xlayer`.
-   - Privacy policy URL.
-   - Support contact.
+   - Privacy policy URL: `https://app.hwallet.vip/privacy`.
+   - Support URL: `https://app.hwallet.vip/support`.
+   - Support contact configured outside git.
    - Data safety answers.
    - Content rating questionnaire.
    - Store listing screenshots and icon.
@@ -153,6 +160,7 @@ Go only when all are true:
 - iOS and Android physical-device evidence is filled and passes strict
   single-device and dual-device smoke.
 - Strict mobile release handoff smoke passes.
+- Store submission packet smoke passes.
 - Staging server gates pass.
 - App Store Connect / Play Console metadata is prepared.
 - Live execution remains closed.

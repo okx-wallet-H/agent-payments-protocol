@@ -21,6 +21,10 @@ const mobileDeviceSmoke = await readFile("v2/scripts/smoke-mobile-device-hwallet
 const mobileTestflightSmoke = await readFile("v2/scripts/smoke-mobile-testflight-readiness.mjs", "utf8");
 const mobileReleasePreflightSmoke = await readFile("v2/scripts/smoke-mobile-release-preflight.mjs", "utf8");
 const mobileReleaseHandoffSmoke = await readFile("v2/scripts/smoke-mobile-release-handoff.mjs", "utf8");
+const mobileStoreSubmissionSmoke = await readFile("v2/scripts/smoke-mobile-store-submission.mjs", "utf8");
+const storeSubmissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
+const supportPage = await readFile("app/support/page.tsx", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -39,6 +43,7 @@ const requiredScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-release-preflight",
   "smoke:mobile-release-handoff",
+  "smoke:mobile-store-submission",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "smoke:hwallet-dual-device-evidence",
@@ -71,6 +76,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:mobile-release-handoff"),
   "verify:merge includes mobile release handoff gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
+  "verify:merge includes mobile store submission gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -95,6 +104,8 @@ assertIncludes(releaseChecklist, "npm run smoke:mobile-release-preflight", "rele
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "release checklist documents strict mobile release preflight");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-release-handoff", "release checklist includes mobile release handoff gate");
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release checklist documents strict mobile release handoff");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist includes mobile store submission gate");
+assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
@@ -198,6 +209,17 @@ assertIncludes(mobileReleaseHandoffSmoke, "smoke:mobile-release-preflight", "mob
 assertIncludes(mobileReleaseHandoffSmoke, "assertGitIgnored", "mobile release handoff keeps local evidence ignored");
 checks.push("mobile release handoff verifies docs, build evidence, dual-device evidence, and strict preflight together");
 
+assertIncludes(mobileStoreSubmissionSmoke, "Privacy Policy", "mobile store submission smoke checks privacy page");
+assertIncludes(mobileStoreSubmissionSmoke, "Support", "mobile store submission smoke checks support page");
+assertIncludes(mobileStoreSubmissionSmoke, "App Store Connect Baseline", "mobile store submission smoke checks App Store baseline");
+assertIncludes(mobileStoreSubmissionSmoke, "Google Play Console Baseline", "mobile store submission smoke checks Google Play baseline");
+assertIncludes(storeSubmissionPacket, "Product: HWallet", "store submission packet names HWallet");
+assertIncludes(storeSubmissionPacket, "https://app.hwallet.vip/privacy", "store submission packet records privacy URL");
+assertIncludes(storeSubmissionPacket, "https://app.hwallet.vip/support", "store submission packet records support URL");
+assertIncludes(privacyPage, "Private keys or seed phrases", "privacy page records private-key boundary");
+assertIncludes(supportPage, "does not submit live orders", "support page records no-live-order boundary");
+checks.push("mobile store submission packet, public legal pages, and review boundaries are part of the release candidate");
+
 assertIncludes(
   stagingHandoffSmoke,
   "const requireRealDeviceEvidence = strict || evidenceFile.length > 0",
@@ -256,6 +278,10 @@ assertNoRawSecrets({
   "v2/scripts/smoke-hwallet-dual-device-evidence.mjs": dualDeviceEvidenceSmoke,
   "v2/scripts/smoke-mobile-release-preflight.mjs": mobileReleasePreflightSmoke,
   "v2/scripts/smoke-mobile-release-handoff.mjs": mobileReleaseHandoffSmoke,
+  "v2/scripts/smoke-mobile-store-submission.mjs": mobileStoreSubmissionSmoke,
+  "docs/HWALLET_STORE_SUBMISSION_PACKET.md": storeSubmissionPacket,
+  "app/privacy/page.tsx": privacyPage,
+  "app/support/page.tsx": supportPage,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");
