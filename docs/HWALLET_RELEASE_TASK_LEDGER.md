@@ -280,6 +280,7 @@ npm run smoke:release-task-ledger
 npm run smoke:task-review-workflow
 npm run smoke:release-owner-packet
 npm run smoke:hwallet-release-candidate
+npm run smoke:release-next-action
 npm run smoke:mobile-store-readiness
 npm run smoke:hwallet-store-console-evidence
 git diff --check

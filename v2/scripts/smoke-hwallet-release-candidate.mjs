@@ -53,6 +53,7 @@ const requiredScripts = [
   "smoke:hwallet-store-console-evidence",
   "smoke:release-owner-packet",
   "smoke:release-task-ledger",
+  "smoke:release-next-action",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "smoke:hwallet-dual-device-evidence",
@@ -98,6 +99,10 @@ assert(
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-task-ledger"),
   "verify:merge includes release task ledger gate"
+);
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:release-next-action"),
+  "verify:merge includes release next-action gate"
 );
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-owner-packet"),
@@ -271,6 +276,7 @@ assertIncludes(releaseTaskLedger, "iOS and Android installed-App evidence", "rel
 assertIncludes(releaseTaskLedger, "No fully automatable task remains", "release task ledger records owner-evidence boundary");
 assertIncludes(releaseTaskLedger, "owner/store-console evidence", "release task ledger names next owner action");
 assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger keeps store tasks owner-gated");
+assertIncludes(releaseTaskLedger, "npm run smoke:release-next-action", "release task ledger exposes next-action status");
 assertIncludes(ownerReleasePacket, "HWallet Owner Release Packet", "owner release packet exists");
 assertIncludes(ownerReleasePacket, "R-007 iOS TestFlight", "owner release packet covers iOS owner task");
 assertIncludes(ownerReleasePacket, "R-008 Android Internal Testing", "owner release packet covers Android owner task");

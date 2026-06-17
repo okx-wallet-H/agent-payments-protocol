@@ -70,6 +70,7 @@ for strict validation:
 
 ```sh
 npm run smoke:hwallet-store-console-evidence
+npm run smoke:release-next-action
 ```
 
 Record redacted console observations after the owner confirms the dashboard
