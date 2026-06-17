@@ -22,6 +22,7 @@ const requiredRootScripts = [
   "smoke:mobile-store-build-evidence",
   "smoke:mobile-distribution-readiness",
   "smoke:mobile-testflight-readiness",
+  "smoke:hwallet-dual-device-evidence",
   "smoke:mobile-build-env",
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",

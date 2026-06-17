@@ -13,6 +13,7 @@ const easRunbook = await readFile("docs/HWALLET_EAS_UPDATE_RUNBOOK.md", "utf8");
 const deviceEvidenceExample = await readFile("docs/HWALLET_DEVICE_EVIDENCE.example.json", "utf8");
 const deviceEvidenceInit = await readFile("v2/scripts/init-hwallet-device-evidence.mjs", "utf8");
 const deviceEvidenceRecord = await readFile("v2/scripts/record-hwallet-device-evidence.mjs", "utf8");
+const dualDeviceEvidenceSmoke = await readFile("v2/scripts/smoke-hwallet-dual-device-evidence.mjs", "utf8");
 const stagingHandoffSmoke = await readFile("v2/scripts/smoke-hwallet-staging-handoff.mjs", "utf8");
 const stagingServerSmoke = await readFile("v2/scripts/smoke-staging-server.mjs", "utf8");
 const stagingAuthSmoke = await readFile("v2/scripts/smoke-staging-auth-surface.mjs", "utf8");
@@ -36,6 +37,7 @@ const requiredScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
+  "smoke:hwallet-dual-device-evidence",
   "hwallet:device-evidence:init",
   "hwallet:device-evidence:record",
   "mobile:store-build-evidence:init",
@@ -52,6 +54,10 @@ for (const scriptName of requiredScripts) {
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:hwallet-release-candidate"),
   "verify:merge includes HWallet release candidate gate"
+);
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:hwallet-dual-device-evidence"),
+  "verify:merge includes dual-device evidence gate"
 );
 checks.push("package exposes the HWallet release candidate gate");
 
@@ -88,6 +94,9 @@ assertIncludes(easRunbook, "STAGING_API_BASE_URL=https://app.hwallet.vip npm run
 assertIncludes(deviceQa, "HWallet release candidate gate", "device QA references the release candidate gate");
 assertIncludes(deviceQa, "npm run hwallet:device-evidence:init", "device QA initializes an ignored evidence file");
 assertIncludes(deviceQa, "npm run hwallet:device-evidence:record", "device QA documents the evidence recorder");
+assertIncludes(deviceQa, "npm run smoke:hwallet-dual-device-evidence", "device QA validates dual-platform evidence");
+assertIncludes(deviceQa, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "device QA names the iOS evidence file env");
+assertIncludes(deviceQa, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "device QA names the Android evidence file env");
 assertIncludes(deviceQa, "MOBILE_DEVICE_PRIVY_ACCESS_TOKEN", "device QA names the primary device token env");
 assertIncludes(deviceQa, "MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN", "device QA names the second-user device token env");
 assertIncludes(deviceQa, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence", "device QA validates redacted evidence file");
@@ -144,6 +153,15 @@ assertIncludes(deviceEvidenceRecord, "normalizeAddress", "device evidence record
 assertIncludes(deviceEvidenceRecord, "assertNoRawSecrets", "device evidence recorder scans for raw secrets");
 checks.push("device evidence recorder converts owner observations into strict local evidence");
 
+assertIncludes(dualDeviceEvidenceSmoke, "HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED", "dual-device evidence smoke has strict mode");
+assertIncludes(dualDeviceEvidenceSmoke, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "dual-device evidence smoke requires iOS evidence file");
+assertIncludes(dualDeviceEvidenceSmoke, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "dual-device evidence smoke requires Android evidence file");
+assertIncludes(dualDeviceEvidenceSmoke, "smoke-hwallet-device-evidence.mjs", "dual-device evidence smoke reuses strict single-device smoke");
+assertIncludes(dualDeviceEvidenceSmoke, "iOS evidence records ios platform", "dual-device evidence smoke verifies iOS platform");
+assertIncludes(dualDeviceEvidenceSmoke, "Android evidence records android platform", "dual-device evidence smoke verifies Android platform");
+assertIncludes(dualDeviceEvidenceSmoke, "assertGitIgnored", "dual-device evidence smoke keeps local evidence ignored");
+checks.push("dual-device evidence smoke blocks external testers until iOS and Android evidence pass together");
+
 assertIncludes(
   stagingHandoffSmoke,
   "const requireRealDeviceEvidence = strict || evidenceFile.length > 0",
@@ -196,6 +214,7 @@ assertNoRawSecrets({
   "docs/HWALLET_DEVICE_EVIDENCE.example.json": deviceEvidenceExample,
   "v2/scripts/init-hwallet-device-evidence.mjs": deviceEvidenceInit,
   "v2/scripts/record-hwallet-device-evidence.mjs": deviceEvidenceRecord,
+  "v2/scripts/smoke-hwallet-dual-device-evidence.mjs": dualDeviceEvidenceSmoke,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
 });
 checks.push("HWallet release candidate docs avoid raw secret material");
