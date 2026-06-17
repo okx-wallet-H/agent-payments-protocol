@@ -12,12 +12,13 @@ Each autonomous development cycle should:
 
 1. Read the newest user instruction and current repo state.
 2. Pick one small task from the highest-priority unblocked lane.
-3. Create or reuse exactly one `codex/*` branch for that task.
-4. Implement the smallest change that moves the first App release forward.
-5. Run the task-specific validation plus the relevant merge gates.
-6. Open a PR with validation evidence.
-7. Merge only after CI and review criteria pass.
-8. Leave a short status note with completed work, validation, and next action.
+3. Mark the task **Claimed** with one owner and one planned `codex/*` branch.
+4. Create or reuse exactly one `codex/*` branch for that task.
+5. Implement the smallest change that moves the first App release forward.
+6. Run the task-specific validation plus the relevant merge gates.
+7. Open a PR with validation evidence.
+8. Merge only after CI and review criteria pass.
+9. Leave a short status note with completed work, validation, and next action.
 
 The controller may continue 7x24 when work is local, deterministic, and covered
 by smoke tests. It must stop for owner input when credentials, dashboards,
@@ -73,16 +74,23 @@ Keep at most three implementation branches active:
 Do not run two branches that both change wallet auth, storage schema, release
 config, or mobile native config at the same time. Those tasks are serialized.
 
+Subtask agents can run in parallel for bounded research or review, but they do
+not count as implementation branches unless they create a `codex/*` branch.
+Only the controller stages, commits, opens PRs, marks PRs ready, or merges.
+
 ## Task Packet
 
 Every task needs:
 
+- Status.
 - Lane.
 - Goal.
+- Branch.
 - In scope.
 - Out of scope.
 - Acceptance checks.
 - Validation commands.
+- Review decision.
 - Rollback path.
 - Whether owner evidence is required.
 

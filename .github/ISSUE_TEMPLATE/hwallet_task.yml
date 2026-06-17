@@ -9,6 +9,21 @@ body:
     attributes:
       value: |
         Use this form to claim one small task. Keep the scope narrow enough that it can be reviewed, tested, and merged independently.
+        Initial task state should be **Claimed** once the controller assigns one owner and one `codex/*` branch.
+  - type: dropdown
+    id: state
+    attributes:
+      label: Task state
+      description: Current controller state for this task.
+      options:
+        - Claimed
+        - In progress
+        - Review
+        - Returned for fixes
+        - Blocked waiting for owner
+        - Merged
+    validations:
+      required: true
   - type: dropdown
     id: lane
     attributes:

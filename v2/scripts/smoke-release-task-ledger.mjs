@@ -32,8 +32,10 @@ for (const section of [
 
 for (const state of [
   "Ready",
+  "Claimed",
   "In progress",
   "Review",
+  "Returned for fixes",
   "Blocked waiting for owner",
   "Merged"
 ]) {
