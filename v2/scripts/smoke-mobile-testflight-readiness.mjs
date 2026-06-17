@@ -20,6 +20,7 @@ const profiles = easConfig.build || {};
 const requiredRootScripts = [
   "smoke:mobile-store-readiness",
   "smoke:mobile-store-build-evidence",
+  "smoke:mobile-distribution-readiness",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-build-env",
   "smoke:mobile-staging-env",
@@ -119,6 +120,7 @@ assertUpdateScript("update:production", "production", "production");
 checks.push("EAS Update scripts target the expected channels and environments");
 
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-readiness", "release checklist includes mobile store readiness smoke");
+assertIncludes(releaseChecklist, "npm run smoke:mobile-distribution-readiness", "release checklist includes mobile distribution readiness smoke");
 assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
@@ -126,6 +128,7 @@ assertIncludes(releaseChecklist, "npm run mobile:build:ios", "release checklist 
 assertIncludes(releaseChecklist, "npm run mobile:build:android", "release checklist includes Android build command");
 assertIncludes(releaseChecklist, "npm --prefix apps/mobile run update:preview", "release checklist includes preview OTA update command");
 assertIncludes(releaseChecklist, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "release checklist points to the device multi-user QA");
+assertIncludes(releaseChecklist, "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "release checklist points to the store distribution plan");
 assertPattern(releaseChecklist, /Do not submit to TestFlight/i, "release checklist blocks TestFlight on failed gates");
 assertPattern(releaseChecklist, /internal Android/i, "release checklist blocks internal Android testing on failed gates");
 checks.push("release checklist documents the iOS and Android mobile release gate");

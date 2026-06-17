@@ -1,9 +1,9 @@
 # HWallet Device Multi-User QA
 
-This checklist is for real iPhone or installable preview-build testing. It
-focuses on the product body: HWallet wallet entry and Agent experience. World
-Cup screens can be used as a sample Agent capability, but they are not the
-release gate.
+This checklist is for real iPhone, Android, or installable preview-build
+testing. It focuses on the product body: HWallet wallet entry and Agent
+experience. World Cup screens can be used as a sample Agent capability, but
+they are not the release gate.
 
 Do not paste secrets, API keys, database URLs, private keys, or long-lived
 access tokens into this document.
@@ -11,6 +11,8 @@ access tokens into this document.
 ## Required Setup
 
 - Install the latest preview or development-staging build on the device.
+- Run the same critical HWallet flow on iOS and Android before treating a build
+  as ready for external testers.
 - Confirm the build talks to the intended API:
   - Local LAN test: `http://YOUR_LAN_IP:3000`
   - Staging test: `https://app.hwallet.vip`
