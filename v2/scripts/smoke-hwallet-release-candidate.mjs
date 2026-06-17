@@ -25,6 +25,8 @@ const mobileStoreSubmissionSmoke = await readFile("v2/scripts/smoke-mobile-store
 const storeSubmissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
+const releaseTaskLedger = await readFile("docs/HWALLET_RELEASE_TASK_LEDGER.md", "utf8");
+const releaseTaskLedgerSmoke = await readFile("v2/scripts/smoke-release-task-ledger.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -44,6 +46,7 @@ const requiredScripts = [
   "smoke:mobile-release-preflight",
   "smoke:mobile-release-handoff",
   "smoke:mobile-store-submission",
+  "smoke:release-task-ledger",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "smoke:hwallet-dual-device-evidence",
@@ -80,6 +83,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
   "verify:merge includes mobile store submission gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:release-task-ledger"),
+  "verify:merge includes release task ledger gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -106,6 +113,8 @@ assertIncludes(releaseChecklist, "npm run smoke:mobile-release-handoff", "releas
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release checklist documents strict mobile release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist includes mobile store submission gate");
 assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
+assertIncludes(releaseChecklist, "docs/HWALLET_RELEASE_TASK_LEDGER.md", "release checklist links release task ledger");
+assertIncludes(releaseChecklist, "npm run smoke:release-task-ledger", "release checklist includes release task ledger smoke");
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
@@ -220,6 +229,14 @@ assertIncludes(privacyPage, "Private keys or seed phrases", "privacy page record
 assertIncludes(supportPage, "does not submit live orders", "support page records no-live-order boundary");
 checks.push("mobile store submission packet, public legal pages, and review boundaries are part of the release candidate");
 
+assertIncludes(releaseTaskLedgerSmoke, "Controller Selection Rule", "release task ledger smoke checks controller selection");
+assertIncludes(releaseTaskLedgerSmoke, "iOS TestFlight candidate build", "release task ledger smoke checks iOS task");
+assertIncludes(releaseTaskLedgerSmoke, "Android internal testing candidate build", "release task ledger smoke checks Android task");
+assertIncludes(releaseTaskLedger, "HWallet Release Task Ledger", "release task ledger names release task ledger");
+assertIncludes(releaseTaskLedger, "R-002 Deposit recognition without mandatory hash paste", "release task ledger names next wallet task");
+assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger keeps store tasks owner-gated");
+checks.push("release candidate includes controller task ledger for 7x24 work selection");
+
 assertIncludes(
   stagingHandoffSmoke,
   "const requireRealDeviceEvidence = strict || evidenceFile.length > 0",
@@ -279,6 +296,8 @@ assertNoRawSecrets({
   "v2/scripts/smoke-mobile-release-preflight.mjs": mobileReleasePreflightSmoke,
   "v2/scripts/smoke-mobile-release-handoff.mjs": mobileReleaseHandoffSmoke,
   "v2/scripts/smoke-mobile-store-submission.mjs": mobileStoreSubmissionSmoke,
+  "docs/HWALLET_RELEASE_TASK_LEDGER.md": releaseTaskLedger,
+  "v2/scripts/smoke-release-task-ledger.mjs": releaseTaskLedgerSmoke,
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": storeSubmissionPacket,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,

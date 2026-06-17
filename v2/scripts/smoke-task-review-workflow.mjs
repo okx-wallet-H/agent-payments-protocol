@@ -5,6 +5,7 @@ const checks = [];
 const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 const workflowDoc = await readFile("docs/TASK_REVIEW_WORKFLOW.md", "utf8");
 const workQueueDoc = await readFile("docs/HWALLET_WORK_QUEUE.md", "utf8");
+const releaseTaskLedger = await readFile("docs/HWALLET_RELEASE_TASK_LEDGER.md", "utf8");
 const issueTemplate = await readFile(".github/ISSUE_TEMPLATE/hwallet_task.yml", "utf8");
 const issueConfig = await readFile(".github/ISSUE_TEMPLATE/config.yml", "utf8");
 const prTemplate = await readFile(".github/pull_request_template.md", "utf8");
@@ -16,6 +17,11 @@ assert(typeof scripts["smoke:task-review-workflow"] === "string", "package expos
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:task-review-workflow"),
   "verify:merge includes task review workflow smoke"
+);
+assert(typeof scripts["smoke:release-task-ledger"] === "string", "package exposes release task ledger smoke");
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:release-task-ledger"),
+  "verify:merge includes release task ledger smoke"
 );
 
 for (const lane of [
@@ -56,6 +62,16 @@ assertIncludes(workQueueDoc, "Evidence Rules", "work queue documents evidence ru
 assertIncludes(workQueueDoc, "Stop Conditions", "work queue documents owner stop conditions");
 assertIncludes(workQueueDoc, "Live execution closed", "work queue keeps live execution closed");
 assertIncludes(workQueueDoc, "Do not commit `.tmp` evidence files", "work queue keeps local evidence out of git");
+assertIncludes(workQueueDoc, "HWallet Release Task Ledger", "work queue points to release task ledger");
+
+assertIncludes(releaseTaskLedger, "HWallet Release Task Ledger", "release task ledger exists");
+assertIncludes(releaseTaskLedger, "Controller Selection Rule", "release task ledger defines controller selection");
+assertIncludes(releaseTaskLedger, "Current Next Best Tasks", "release task ledger defines next task order");
+assertIncludes(releaseTaskLedger, "R-002 Deposit recognition without mandatory hash paste", "release task ledger includes deposit recognition task");
+assertIncludes(releaseTaskLedger, "R-007 iOS TestFlight candidate build", "release task ledger includes iOS owner-gated task");
+assertIncludes(releaseTaskLedger, "R-008 Android internal testing candidate build", "release task ledger includes Android owner-gated task");
+assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally owner-gated", "release task ledger separates owner-gated tasks");
+assertIncludes(releaseTaskLedger, "npm run smoke:release-task-ledger", "release task ledger is self-verifiable");
 
 for (const field of [
   "Work lane",
@@ -93,6 +109,7 @@ assertIncludes(reviewGate, "npm run verify:merge", "GitHub gate runs full merge 
 assertNoRawSecrets({
   "docs/TASK_REVIEW_WORKFLOW.md": workflowDoc,
   "docs/HWALLET_WORK_QUEUE.md": workQueueDoc,
+  "docs/HWALLET_RELEASE_TASK_LEDGER.md": releaseTaskLedger,
   ".github/ISSUE_TEMPLATE/hwallet_task.yml": issueTemplate,
   ".github/pull_request_template.md": prTemplate,
   ".github/workflows/hwallet-review-gate.yml": reviewGate

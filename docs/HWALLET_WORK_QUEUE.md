@@ -2,6 +2,9 @@
 
 This queue keeps the first installable iOS and Android App moving without
 mixing unfinished wallet, Agent, data, and release work into one branch.
+The current HWallet Release Task Ledger is
+`docs/HWALLET_RELEASE_TASK_LEDGER.md`; use that file to pick the next concrete
+task after applying the rules below.
 
 ## Controller Loop
 
@@ -82,6 +85,10 @@ Every task needs:
 - Validation commands.
 - Rollback path.
 - Whether owner evidence is required.
+
+The release ledger records the current task packets for the first iOS and
+Android App handoff. When no fresh user instruction overrides it, use the
+`Current Next Best Tasks` section in `docs/HWALLET_RELEASE_TASK_LEDGER.md`.
 
 ## Evidence Rules
 

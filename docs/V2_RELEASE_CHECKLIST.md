@@ -31,6 +31,9 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 ## Before TestFlight / Internal Android Testing
 
 - Before every merge, local commit, or push, run `npm run verify:merge`. Do not merge if any check fails.
+- Before each autonomous or delegated development cycle, pick the next Ready
+  task from `docs/HWALLET_RELEASE_TASK_LEDGER.md` and keep
+  `npm run smoke:release-task-ledger` green.
 - Start backend locally with `npm run dev`.
 - Start the v2 mobile shell with `npm run mobile:ios:v2` or `npm run mobile:android:v2`.
 - Replace local `.agent-wallet-data` storage with a durable store or a staging-safe managed volume.
