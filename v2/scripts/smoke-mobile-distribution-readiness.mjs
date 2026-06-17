@@ -81,6 +81,9 @@ assertIncludes(distributionPlan, "Data safety", "distribution plan requires Andr
 assertIncludes(distributionPlan, "Content rating", "distribution plan requires Android content rating");
 assertIncludes(distributionPlan, "Screenshots", "distribution plan requires store screenshots");
 assertIncludes(distributionPlan, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true", "distribution plan requires strict device evidence");
+assertIncludes(distributionPlan, "HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true", "distribution plan requires strict dual-device evidence");
+assertIncludes(distributionPlan, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "distribution plan requires iOS device evidence");
+assertIncludes(distributionPlan, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "distribution plan requires Android device evidence");
 assertIncludes(distributionPlan, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "distribution plan requires staging device auth boundary smoke");
 assertIncludes(distributionPlan, "npm run submit:ios", "distribution plan documents iOS submit command");
 assertIncludes(distributionPlan, "npm run submit:android", "distribution plan documents Android submit command");

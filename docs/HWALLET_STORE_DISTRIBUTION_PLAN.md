@@ -22,12 +22,21 @@ API keys, private keys, database URLs, or verification codes in this file.
 
 - Complete the installed-App multi-user pass in
   `docs/HWALLET_DEVICE_MULTI_USER_QA.md` for iOS and Android.
-- Fill the ignored `.tmp/hwallet-device-evidence.json` file with redacted
-  observations only.
-- Run strict device evidence validation:
+- Fill ignored local evidence files for both platforms with redacted
+  observations only:
+  - `.tmp/hwallet-device-evidence-ios.json`
+  - `.tmp/hwallet-device-evidence-android.json`
+- Run strict single-device evidence validation for each platform:
 
 ```sh
-HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+```
+
+- Run strict dual-platform evidence validation:
+
+```sh
+HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-dual-device-evidence
 ```
 
 - Run the HWallet release candidate and staging gates:
@@ -127,7 +136,8 @@ ids, URL schemes, Privy native extension changes, or Expo SDK changes.
 Go only when all are true:
 
 - iOS and Android build evidence is filled and passes strict smoke.
-- iOS and Android physical-device evidence is filled and passes strict smoke.
+- iOS and Android physical-device evidence is filled and passes strict
+  single-device and dual-device smoke.
 - Staging server gates pass.
 - App Store Connect / Play Console metadata is prepared.
 - Live execution remains closed.

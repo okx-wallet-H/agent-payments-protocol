@@ -41,6 +41,7 @@ npm run hwallet:device-evidence:init
   tokens:
 
 ```sh
+HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json \
 HWALLET_DEVICE_EVIDENCE_CONFIRM_ALL=true \
 HWALLET_DEVICE_PLATFORM=ios \
 HWALLET_DEVICE_USER_A_LABEL=user-a-label \
@@ -50,6 +51,10 @@ HWALLET_DEVICE_USER_B_SHORT_ADDRESS=0x654321...fedcba \
 npm run hwallet:device-evidence:record
 ```
 
+Repeat the same command for Android with
+`HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json` and
+`HWALLET_DEVICE_PLATFORM=android`.
+
 - After the manual device pass, fill `.tmp/hwallet-device-evidence.json` with
   only redacted observations, set every required flow step and confirmation
   field to `true`, or generate it with `npm run hwallet:device-evidence:record`,
@@ -57,6 +62,15 @@ npm run hwallet:device-evidence:record
 
 ```sh
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+```
+
+- Before external testers or store submission, validate both platforms together:
+
+```sh
+HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json \
+HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json \
+HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true \
+npm run smoke:hwallet-dual-device-evidence
 ```
 
 - Keep real execution closed:
@@ -220,6 +234,7 @@ Run before publishing a new build or OTA update:
 npm run smoke:mobile-testflight-readiness
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
+npm run smoke:hwallet-dual-device-evidence
 npm run smoke:hwallet-staging-handoff
 npm run smoke:mobile-session
 npm run smoke:privy-wallet-status
