@@ -98,7 +98,8 @@ checks.push("native app identifiers and minimal permission boundary are configur
 
 assertIncludes(releaseChecklist, "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "release checklist links store distribution plan");
 assertIncludes(releaseHandoff, "docs/HWALLET_DEVICE_MULTI_USER_QA.md", "release handoff points to device QA");
-assertIncludes(releaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "release handoff records current iOS preview build");
+assertIncludes(releaseHandoff, "60425e71-5a50-4143-92df-5aefc7499aab", "release handoff records current iOS production build");
+assertIncludes(releaseHandoff, "281cbee1-d288-45d4-a3d3-15ed92c9aef4", "release handoff records current iOS EAS Submit job");
 assertIncludes(releaseHandoff, "6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547", "release handoff records current Android production build");
 assertIncludes(releaseHandoff, ".tmp/hwallet-device-evidence-ios.json", "release handoff records iOS device evidence path");
 assertIncludes(releaseHandoff, ".tmp/hwallet-device-evidence-android.json", "release handoff records Android device evidence path");

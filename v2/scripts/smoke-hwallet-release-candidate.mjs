@@ -343,9 +343,10 @@ assertIncludes(mobileReleaseHandoff, "HWallet wallet entry plus Agent experience
 assertIncludes(mobileReleaseHandoff, "https://app.hwallet.vip", "mobile release handoff records staging API");
 assertIncludes(mobileReleaseHandoff, "source commits", "mobile release handoff labels source commits");
 assertIncludes(mobileReleaseHandoff, "recorded per platform", "mobile release handoff labels per-platform source commits");
-assertIncludes(mobileReleaseHandoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "mobile release handoff records iOS preview source commit");
+assertIncludes(mobileReleaseHandoff, "da24852f6e832b9fd2c38aa39e1892d73bb036d0", "mobile release handoff records iOS production source commit");
 assertIncludes(mobileReleaseHandoff, "e546726d5d6626a164990bde80ae2befa4438ba9", "mobile release handoff records Android production source commit");
-assertIncludes(mobileReleaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "mobile release handoff records current iOS preview build");
+assertIncludes(mobileReleaseHandoff, "60425e71-5a50-4143-92df-5aefc7499aab", "mobile release handoff records current iOS production build");
+assertIncludes(mobileReleaseHandoff, "281cbee1-d288-45d4-a3d3-15ed92c9aef4", "mobile release handoff records current iOS EAS Submit job");
 assertIncludes(mobileReleaseHandoff, "6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547", "mobile release handoff records current Android production build");
 assertIncludes(mobileReleaseHandoff, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live", "mobile release handoff records staging device auth boundary smoke");
 assertIncludes(mobileReleaseHandoff, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true", "mobile release handoff records strict store-build evidence smoke");

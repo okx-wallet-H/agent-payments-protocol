@@ -10,28 +10,34 @@ codes, or raw build artifact signed URLs.
 - Product body: HWallet wallet entry plus Agent experience.
 - Sample capability: prediction/market screens may remain as examples, but they
   are not the product body.
-- Current release mode: iOS internal preview build plus Android production
-  store build.
+- Current release mode: iOS production store build submitted to App Store
+  Connect plus Android production store build ready for Google Play Console.
 - API target: `https://app.hwallet.vip`.
 - Live execution state: closed. Real trading, Onchain OS live mode, prediction
   trading, and transaction broadcast remain disabled.
 
 ## Current Build Handoff
 
-The builds below are the current mobile release handoff candidates. iOS remains
-on the installable preview build used for device evidence, while Android now has
-the production `aab` build for Google Play Console internal testing. They share
-the same app version, API target, and live-execution boundary; source commits
-are recorded per platform because the builds may be refreshed independently.
+The builds below are the current mobile release handoff candidates. iOS now has
+the production store build submitted through EAS Submit to App Store Connect;
+Android has the production `aab` build ready for Google Play Console internal
+testing. They share the same app version, API target, and live-execution
+boundary; source commits are recorded per platform because the builds may be
+refreshed independently.
 
 | Platform | EAS profile | Channel | Build version | Source commit | Status | Build page |
 | --- | --- | --- | --- | --- | --- | --- |
-| iOS | `preview` | `preview` | `9` | `253ef6830dc894137701d0ee35aef3340b09a57d` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/e4603d5d-2123-4502-94f9-3e9035ba3c9e` |
-| Android | `production` | `production` | `10` | `e546726d5d6626a164990bde80ae2befa4438ba9` | `FINISHED` | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` |
+| iOS | `production` | `production` | `10` | `da24852f6e832b9fd2c38aa39e1892d73bb036d0` | `FINISHED`, submitted to App Store Connect | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/60425e71-5a50-4143-92df-5aefc7499aab` |
+| Android | `production` | `production` | `10` | `e546726d5d6626a164990bde80ae2befa4438ba9` | `FINISHED`, ready for Play Console | `https://expo.dev/accounts/hongchen888/projects/agent-wallet-xlayer-mvp/builds/6c66eb31-ea1b-40f2-b23d-bfb3ee2fa547` |
 
 The ignored local file `.tmp/hwallet-mobile-store-build-evidence.json` was
-updated with the two build ids and passed the strict store-build evidence smoke.
-Keep that file local and ignored.
+updated with the two production build ids and passed the strict store-build
+evidence smoke. Keep that file local and ignored.
+
+The EAS Submit job `281cbee1-d288-45d4-a3d3-15ed92c9aef4` finished for the iOS
+production build and is associated with App Store Connect app id `6781393663`.
+This confirms upload through EAS Submit; it does not by itself confirm Apple
+processing, TestFlight internal availability, or installed-App retest.
 
 ## Current Device Evidence
 
@@ -49,6 +55,15 @@ handoff, run:
 ```sh
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
+```
+
+The ignored local store-console evidence file currently records iOS upload as
+pending Apple-side completion. It must not be marked ready until TestFlight
+processing, internal testing availability, metadata checks, and installed-App
+retest are all complete:
+
+```sh
+HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence
 ```
 
 ## Verified Gates
@@ -75,6 +90,11 @@ HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidenc
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
 ```
+
+The EAS GraphQL submission lookup also returned iOS submission
+`281cbee1-d288-45d4-a3d3-15ed92c9aef4` as `FINISHED` for build
+`60425e71-5a50-4143-92df-5aefc7499aab`; this was recorded in ignored local
+operator evidence and not committed.
 
 ## Staging State
 
@@ -107,10 +127,11 @@ still requires short-lived device Privy tokens or manual installed-App evidence.
 Before calling this release candidate ready for external testers, complete the
 installed-App checks from `docs/HWALLET_DEVICE_MULTI_USER_QA.md`:
 
-1. Install the iOS preview build on the registered iPhone.
-2. Install the Android preview build on an Android device for direct device QA,
-   or upload the Android production `aab` to Google Play internal testing before
-   testing the store-distributed binary.
+1. Install the iOS production build from TestFlight after Apple processing and
+   internal testing availability are confirmed.
+2. Install the Android production build from Google Play internal testing after
+   the `aab` is uploaded, or use direct Android device QA only as a pre-console
+   fallback.
 3. Log in as User A.
 4. Open HWallet and confirm a receive address is visible.
 5. Tap copy and confirm the button changes to `已复制`.
@@ -130,14 +151,20 @@ HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_A
 
 ## Remaining Release Work
 
+- In App Store Connect, wait for iOS build `10` to finish processing, enable it
+  for internal TestFlight testing, install it, and rerun the same HWallet
+  multi-user checks before marking iOS store-console evidence ready.
+- Upload Android build `10` to Google Play Console internal testing or connect a
+  Google Play service-account key for EAS Submit; then install and rerun the
+  same HWallet multi-user checks before marking Android store-console evidence
+  ready.
 - Refresh iOS and Android evidence after any new binary build, native config
   change, Privy native extension change, or mobile runtime change.
 - Keep the strict release preflight and release handoff gates green with the
   latest ignored local evidence files.
 - Decide the first distribution route:
-  - iOS: continue with internal/ad-hoc device testing, then TestFlight when App
-    Store Connect metadata and review materials are ready.
-  - Android: internal testing first, then Play Console when listing and policy
-    assets are ready.
+  - iOS: TestFlight internal testing after Apple processing and metadata checks.
+  - Android: Google Play internal testing after console upload or service-account
+    setup.
 - Keep real execution closed until policy, signing, audit, and operator controls
   are separately reviewed.

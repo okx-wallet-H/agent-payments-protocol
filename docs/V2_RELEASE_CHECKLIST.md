@@ -232,10 +232,10 @@ The current HWallet Supabase live closeout is recorded in
 green `dual` and `postgres` validation before treating Supabase as the active
 storage path for an installable App build.
 
-The current installable iOS/Android preview build handoff is recorded in
+The current iOS/Android store-build handoff is recorded in
 `docs/HWALLET_MOBILE_RELEASE_HANDOFF.md`. Keep that handoff aligned with the
-latest EAS build ids, staging gate results, and redacted device evidence before
-inviting external testers.
+latest EAS build ids, submit status, staging gate results, and redacted device
+evidence before inviting external testers.
 
 The store distribution path for TestFlight and Android internal testing is
 recorded in `docs/HWALLET_STORE_DISTRIBUTION_PLAN.md`. Keep this plan aligned

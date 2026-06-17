@@ -28,8 +28,17 @@ const tasks = parseTasks(ledger);
 for (const id of ["R-001", "R-002", "R-003", "R-004", "R-005", "R-006"]) {
   assert(tasks[id]?.status === "Merged", `${id} is already merged`);
 }
-for (const id of ["R-007", "R-008", "R-009"]) {
-  assert(tasks[id]?.status === "Blocked waiting for owner", `${id} is owner-gated`);
+const ownerActionStatuses = {
+  "R-007": [
+    "Blocked waiting for owner",
+    "In Apple processing / TestFlight console handoff"
+  ],
+  "R-008": ["Blocked waiting for owner"],
+  "R-009": ["Blocked waiting for owner"]
+};
+
+for (const [id, allowedStatuses] of Object.entries(ownerActionStatuses)) {
+  assert(allowedStatuses.includes(tasks[id]?.status), `${id} is owner/store-console gated`);
 }
 
 assertIncludes(ledger, "No fully automatable task remains", "ledger declares no automatable release task remains");
