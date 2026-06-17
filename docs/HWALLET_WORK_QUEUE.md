@@ -113,7 +113,7 @@ Android App handoff. When no fresh user instruction overrides it, use the
 
 ## Stop Conditions
 
-Pause and ask the owner when:
+Stop and ask the owner when:
 
 - A real iPhone or Android install must be tested.
 - A Privy, Supabase, OKX, Apple, Google, DNS, or server dashboard action is
@@ -131,10 +131,13 @@ The controller can print the current release action state without opening a
 dashboard or exposing secrets:
 
 ```sh
+npm run smoke:owner-release-status
 npm run smoke:release-next-action
 ```
 
-The command returns a JSON summary of merged tasks, owner-gated tasks, local
-store-console evidence status, and the next safe action. If it reports owner
-evidence is required, continue only with unrelated local scaffolding or pause
-for the owner.
+`smoke:owner-release-status` is the preferred controller view. It returns a
+JSON summary of local dual-device evidence, store-console evidence status,
+owner-gated tasks, and the next safe action without printing emails, full wallet
+addresses, credentials, or verification codes. `smoke:release-next-action` is
+the narrower release-ledger view. If either command reports owner evidence is
+required, continue only with unrelated local scaffolding or pause for the owner.

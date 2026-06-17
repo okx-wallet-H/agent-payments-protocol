@@ -33,6 +33,7 @@ const releaseTaskLedger = await readFile("docs/HWALLET_RELEASE_TASK_LEDGER.md", 
 const releaseTaskLedgerSmoke = await readFile("v2/scripts/smoke-release-task-ledger.mjs", "utf8");
 const ownerReleasePacket = await readFile("docs/HWALLET_OWNER_RELEASE_PACKET.md", "utf8");
 const ownerReleasePacketSmoke = await readFile("v2/scripts/smoke-release-owner-packet.mjs", "utf8");
+const ownerReleaseStatusSmoke = await readFile("v2/scripts/smoke-owner-release-status.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -57,6 +58,7 @@ const requiredScripts = [
   "smoke:release-owner-packet",
   "smoke:release-task-ledger",
   "smoke:release-next-action",
+  "smoke:owner-release-status",
   "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "smoke:hwallet-dual-device-evidence",
@@ -110,6 +112,10 @@ assert(
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-next-action"),
   "verify:merge includes release next-action gate"
+);
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:owner-release-status"),
+  "verify:merge includes owner release status gate"
 );
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-owner-packet"),
@@ -304,6 +310,9 @@ assertIncludes(ownerReleasePacket, "R-008 Android Internal Testing", "owner rele
 assertIncludes(ownerReleasePacket, "R-009 Store Metadata", "owner release packet covers store metadata owner task");
 assertIncludes(ownerReleasePacket, "No secret material is needed now", "owner release packet keeps owner ask non-secret");
 assertIncludes(ownerReleasePacketSmoke, "smoke:release-owner-packet", "owner release packet has smoke gate");
+assertIncludes(ownerReleaseStatusSmoke, "smoke:owner-release-status", "owner release status has smoke gate");
+assertIncludes(ownerReleaseStatusSmoke, "ownerGatedTaskIds", "owner release status summarizes owner-gated tasks");
+assertIncludes(ownerReleaseStatusSmoke, "distinctAddresses", "owner release status summarizes distinct device addresses without printing them");
 checks.push("release candidate includes controller task ledger and owner packet for 7x24 work selection");
 
 assertIncludes(
@@ -375,6 +384,7 @@ assertNoRawSecrets({
   "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
   "docs/HWALLET_OWNER_RELEASE_PACKET.md": ownerReleasePacket,
   "v2/scripts/smoke-release-owner-packet.mjs": ownerReleasePacketSmoke,
+  "v2/scripts/smoke-owner-release-status.mjs": ownerReleaseStatusSmoke,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
