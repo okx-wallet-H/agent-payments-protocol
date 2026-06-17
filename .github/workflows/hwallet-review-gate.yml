@@ -54,6 +54,9 @@ jobs:
       - name: Typecheck mobile
         run: npm run mobile:typecheck
 
+      - name: Task workflow smoke
+        run: npm run smoke:task-review-workflow
+
       - name: HWallet release candidate smoke
         run: npm run smoke:hwallet-release-candidate
 

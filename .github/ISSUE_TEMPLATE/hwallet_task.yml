@@ -72,6 +72,16 @@ body:
         npm run smoke:mobile-api-auth
     validations:
       required: true
+  - type: dropdown
+    id: owner_evidence
+    attributes:
+      label: Owner evidence required
+      description: Does this task need real device, dashboard, credential, DNS, App Store, Google Play, Supabase, Privy, OKX, or payment evidence from the owner?
+      options:
+        - "No - fully automatable"
+        - "Yes - owner/device/dashboard evidence required"
+    validations:
+      required: true
   - type: checkboxes
     id: safety
     attributes:
