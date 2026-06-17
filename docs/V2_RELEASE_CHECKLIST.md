@@ -57,6 +57,7 @@ Mobile store readiness gate (iOS + Android):
 
 ```sh
 npm run smoke:mobile-store-readiness
+npm run smoke:mobile-distribution-readiness
 npm run smoke:hwallet-release-candidate
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
@@ -194,6 +195,12 @@ The current installable iOS/Android preview build handoff is recorded in
 `docs/HWALLET_MOBILE_RELEASE_HANDOFF.md`. Keep that handoff aligned with the
 latest EAS build ids, staging gate results, and redacted device evidence before
 inviting external testers.
+
+The store distribution path for TestFlight and Android internal testing is
+recorded in `docs/HWALLET_STORE_DISTRIBUTION_PLAN.md`. Keep this plan aligned
+with the latest production build, submit, store metadata, privacy, and device
+evidence requirements before using `npm run submit:ios` or
+`npm run submit:android`.
 
 Supabase staging stability gate:
 
