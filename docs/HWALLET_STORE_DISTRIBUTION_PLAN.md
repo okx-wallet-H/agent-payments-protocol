@@ -73,6 +73,28 @@ MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-h
 npm run smoke:mobile-store-submission
 ```
 
+- Initialize the ignored store-console evidence packet before any App Store
+  Connect or Google Play Console operation:
+
+```sh
+npm run hwallet:store-console-evidence:init
+npm run smoke:hwallet-store-console-evidence
+```
+
+- After TestFlight and Google Play Console actions are complete, record only
+  redacted console observations and require strict evidence:
+
+```sh
+HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_CONFIRM_ALL=true HWALLET_STORE_CONSOLE_IOS_STATUS=ready HWALLET_STORE_CONSOLE_IOS_BUILD_ID=<ios-eas-build-id> HWALLET_STORE_CONSOLE_ANDROID_STATUS=ready HWALLET_STORE_CONSOLE_ANDROID_BUILD_ID=<android-eas-build-id> npm run hwallet:store-console-evidence:record
+HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence
+```
+
+- Keep `.tmp/hwallet-store-console-evidence.json` local and ignored. It may
+  contain redacted App Store Connect / Google Play status labels, build ids,
+  and owner confirmations only. Do not paste console credentials,
+  service-account JSON, verification codes, access tokens, private keys,
+  database URLs, or unredacted personal data.
+
 ## iOS Path
 
 1. Keep using internal/ad-hoc preview builds until the owner confirms the
@@ -105,7 +127,9 @@ npm run submit:ios -- --latest --non-interactive
 
 5. Do not invite external testers until TestFlight processing completes and the
    installed TestFlight build passes the same User A -> User B -> User A
-   HWallet regression path.
+   HWallet regression path. Record the TestFlight page and installed retest
+   result in `.tmp/hwallet-store-console-evidence.json` with redacted labels
+   only.
 
 ## Android Path
 
@@ -138,7 +162,8 @@ npm run submit:android -- --latest --non-interactive
 
 5. Do not roll to open/production tracks until internal testers confirm login,
    HWallet receive address, copy feedback, account switching, and signed-out
-   clearing.
+   clearing. Record the internal testing page and installed retest result in
+   `.tmp/hwallet-store-console-evidence.json` with redacted labels only.
 
 ## OTA Boundary
 
@@ -161,6 +186,8 @@ Go only when all are true:
   single-device and dual-device smoke.
 - Strict mobile release handoff smoke passes.
 - Store submission packet smoke passes.
+- Store console evidence smoke passes in strict mode after TestFlight and
+  Google Play Console actions are done.
 - Staging server gates pass.
 - App Store Connect / Play Console metadata is prepared.
 - Live execution remains closed.
@@ -173,5 +200,6 @@ No-go when any are true:
 - Signed-out state shows a stale wallet address.
 - Staging accepts protected traffic without a Privy token.
 - Any live money movement switch is enabled.
+- Store console evidence is missing, still example-only, or not ignored by git.
 - Store credentials, tokens, database URLs, private keys, or verification codes
   appear in code, docs, logs, PRs, or issue comments.

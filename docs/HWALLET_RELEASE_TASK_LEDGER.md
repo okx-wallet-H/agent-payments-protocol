@@ -232,15 +232,19 @@ audit task.
 - **Goal**: turn the current submission packet into owner-approved App Store
   and Google Play metadata.
 - **In scope**: `docs/HWALLET_STORE_SUBMISSION_PACKET.md`, privacy/support URLs,
-  data safety baseline, screenshot checklist.
+  data safety baseline, screenshot checklist, and ignored store-console
+  evidence.
 - **Out of scope**: code changes unrelated to release metadata.
 - **Validation**:
   ```sh
   npm run smoke:mobile-store-submission
+  npm run smoke:hwallet-store-console-evidence
   npm run smoke:mobile-distribution-readiness
   ```
 - **Done evidence**: owner-approved metadata is recorded without secrets and
-  screenshots are approved outside git or via sanitized assets.
+  screenshots are approved outside git or via sanitized assets. App Store
+  Connect / Google Play Console action evidence is recorded in ignored local
+  evidence and passes strict `smoke:hwallet-store-console-evidence`.
 - **Rollback**: keep metadata in draft and do not submit.
 
 ## Current Next Best Tasks
@@ -253,7 +257,8 @@ steps need owner/store-console evidence:
 2. R-008 Android internal testing candidate build: prepare Google Play internal
    testing action when the owner is ready.
 3. R-009 Store metadata final owner pass: collect final copy, screenshots,
-   support contact, privacy review, and store-console answers.
+   support contact, privacy review, store-console answers, and redacted
+   store-console evidence.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
@@ -268,6 +273,7 @@ npm run smoke:release-task-ledger
 npm run smoke:task-review-workflow
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-store-readiness
+npm run smoke:hwallet-store-console-evidence
 git diff --check
 ```
 

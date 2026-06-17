@@ -94,6 +94,8 @@ Do not submit to public production tracks until all are true:
 - Strict build and dual-device evidence gates pass.
 - TestFlight and Android internal testing are installed and rechecked.
 - Store screenshots are approved by the owner.
+- Store console evidence is recorded in ignored local evidence and passes
+  `smoke:hwallet-store-console-evidence` in strict mode.
 - Store account credentials and service-account files remain outside git.
 - Live execution remains closed unless a separate live-execution release gate is
   reviewed and merged.
