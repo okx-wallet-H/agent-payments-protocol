@@ -1,0 +1,78 @@
+{
+  "kind": "hwallet-store-console-evidence",
+  "version": 1,
+  "environment": {
+    "appVersion": "0.1.0",
+    "iosBundleIdentifier": "com.agentwallet.xlayer",
+    "androidPackage": "com.agentwallet.xlayer",
+    "apiBaseUrl": "https://app.hwallet.vip",
+    "releaseTrack": "internal"
+  },
+  "operator": {
+    "label": "example-release-operator",
+    "recordedAt": "2026-06-17T00:00:00.000Z"
+  },
+  "ios": {
+    "console": "App Store Connect",
+    "status": "ready",
+    "buildId": "00000000-0000-4000-8000-000000000000",
+    "buildNumber": "9",
+    "appRecordLabel": "app-store-connect-app-redacted",
+    "testflight": {
+      "buildUploaded": true,
+      "processingComplete": true,
+      "internalTestingReady": true,
+      "installedAndRetested": true
+    },
+    "metadata": {
+      "privacyPolicyUrlSet": true,
+      "supportUrlSet": true,
+      "reviewNotesObserveOnly": true,
+      "screenshotsOwnerApproved": true
+    }
+  },
+  "android": {
+    "console": "Google Play Console",
+    "status": "ready",
+    "buildId": "11111111-1111-4111-8111-111111111111",
+    "versionCode": 9,
+    "appRecordLabel": "google-play-app-redacted",
+    "internalTesting": {
+      "buildUploaded": true,
+      "processingComplete": true,
+      "testerTrackReady": true,
+      "installedAndRetested": true
+    },
+    "metadata": {
+      "privacyPolicyUrlSet": true,
+      "supportUrlSet": true,
+      "dataSafetyCompleted": true,
+      "contentRatingCompleted": true,
+      "screenshotsOwnerApproved": true
+    }
+  },
+  "checks": {
+    "strictReleaseHandoffPassed": true,
+    "storeSubmissionSmokePassed": true,
+    "dualDeviceEvidencePassed": true,
+    "liveExecutionClosed": true,
+    "noSecretsCommitted": true
+  },
+  "confirmations": {
+    "noCredentialsInEvidence": true,
+    "noVerificationCodesInEvidence": true,
+    "screenshotsRedactedOrExternal": true,
+    "readyForInternalReview": true
+  },
+  "artifacts": [
+    {
+      "label": "ios-testflight-page-redacted",
+      "redacted": true
+    },
+    {
+      "label": "android-internal-testing-page-redacted",
+      "redacted": true
+    }
+  ],
+  "notes": "Example only. Real evidence belongs in .tmp/hwallet-store-console-evidence.json and must contain only redacted console labels, build ids, status observations, and owner confirmations. Do not paste Apple credentials, Google Play service-account JSON, access tokens, private keys, API keys, database URLs, verification codes, or unredacted personal data."
+}

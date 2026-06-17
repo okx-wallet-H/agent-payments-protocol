@@ -8,6 +8,7 @@ const easConfig = await readJson("apps/mobile/eas.json");
 const distributionPlan = await readFile("docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "utf8");
 const releaseChecklist = await readFile("docs/V2_RELEASE_CHECKLIST.md", "utf8");
 const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
 
@@ -16,6 +17,7 @@ const expo = mobileApp.expo || {};
 const production = easConfig.build?.production || {};
 
 assert(typeof scripts["smoke:mobile-store-submission"] === "string", "package exposes mobile store submission smoke");
+assert(typeof scripts["smoke:hwallet-store-console-evidence"] === "string", "package exposes store console evidence smoke");
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
   "verify:merge includes mobile store submission smoke"
@@ -40,6 +42,7 @@ assertIncludes(submissionPacket, "observe/simulate only", "submission packet rec
 assertIncludes(submissionPacket, "Live execution status: closed", "submission packet records closed execution");
 assertIncludes(submissionPacket, "Data safety answers", "submission packet records Play data safety baseline");
 assertIncludes(submissionPacket, "Store screenshots are approved by the owner", "submission packet keeps owner screenshot approval gate");
+assertIncludes(submissionPacket, "Store console evidence", "submission packet keeps store console evidence gate");
 checks.push("submission packet records metadata, review notes, data safety, and blockers");
 
 assertIncludes(privacyPage, "Privacy Policy", "privacy page exists");
@@ -56,12 +59,22 @@ checks.push("public privacy and support pages cover release-review safety bounda
 
 assertIncludes(distributionPlan, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "distribution plan links store submission packet");
 assertIncludes(distributionPlan, "npm run smoke:mobile-store-submission", "distribution plan runs store submission smoke");
+assertIncludes(distributionPlan, "npm run smoke:hwallet-store-console-evidence", "distribution plan runs store console evidence smoke");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist runs store submission smoke");
+assertIncludes(releaseChecklist, "npm run smoke:hwallet-store-console-evidence", "release checklist runs store console evidence smoke");
 assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
 checks.push("release docs include store submission gate");
 
+const storeConsoleEvidence = JSON.parse(storeConsoleEvidenceExample);
+assert(storeConsoleEvidence.kind === "hwallet-store-console-evidence", "store console evidence example has expected kind");
+assert(storeConsoleEvidence.ios?.metadata?.reviewNotesObserveOnly === true, "store console evidence covers App Store review notes");
+assert(storeConsoleEvidence.android?.metadata?.dataSafetyCompleted === true, "store console evidence covers Play data safety");
+assert(storeConsoleEvidence.confirmations?.readyForInternalReview === true, "store console evidence covers internal review readiness");
+checks.push("store console evidence example covers review metadata and internal testing readiness");
+
 assertNoRawSecrets({
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": submissionPacket,
+  "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md": distributionPlan,

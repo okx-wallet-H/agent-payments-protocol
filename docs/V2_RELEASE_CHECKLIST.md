@@ -62,10 +62,12 @@ Mobile store readiness gate (iOS + Android):
 npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:mobile-store-submission
+npm run smoke:hwallet-store-console-evidence
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-release-preflight
 npm run smoke:mobile-release-handoff
 npm run hwallet:device-evidence:init
+npm run hwallet:store-console-evidence:init
 npm run smoke:hwallet-device-evidence
 MOBILE_STAGING_READINESS=true EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-build-env
 npm run smoke:mobile-session
@@ -80,6 +82,7 @@ HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidenc
 HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
+HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence
 ```
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
@@ -225,6 +228,10 @@ review-note boundary are recorded in
 `docs/HWALLET_STORE_SUBMISSION_PACKET.md`. Keep `npm run
 smoke:mobile-store-submission` green before TestFlight, Android internal
 testing, or public store submission.
+The redacted App Store Connect / Google Play Console action evidence is
+recorded in `.tmp/hwallet-store-console-evidence.json`. Keep `npm run
+smoke:hwallet-store-console-evidence` green in template mode during development
+and strict mode before treating TestFlight or Android internal testing as ready.
 
 Supabase staging stability gate:
 

@@ -11,6 +11,7 @@ const releaseHandoff = await readFile("docs/HWALLET_MOBILE_RELEASE_HANDOFF.md", 
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 const distributionPlan = await readFile("docs/HWALLET_STORE_DISTRIBUTION_PLAN.md", "utf8");
 const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md", "utf8");
+const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
 
@@ -24,6 +25,9 @@ assert(typeof rootScripts["smoke:mobile-distribution-readiness"] === "string", "
 assert(typeof rootScripts["smoke:mobile-release-preflight"] === "string", "root exposes mobile release preflight smoke");
 assert(typeof rootScripts["smoke:mobile-release-handoff"] === "string", "root exposes mobile release handoff smoke");
 assert(typeof rootScripts["smoke:mobile-store-submission"] === "string", "root exposes mobile store submission smoke");
+assert(typeof rootScripts["smoke:hwallet-store-console-evidence"] === "string", "root exposes store console evidence smoke");
+assert(typeof rootScripts["hwallet:store-console-evidence:init"] === "string", "root exposes store console evidence initializer");
+assert(typeof rootScripts["hwallet:store-console-evidence:record"] === "string", "root exposes store console evidence recorder");
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-distribution-readiness"),
   "verify:merge includes distribution readiness smoke"
@@ -39,6 +43,10 @@ assert(
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-store-submission"),
   "verify:merge includes mobile store submission smoke"
+);
+assert(
+  String(rootScripts["verify:merge"] || "").includes("smoke:hwallet-store-console-evidence"),
+  "verify:merge includes store console evidence smoke"
 );
 
 assert(typeof mobileScripts["build:ios"] === "string", "mobile iOS production build script exists");
@@ -111,6 +119,10 @@ assertIncludes(distributionPlan, "HWALLET_RELEASE_HANDOFF_STRICT=true", "distrib
 assertIncludes(distributionPlan, "npm run smoke:mobile-release-handoff", "distribution plan documents release handoff");
 assertIncludes(distributionPlan, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "distribution plan links store submission packet");
 assertIncludes(distributionPlan, "npm run smoke:mobile-store-submission", "distribution plan documents store submission gate");
+assertIncludes(distributionPlan, "npm run hwallet:store-console-evidence:init", "distribution plan initializes store console evidence");
+assertIncludes(distributionPlan, "npm run hwallet:store-console-evidence:record", "distribution plan records store console evidence");
+assertIncludes(distributionPlan, "HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true", "distribution plan requires strict store console evidence");
+assertIncludes(distributionPlan, "npm run smoke:hwallet-store-console-evidence", "distribution plan documents store console evidence gate");
 assertIncludes(distributionPlan, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "distribution plan requires staging device auth boundary smoke");
 assertIncludes(distributionPlan, "npm run submit:ios", "distribution plan documents iOS submit command");
 assertIncludes(distributionPlan, "npm run submit:android", "distribution plan documents Android submit command");
@@ -123,16 +135,26 @@ assertIncludes(submissionPacket, "Privacy policy URL: `https://app.hwallet.vip/p
 assertIncludes(submissionPacket, "Support URL: `https://app.hwallet.vip/support`", "submission packet records support URL");
 assertIncludes(submissionPacket, "Review notes must include the observe/simulate-only boundary", "submission packet records App Store review boundary");
 assertIncludes(submissionPacket, "Data safety answers must include", "submission packet records Play data safety boundary");
+assertIncludes(submissionPacket, "Store console evidence", "submission packet records store console evidence blocker");
 assertIncludes(submissionPacket, "Live execution remains closed", "submission packet keeps live execution closed");
 assertIncludes(privacyPage, "Privacy Policy", "privacy page exists");
 assertIncludes(supportPage, "Support", "support page exists");
-checks.push("distribution readiness includes public store submission packet and legal pages");
+checks.push("distribution readiness includes public store submission packet, store console evidence, and legal pages");
+
+const storeConsoleEvidence = JSON.parse(storeConsoleEvidenceExample);
+assert(storeConsoleEvidence.kind === "hwallet-store-console-evidence", "store console evidence example has expected kind");
+assert(storeConsoleEvidence.ios?.console === "App Store Connect", "store console evidence covers App Store Connect");
+assert(storeConsoleEvidence.android?.console === "Google Play Console", "store console evidence covers Google Play Console");
+assert(storeConsoleEvidence.checks?.liveExecutionClosed === true, "store console evidence keeps live execution closed");
+assert(storeConsoleEvidence.confirmations?.noCredentialsInEvidence === true, "store console evidence confirms no credentials");
+checks.push("store console evidence example covers iOS, Android, safety, and no-secret confirmations");
 
 assertNoRawSecrets({
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2),
   "apps/mobile/app.json": JSON.stringify(mobileApp, null, 2),
   "docs/HWALLET_STORE_DISTRIBUTION_PLAN.md": distributionPlan,
   "docs/HWALLET_STORE_SUBMISSION_PACKET.md": submissionPacket,
+  "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json": storeConsoleEvidenceExample,
   "docs/HWALLET_MOBILE_RELEASE_HANDOFF.md": releaseHandoff,
   "docs/V2_RELEASE_CHECKLIST.md": releaseChecklist,
   "app/privacy/page.tsx": privacyPage,
