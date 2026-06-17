@@ -29,6 +29,24 @@ The ignored local file `.tmp/hwallet-mobile-store-build-evidence.json` was
 updated with the two build ids and passed the strict store-build evidence smoke.
 Keep that file local and ignored.
 
+## Current Device Evidence
+
+The ignored local device evidence files for the current preview handoff are:
+
+- `.tmp/hwallet-device-evidence-ios.json`
+- `.tmp/hwallet-device-evidence-android.json`
+
+They record redacted owner-observed results only: no verification codes, access
+tokens, private keys, database URLs, or full unredacted wallet addresses.
+
+Before external testers, TestFlight, Android internal testing, or production
+handoff, run:
+
+```sh
+HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
+HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
+```
+
 ## Verified Gates
 
 The following commands passed on 2026-06-17 against the current repo and staging
@@ -48,6 +66,8 @@ npm run smoke:privy-wallet-status
 npm run smoke:mobile-api-auth
 npm run smoke:mobile-hwallet-ux
 HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
+HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
+HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
 ```
 
 ## Staging State
@@ -92,18 +112,19 @@ Record only redacted observations in the ignored device-evidence file:
 ```sh
 npm run hwallet:device-evidence:init
 HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-device-evidence
+HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-dual-device-evidence
 ```
 
 ## Remaining Release Work
 
-- Complete Android physical-device install testing.
-- Refresh iOS physical-device testing with the recorded iOS preview build, or
-  create a newer preview build if mobile runtime code changes.
-- Fill and verify redacted `.tmp/hwallet-device-evidence.json`.
+- Refresh iOS and Android evidence after any new binary build, native config
+  change, Privy native extension change, or mobile runtime change.
+- Keep the strict release preflight and release handoff gates green with the
+  latest ignored local evidence files.
 - Decide the first distribution route:
   - iOS: continue with internal/ad-hoc device testing, then TestFlight when App
     Store Connect metadata and review materials are ready.
-  - Android: internal testing or APK handoff first, then Play Console when
-    listing and policy assets are ready.
+  - Android: internal testing first, then Play Console when listing and policy
+    assets are ready.
 - Keep real execution closed until policy, signing, audit, and operator controls
   are separately reviewed.
