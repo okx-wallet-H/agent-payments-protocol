@@ -181,21 +181,30 @@ checks.push("mobile store readiness includes submission packet and public legal 
 
 const storeBuildEvidence = JSON.parse(storeBuildEvidenceExample);
 assert(storeBuildEvidence.kind === "hwallet-mobile-store-build-evidence", "store build evidence example has expected kind");
+assert(storeBuildEvidence.environment?.publicAppName === "海豚社区", "store build evidence example records public app name");
+assert(storeBuildEvidence.environment?.internalWalletModule === "HWallet", "store build evidence example records internal wallet module");
+assert(storeBuildEvidence.environment?.iconSource === "owner-approved-haitun-logo", "store build evidence example records owner-approved icon source");
 assert(storeBuildEvidence.builds?.ios?.platform === "ios", "store build evidence example covers iOS");
 assert(storeBuildEvidence.builds?.android?.platform === "android", "store build evidence example covers Android");
 assert(storeBuildEvidence.checks?.iosBuildFinished === true, "store build evidence example checks iOS build completion");
 assert(storeBuildEvidence.checks?.androidBuildFinished === true, "store build evidence example checks Android build completion");
+assert(storeBuildEvidence.checks?.publicAppNameMatchesRepo === true, "store build evidence example checks public app name");
+assert(storeBuildEvidence.checks?.iconAssetsMatchOwnerLogo === true, "store build evidence example checks owner-approved icon assets");
 assert(storeBuildEvidence.confirmations?.bothPlatformsRecorded === true, "store build evidence example confirms both platforms");
 assertIncludes(storeBuildEvidenceSmoke, "iosInstallableOrSubmitted", "store build evidence smoke checks iOS install or submit status");
 assertIncludes(storeBuildEvidenceSmoke, "androidInstallableOrSubmitted", "store build evidence smoke checks Android install or submit status");
+assertIncludes(storeBuildEvidenceSmoke, "publicAppNameMatchesRepo", "store build evidence smoke checks public app name");
+assertIncludes(storeBuildEvidenceSmoke, "iconAssetsMatchOwnerLogo", "store build evidence smoke checks owner-approved icon assets");
 assertIncludes(storeBuildEvidenceSmoke, "containsNoSecrets", "store build evidence smoke requires no-secret confirmation");
 assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_PLATFORM", "store build evidence recorder supports single-platform updates");
 assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_IOS_ID", "store build evidence recorder supports iOS build id");
 assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_ANDROID_ID", "store build evidence recorder supports Android build id");
+assertIncludes(storeBuildEvidenceRecorder, "publicAppNameMatchesRepo", "store build evidence recorder records public app name checks");
+assertIncludes(storeBuildEvidenceRecorder, "iconAssetsMatchOwnerLogo", "store build evidence recorder records owner-approved icon checks");
 assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_CONFIRM_ALL", "store build evidence recorder requires explicit final confirmation");
 assertIncludes(storeBuildEvidenceRecorder, "assertGitIgnored", "store build evidence recorder keeps real evidence ignored");
 assertIncludes(storeBuildEvidenceRecorder, "assertNoRawSecrets", "store build evidence recorder rejects raw secrets");
-checks.push("mobile store build evidence covers iOS and Android build artifacts");
+checks.push("mobile store build evidence covers iOS, Android, public branding, and icon artifacts");
 
 assertIncludes(deviceQa, "User A", "device QA includes User A");
 assertIncludes(deviceQa, "User B", "device QA includes User B");
