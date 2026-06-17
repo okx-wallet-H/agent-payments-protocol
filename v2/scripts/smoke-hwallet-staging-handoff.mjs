@@ -6,6 +6,7 @@ const stagingApi =
   "https://app.hwallet.vip";
 const strict = process.env.HWALLET_STAGING_HANDOFF_STRICT === "true";
 const evidenceFile = process.env.HWALLET_DEVICE_EVIDENCE_FILE || "";
+const requireRealDeviceEvidence = strict || evidenceFile.length > 0;
 const hasUserAToken = Boolean(process.env.MOBILE_DEVICE_PRIVY_ACCESS_TOKEN || process.env.PRIVY_ACCESS_TOKEN);
 const hasUserBToken = Boolean(process.env.MOBILE_DEVICE_OTHER_PRIVY_ACCESS_TOKEN || process.env.OTHER_PRIVY_ACCESS_TOKEN);
 const steps = [];
@@ -37,7 +38,7 @@ runStep("device-facing HWallet API smoke", "npm", ["run", "smoke:mobile-device-h
 });
 runStep("redacted device evidence smoke", "npm", ["run", "smoke:hwallet-device-evidence"], {
   ...(evidenceFile ? { HWALLET_DEVICE_EVIDENCE_FILE: evidenceFile } : {}),
-  ...(strict ? { HWALLET_DEVICE_EVIDENCE_REQUIRED: "true" } : {})
+  ...(requireRealDeviceEvidence ? { HWALLET_DEVICE_EVIDENCE_REQUIRED: "true" } : {})
 });
 
 console.log(JSON.stringify({
@@ -49,6 +50,7 @@ console.log(JSON.stringify({
     authRequired: true,
     twoUserDeviceSmokeRequiredForStrict: true,
     deviceEvidenceRequiredForStrict: true,
+    suppliedDeviceEvidenceMustBeReal: true,
     liveExecutionClosed: true
   }
 }, null, 2));
