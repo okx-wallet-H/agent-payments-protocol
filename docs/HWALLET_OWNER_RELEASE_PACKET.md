@@ -73,10 +73,16 @@ npm run smoke:hwallet-store-console-evidence
 ```
 
 Record redacted console observations after the owner confirms the dashboard
-actions:
+actions. If `.tmp/hwallet-mobile-store-build-evidence.json` exists, the
+recorder automatically imports the already recorded iOS and Android EAS build
+ids, build number, and version code; the owner only needs to confirm the
+App Store / Google Play console status fields. If build evidence is missing,
+add `HWALLET_STORE_CONSOLE_IOS_BUILD_ID` and
+`HWALLET_STORE_CONSOLE_ANDROID_BUILD_ID` to the same command instead of pasting
+anything into git:
 
 ```sh
-HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_CONFIRM_ALL=true HWALLET_STORE_CONSOLE_IOS_STATUS=ready HWALLET_STORE_CONSOLE_IOS_BUILD_ID=<ios-eas-build-id> HWALLET_STORE_CONSOLE_ANDROID_STATUS=ready HWALLET_STORE_CONSOLE_ANDROID_BUILD_ID=<android-eas-build-id> npm run hwallet:store-console-evidence:record
+HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWALLET_STORE_CONSOLE_EVIDENCE_CONFIRM_ALL=true HWALLET_STORE_CONSOLE_IOS_STATUS=ready HWALLET_STORE_CONSOLE_ANDROID_STATUS=ready npm run hwallet:store-console-evidence:record
 ```
 
 Require strict evidence before treating the release as ready for internal
