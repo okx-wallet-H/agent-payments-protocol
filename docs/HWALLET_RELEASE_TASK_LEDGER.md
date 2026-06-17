@@ -195,6 +195,9 @@ audit task.
 - **Status**: Blocked waiting for owner.
 - **Owner evidence**: Apple Developer account, registered device/build review,
   TestFlight console action.
+- **Current blocker class**: owner-side Apple Developer sign-in, distribution
+  certificate validation, device/profile confirmation, or App Store Connect
+  action. Do not collect Apple credentials in chat or git.
 - **Goal**: produce and record an iOS build candidate that uses
   `https://app.hwallet.vip`, passes HWallet device evidence, and is ready for
   TestFlight internal review.
@@ -216,6 +219,9 @@ audit task.
 - **Status**: Blocked waiting for owner.
 - **Owner evidence**: Google Play Console access, internal testing track, signed
   Android build evidence.
+- **Current blocker class**: Expo/EAS Android build quota or plan capacity plus
+  Google Play Console/internal testing action. If quota is exhausted, wait for
+  reset or owner capacity upgrade before building the next Android candidate.
 - **Goal**: produce and record an Android build candidate that uses
   `https://app.hwallet.vip` and passes the same HWallet multi-user evidence.
 - **In scope**: EAS Android production/preview build, store build evidence,
