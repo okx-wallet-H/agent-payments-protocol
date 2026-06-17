@@ -67,6 +67,7 @@ for (const [id, title] of Object.entries(requiredTasks)) {
 }
 
 assertTaskStatus(ledger, "R-002", "Merged");
+assertTaskStatus(ledger, "R-003", "Merged");
 assertTaskStatus(ledger, "R-004", "Merged");
 assertTaskStatus(ledger, "R-005", "Merged");
 assertTaskStatus(ledger, "R-006", "Merged");
@@ -96,7 +97,7 @@ assertIncludes(ledger, ".tmp", "ledger keeps local evidence in ignored temp file
 assertIncludes(ledger, "raw access tokens", "ledger blocks token leakage");
 assertIncludes(ledger, "https://app.hwallet.vip", "ledger uses current staging API");
 
-for (const taskId of ["R-003", "R-001"]) {
+for (const taskId of ["R-001"]) {
   assertIncludes(ledger, taskId, `ledger next-best queue includes ${taskId}`);
 }
 
@@ -116,8 +117,8 @@ console.log(JSON.stringify({
   ok: true,
   checks,
   ledger: {
-    readyAutomatableTasks: ["R-003", "R-001"],
-    mergedTasks: ["R-002", "R-004", "R-005", "R-006"],
+    readyAutomatableTasks: ["R-001"],
+    mergedTasks: ["R-002", "R-003", "R-004", "R-005", "R-006"],
     ownerGatedTasks: ["R-007", "R-008", "R-009"],
     liveExecutionClosed: true
   }

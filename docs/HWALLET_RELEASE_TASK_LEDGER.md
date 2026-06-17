@@ -83,7 +83,7 @@ audit task.
 
 ### R-003 Supabase postgres cutover candidate
 
-- **Status**: Ready.
+- **Status**: Merged.
 - **Owner evidence**: Required only if staging credentials/dashboard changes are
   needed.
 - **Goal**: prove dual observation, postgres readback, multi-user isolation,
@@ -100,8 +100,11 @@ audit task.
   npm run smoke:supabase-rollback-plan
   npm run smoke:supabase-closeout
   ```
-- **Done evidence**: all static gates pass and live staging evidence is recorded
-  in `docs/HWALLET_SUPABASE_LIVE_CLOSEOUT.md` without secrets.
+- **Done evidence**: `smoke:supabase-cutover-safety`,
+  `smoke:supabase-staging-sequence`, `smoke:supabase-readback-drill`,
+  `smoke:supabase-rollback-plan`, and live-mode `smoke:supabase-closeout`
+  passed; `docs/HWALLET_SUPABASE_LIVE_CLOSEOUT.md` records the staging evidence
+  without secrets.
 - **Rollback**: keep `HWALLET_SESSION_STORE=dual` or `jsonl`.
 
 ### R-004 Staging API auth and storage handoff
@@ -240,8 +243,7 @@ audit task.
 
 When no new owner instruction is present, pick in this order:
 
-1. R-003 Supabase postgres cutover candidate.
-2. R-001 Installed App two-user wallet regression.
+1. R-001 Installed App two-user wallet regression.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
