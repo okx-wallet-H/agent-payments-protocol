@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 
 const evidencePath =
@@ -7,7 +7,13 @@ const evidencePath =
   "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json";
 const isExample = evidencePath.endsWith(".example.json");
 const requireRealEvidence = process.env.HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED === "true";
+const defaultLocalEvidencePath = ".tmp/hwallet-store-console-evidence.json";
 const checks = [];
+
+assertNoRawSecrets(JSON.stringify({
+  evidencePath,
+  required: requireRealEvidence
+}), "store-console-evidence-env");
 
 const raw = await readFile(evidencePath, "utf8");
 assertNoRawSecrets(raw, evidencePath);
@@ -73,6 +79,12 @@ console.log(JSON.stringify({
   mode: isExample ? "example-template" : "store-console-evidence",
   evidencePath,
   checks,
+  ...(!requireRealEvidence ? {
+    localEvidence: await inspectOptionalEvidence(defaultLocalEvidencePath),
+    nextStrictCommand:
+      "HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json " +
+      "HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence"
+  } : {}),
   summary: {
     appVersion: environment.appVersion,
     iosStatus: evidence.ios.status,
@@ -127,14 +139,18 @@ function isExampleBuildId(value) {
 }
 
 function assertGitIgnored(path) {
+  if (!isGitIgnored(path)) {
+    throw new Error(`${path} is not ignored by git. Keep store console evidence in ignored .tmp files.`);
+  }
+}
+
+function isGitIgnored(path) {
   const ignoreCheck = spawnSync("git", ["check-ignore", "-q", path], {
     cwd: process.cwd(),
     stdio: "ignore"
   });
 
-  if (ignoreCheck.status !== 0) {
-    throw new Error(`${path} is not ignored by git. Keep store console evidence in ignored .tmp files.`);
-  }
+  return ignoreCheck.status === 0;
 }
 
 function assertNoRawSecrets(text, file) {
@@ -160,4 +176,121 @@ function assertNoRawSecrets(text, file) {
 function assert(condition, label) {
   if (!condition) throw new Error(`Store console evidence smoke failed: ${label}`);
   checks.push(label);
+}
+
+async function inspectOptionalEvidence(path) {
+  try {
+    await access(path);
+  } catch {
+    return {
+      status: "missing",
+      path
+    };
+  }
+
+  try {
+    if (!isGitIgnored(path)) {
+      return {
+        status: "invalid",
+        path,
+        reason: "evidence file is not git ignored"
+      };
+    }
+
+    const raw = await readFile(path, "utf8");
+    assertNoRawSecrets(raw, path);
+    const evidence = JSON.parse(raw);
+    if (evidence.kind !== "hwallet-store-console-evidence") {
+      return {
+        status: "invalid",
+        path,
+        reason: "unexpected evidence kind"
+      };
+    }
+    if (evidence.version !== 1) {
+      return {
+        status: "invalid",
+        path,
+        reason: "unsupported evidence version"
+      };
+    }
+
+    return {
+      status: "present",
+      path,
+      appVersion: evidence.environment?.appVersion,
+      apiBaseUrl: evidence.environment?.apiBaseUrl,
+      releaseTrack: evidence.environment?.releaseTrack,
+      iosStatus: evidence.ios?.status,
+      androidStatus: evidence.android?.status,
+      artifacts: Array.isArray(evidence.artifacts) ? evidence.artifacts.length : 0,
+      strictReady: isStrictReady(evidence),
+      missingForStrict: missingStrictFields(evidence)
+    };
+  } catch (error) {
+    return {
+      status: "invalid",
+      path,
+      reason: redactError(error)
+    };
+  }
+}
+
+function isStrictReady(evidence) {
+  return missingStrictFields(evidence).length === 0;
+}
+
+function missingStrictFields(evidence) {
+  const missing = [];
+  const ios = evidence.ios || {};
+  const android = evidence.android || {};
+
+  if (!hasText(evidence.operator?.label)) {
+    missing.push("operator label");
+  } else if (looksUnresolved(evidence.operator.label)) {
+    missing.push("operator label");
+  }
+  if (ios.status !== "ready") missing.push("iOS ready status");
+  if (android.status !== "ready") missing.push("Android ready status");
+  if (!isUuid(ios.buildId) || isExampleBuildId(ios.buildId)) missing.push("iOS real build id");
+  if (!isUuid(android.buildId) || isExampleBuildId(android.buildId)) missing.push("Android real build id");
+  if (!hasText(ios.appRecordLabel) || looksUnresolved(ios.appRecordLabel)) missing.push("iOS app record label");
+  if (!hasText(android.appRecordLabel) || looksUnresolved(android.appRecordLabel)) missing.push("Android app record label");
+  for (const [key, value] of Object.entries(ios.testflight || {})) {
+    if (value !== true) missing.push(`iOS TestFlight ${key}`);
+  }
+  for (const [key, value] of Object.entries(ios.metadata || {})) {
+    if (value !== true) missing.push(`iOS metadata ${key}`);
+  }
+  for (const [key, value] of Object.entries(android.internalTesting || {})) {
+    if (value !== true) missing.push(`Android internal testing ${key}`);
+  }
+  for (const [key, value] of Object.entries(android.metadata || {})) {
+    if (value !== true) missing.push(`Android metadata ${key}`);
+  }
+  for (const [key, value] of Object.entries(evidence.checks || {})) {
+    if (value !== true) missing.push(`check ${key}`);
+  }
+  for (const [key, value] of Object.entries(evidence.confirmations || {})) {
+    if (value !== true) missing.push(`confirmation ${key}`);
+  }
+  if (!Array.isArray(evidence.artifacts) || evidence.artifacts.length < 2) {
+    missing.push("redacted console artifacts");
+  }
+
+  return missing.slice(0, 12);
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+}
+
+function hasText(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function redactError(error) {
+  return String(error?.message || error || "unknown error")
+    .replace(/0x[a-fA-F0-9]{8,}/g, "0x...")
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]");
 }

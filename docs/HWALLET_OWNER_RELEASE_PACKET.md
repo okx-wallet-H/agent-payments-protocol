@@ -64,6 +64,14 @@ Initialize the ignored local store-console evidence file:
 npm run hwallet:store-console-evidence:init
 ```
 
+Check the current status without requiring owner evidence yet. This prints
+whether `.tmp/hwallet-store-console-evidence.json` is missing, pending, or ready
+for strict validation:
+
+```sh
+npm run smoke:hwallet-store-console-evidence
+```
+
 Record redacted console observations after the owner confirms the dashboard
 actions:
 
