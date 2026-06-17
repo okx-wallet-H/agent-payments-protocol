@@ -37,6 +37,9 @@ export function handlePhaseOneUserText(input: {
     const walletSyncPrefix = shouldIncludeWalletFundText(input.userText, input.walletFundText)
       ? `${input.walletFundText} `
       : "";
+    const safetySuffix = shouldExplainNoLiveExecution(input.userText)
+      ? " 这一步我只做分析和模拟，不会真实下单。"
+      : "";
 
     return {
       id: crypto.randomUUID(),
@@ -44,8 +47,8 @@ export function handlePhaseOneUserText(input: {
       progress: input.candidateMarket ? createSelectedMarketProgress(goal) : createStrategyProgress(goal),
       cards: input.candidateMarket ? [createPredictionCard(input.candidateMarket)] : [],
       finalText: plan.market
-        ? `${walletSyncPrefix}这场我先建议观察，点卡片可以继续跟踪或先模拟。`
-        : `${walletSyncPrefix}我先去找世界杯相关市场。`,
+        ? `${walletSyncPrefix}这场我先建议观察，点卡片可以继续跟踪或先模拟。${safetySuffix}`
+        : `${walletSyncPrefix}我先去找世界杯相关市场。${safetySuffix}`,
       createdAt: new Date().toISOString()
     };
   }
@@ -105,5 +108,9 @@ export function handlePhaseOneUserText(input: {
 
 function shouldIncludeWalletFundText(userText: string, walletFundText?: string): walletFundText is string {
   if (!walletFundText) return false;
-  return /好了|充完|已充|已转|转了|到账|到了|到帐|done|finished|arrived/i.test(userText);
+  return /好了|充完|已充|已转|转了|到账|到了|到帐|刷新|钱包|HWallet|done|finished|arrived|refresh|wallet/i.test(userText);
+}
+
+function shouldExplainNoLiveExecution(userText: string): boolean {
+  return /执行|下单|买|卖|execute|buy|sell/i.test(userText);
 }

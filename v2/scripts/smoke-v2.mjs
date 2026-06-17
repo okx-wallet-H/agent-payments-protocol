@@ -127,6 +127,10 @@ assert(
   walletRefresh.mobileTurn?.messages?.some((message) => /到账|资产|刷新|HWallet|观察|模拟/.test(message.text || "")),
   "wallet refresh replies with wallet recognition copy"
 );
+assert(
+  walletRefresh.mobileTurn?.messages?.some((message) => /不开放真实下单|真实下单/.test(message.text || "")),
+  "wallet refresh replies with live-execution boundary"
+);
 const auditAfterWalletRefresh = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
 assert(
   auditAfterWalletRefresh.events?.some((event) => event.type === "device.evidence" && event.moneyMoved === false),
@@ -196,6 +200,20 @@ assert(
   memoryAfterPrediction.memory?.knowledgeNotes?.some((note) => /X Layer|真实下单|充值/.test(note)),
   "memory endpoint records wallet knowledge notes"
 );
+
+const executeLikeReply = await postJson("/api/v2/phase-one", {
+  text: "买西班牙冠军 500U",
+  walletAddress,
+  userId
+});
+assert(executeLikeReply.mobileTurn?.goalType === "prediction_market_research", "execute-like copy stays in research mode");
+assert(executeLikeReply.orchestration?.action === "analyze_worldcup_market", "execute-like copy routes to analysis");
+assert(executeLikeReply.orchestration?.capability?.liveExecution?.enabled === false, "execute-like copy keeps live execution disabled");
+assert(
+  executeLikeReply.mobileTurn?.messages?.some((message) => /只做分析和模拟|不会真实下单/.test(message.text || "")),
+  "execute-like mobile reply explains no live order"
+);
+
 const otherMemory = await getJson(`/api/v2/mobile/memory?userId=${encodeURIComponent(otherUserId)}`);
 assert(otherMemory.memory?.recentMessages?.length === 0, "memory endpoint isolates other users");
 

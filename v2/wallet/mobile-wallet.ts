@@ -55,6 +55,33 @@ export function createMobileWalletKnowledgeNotes(wallet: SyncedAgentWalletContex
   return createWalletKnowledgeNotes(wallet);
 }
 
+export interface AgentWalletReplyContext {
+  statusText: string;
+  fundText: string;
+  nextActionText: string;
+  safetyText: string;
+  summaryText: string;
+}
+
+export function createAgentWalletReplyContext(wallet: SyncedAgentWalletContext): AgentWalletReplyContext {
+  const statusText = createWalletStatusReply(wallet);
+  const fundText = createWalletFundReply(wallet);
+  const nextActionText = wallet.agent.nextActionText;
+  const safetyText = wallet.vault.policyText || "第一版只允许分析、跟踪和模拟，不开放真实下单。";
+
+  return {
+    statusText,
+    fundText,
+    nextActionText,
+    safetyText,
+    summaryText: createWalletSummaryText({
+      fundText,
+      nextActionText,
+      safetyText
+    })
+  };
+}
+
 export function withVerifiedInboundTransfer(
   wallet: SyncedAgentWalletContext,
   transfer: XLayerInboundTransfer
@@ -145,6 +172,14 @@ function createSyncedAssetText(wallet: SyncedAgentWalletContext): string {
     .filter((asset) => asset.syncStatus === "synced")
     .map((asset) => `${asset.symbol} ${asset.amountLabel}`)
     .join("，");
+}
+
+function createWalletSummaryText(input: {
+  fundText: string;
+  nextActionText: string;
+  safetyText: string;
+}): string {
+  return `${input.fundText} ${input.nextActionText} ${input.safetyText}`;
 }
 
 function mergeVerifiedAsset(asset: AgentWalletAsset, amountLabel: string): AgentWalletAsset {
