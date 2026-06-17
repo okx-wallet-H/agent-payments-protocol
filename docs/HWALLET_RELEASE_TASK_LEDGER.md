@@ -257,8 +257,8 @@ steps need owner/store-console evidence:
 2. R-008 Android internal testing candidate build: prepare Google Play internal
    testing action when the owner is ready.
 3. R-009 Store metadata final owner pass: collect final copy, screenshots,
-   support contact, privacy review, store-console answers, and redacted
-   store-console evidence.
+   support contact, privacy review, store-console answers, redacted
+   store-console evidence, and `docs/HWALLET_OWNER_RELEASE_PACKET.md`.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
@@ -271,6 +271,7 @@ Every task that moves the release forward must keep these green:
 ```sh
 npm run smoke:release-task-ledger
 npm run smoke:task-review-workflow
+npm run smoke:release-owner-packet
 npm run smoke:hwallet-release-candidate
 npm run smoke:mobile-store-readiness
 npm run smoke:hwallet-store-console-evidence
