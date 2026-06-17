@@ -73,6 +73,11 @@ HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true \
 npm run smoke:hwallet-dual-device-evidence
 ```
 
+- During normal development, `npm run smoke:hwallet-dual-device-evidence`
+  runs in non-strict mode and prints whether the ignored local iOS and Android
+  evidence files are present, missing, or invalid. That status is for release
+  coordination only; it does not replace the strict command above.
+
 - Keep real execution closed:
   - live transaction broadcast: off
   - Agent real execution: off

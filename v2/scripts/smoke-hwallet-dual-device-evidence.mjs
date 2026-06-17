@@ -1,10 +1,12 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 
 const checks = [];
 const requireRealEvidence = process.env.HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED === "true";
 const iosPath = process.env.HWALLET_IOS_DEVICE_EVIDENCE_FILE || "";
 const androidPath = process.env.HWALLET_ANDROID_DEVICE_EVIDENCE_FILE || "";
+const defaultIosPath = ".tmp/hwallet-device-evidence-ios.json";
+const defaultAndroidPath = ".tmp/hwallet-device-evidence-android.json";
 
 assertNoRawSecrets(JSON.stringify({
   iosPath,
@@ -13,11 +15,16 @@ assertNoRawSecrets(JSON.stringify({
 }), "dual-device-evidence-env");
 
 if (!requireRealEvidence) {
-  assert(!iosPath && !androidPath, "non-strict mode does not consume local device evidence");
+  assert(!iosPath && !androidPath, "non-strict mode does not require local device evidence env");
+  const localEvidence = {
+    ios: await inspectOptionalEvidence(defaultIosPath, "ios"),
+    android: await inspectOptionalEvidence(defaultAndroidPath, "android")
+  };
   console.log(JSON.stringify({
     ok: true,
     mode: "strict-not-requested",
     checks,
+    localEvidence,
     nextStrictCommand:
       "HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json " +
       "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json " +
@@ -93,15 +100,19 @@ function runSingleEvidenceSmoke(path, label) {
 }
 
 function assertGitIgnored(path) {
+  if (!isGitIgnored(path)) {
+    throw new Error(`${path} is not ignored by git. Keep real device evidence in ignored .tmp files.`);
+  }
+  checks.push(`${path} is git ignored`);
+}
+
+function isGitIgnored(path) {
   const ignoreCheck = spawnSync("git", ["check-ignore", "-q", path], {
     cwd: process.cwd(),
     stdio: "ignore"
   });
 
-  if (ignoreCheck.status !== 0) {
-    throw new Error(`${path} is not ignored by git. Keep real device evidence in ignored .tmp files.`);
-  }
-  checks.push(`${path} is git ignored`);
+  return ignoreCheck.status === 0;
 }
 
 function summarize(evidence) {
@@ -134,4 +145,74 @@ function assertNoRawSecrets(text, file) {
 function assert(condition, label) {
   if (!condition) throw new Error(`HWallet dual-device evidence smoke failed: ${label}`);
   checks.push(label);
+}
+
+async function inspectOptionalEvidence(path, expectedPlatform) {
+  try {
+    await access(path);
+  } catch {
+    return {
+      status: "missing",
+      path,
+      expectedPlatform
+    };
+  }
+
+  try {
+    if (!isGitIgnored(path)) {
+      return {
+        status: "invalid",
+        path,
+        expectedPlatform,
+        reason: "evidence file is not git ignored"
+      };
+    }
+
+    const raw = await readFile(path, "utf8");
+    assertNoRawSecrets(raw, path);
+    const evidence = JSON.parse(raw);
+    if (evidence.kind !== "hwallet-device-multi-user-evidence") {
+      return {
+        status: "invalid",
+        path,
+        expectedPlatform,
+        reason: "unexpected evidence kind"
+      };
+    }
+    if (evidence.environment?.platform !== expectedPlatform) {
+      return {
+        status: "invalid",
+        path,
+        expectedPlatform,
+        reason: "platform mismatch"
+      };
+    }
+
+    return {
+      status: "present",
+      path,
+      platform: evidence.environment.platform,
+      buildChannel: evidence.environment.buildChannel,
+      buildNumber: evidence.environment.buildNumber,
+      apiBaseUrl: evidence.environment.apiBaseUrl,
+      appVersion: evidence.environment.appVersion,
+      userA: evidence.users?.userA?.shortAddress,
+      userB: evidence.users?.userB?.shortAddress,
+      artifacts: Array.isArray(evidence.artifacts) ? evidence.artifacts.length : 0,
+      liveExecutionClosed: evidence.confirmations?.liveExecutionStillClosed === true
+    };
+  } catch (error) {
+    return {
+      status: "invalid",
+      path,
+      expectedPlatform,
+      reason: redactError(error)
+    };
+  }
+}
+
+function redactError(error) {
+  return String(error?.message || error || "unknown error")
+    .replace(/0x[a-fA-F0-9]{8,}/g, "0x...")
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]");
 }
