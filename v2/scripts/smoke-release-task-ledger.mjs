@@ -66,6 +66,8 @@ for (const [id, title] of Object.entries(requiredTasks)) {
   ]);
 }
 
+assertTaskStatus(ledger, "R-002", "Merged");
+
 for (const command of [
   "npm run smoke:mobile-hwallet-ux",
   "npm run smoke:wallet-sync",
@@ -91,7 +93,7 @@ assertIncludes(ledger, ".tmp", "ledger keeps local evidence in ignored temp file
 assertIncludes(ledger, "raw access tokens", "ledger blocks token leakage");
 assertIncludes(ledger, "https://app.hwallet.vip", "ledger uses current staging API");
 
-for (const taskId of ["R-002", "R-004", "R-005", "R-006", "R-003"]) {
+for (const taskId of ["R-004", "R-005", "R-006", "R-003"]) {
   assertIncludes(ledger, taskId, `ledger next-best queue includes ${taskId}`);
 }
 
@@ -111,7 +113,8 @@ console.log(JSON.stringify({
   ok: true,
   checks,
   ledger: {
-    readyAutomatableTasks: ["R-002", "R-004", "R-005", "R-006", "R-003"],
+    readyAutomatableTasks: ["R-004", "R-005", "R-006", "R-003"],
+    mergedTasks: ["R-002"],
     ownerGatedTasks: ["R-007", "R-008", "R-009"],
     liveExecutionClosed: true
   }
@@ -125,6 +128,13 @@ function assertTaskHasFields(text, taskId, fields) {
   for (const field of fields) {
     assertIncludes(block, `**${field}**`, `${taskId} includes ${field}`);
   }
+}
+
+function assertTaskStatus(text, taskId, expectedStatus) {
+  const taskPattern = new RegExp(`### ${taskId} [\\s\\S]*?(?=\\n### R-|\\n## |$)`);
+  const match = text.match(taskPattern);
+  assert(Boolean(match), `ledger can isolate ${taskId} status`);
+  assertIncludes(match[0], `**Status**: ${expectedStatus}.`, `${taskId} status is ${expectedStatus}`);
 }
 
 function assertIncludes(text, value, label) {
