@@ -18,9 +18,14 @@ const buildProfiles = easConfig.build || {};
 const submitProfiles = easConfig.submit || {};
 
 assert(typeof rootScripts["smoke:mobile-distribution-readiness"] === "string", "root exposes distribution readiness smoke");
+assert(typeof rootScripts["smoke:mobile-release-preflight"] === "string", "root exposes mobile release preflight smoke");
 assert(
   String(rootScripts["verify:merge"] || "").includes("smoke:mobile-distribution-readiness"),
   "verify:merge includes distribution readiness smoke"
+);
+assert(
+  String(rootScripts["verify:merge"] || "").includes("smoke:mobile-release-preflight"),
+  "verify:merge includes mobile release preflight smoke"
 );
 
 assert(typeof mobileScripts["build:ios"] === "string", "mobile iOS production build script exists");
@@ -84,6 +89,8 @@ assertIncludes(distributionPlan, "HWALLET_DEVICE_EVIDENCE_REQUIRED=true", "distr
 assertIncludes(distributionPlan, "HWALLET_DUAL_DEVICE_EVIDENCE_REQUIRED=true", "distribution plan requires strict dual-device evidence");
 assertIncludes(distributionPlan, "HWALLET_IOS_DEVICE_EVIDENCE_FILE", "distribution plan requires iOS device evidence");
 assertIncludes(distributionPlan, "HWALLET_ANDROID_DEVICE_EVIDENCE_FILE", "distribution plan requires Android device evidence");
+assertIncludes(distributionPlan, "HWALLET_RELEASE_PREFLIGHT_STRICT=true", "distribution plan requires strict release preflight");
+assertIncludes(distributionPlan, "npm run smoke:mobile-release-preflight", "distribution plan documents release preflight");
 assertIncludes(distributionPlan, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip", "distribution plan requires staging device auth boundary smoke");
 assertIncludes(distributionPlan, "npm run submit:ios", "distribution plan documents iOS submit command");
 assertIncludes(distributionPlan, "npm run submit:android", "distribution plan documents Android submit command");
