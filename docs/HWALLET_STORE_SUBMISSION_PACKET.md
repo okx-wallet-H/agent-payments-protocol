@@ -8,9 +8,11 @@ verification codes in this file.
 
 ## Product Body
 
-- Product: HWallet
+- Product: 海豚社区
 - App body: HWallet wallet entry plus Agent experience
-- Current binary display name: Agent Wallet
+- Public app name: 海豚社区
+- Current binary display name: 海豚社区
+- Internal wallet module: HWallet
 - Public staging API: `https://app.hwallet.vip`
 - Privacy policy URL: `https://app.hwallet.vip/privacy`
 - Support URL: `https://app.hwallet.vip/support`
@@ -27,17 +29,18 @@ verification codes in this file.
 
 Short description:
 
-> HWallet gives users a simple wallet entry and an Agent that can read wallet
+> 海豚社区 gives users a simple HWallet entry and an Agent that can read wallet
 > state, recognize deposits, analyze opportunities, simulate actions, and keep
 > audit records.
 
 Long description:
 
-> HWallet is built for users who want a simple Agent-first Web3 experience. The
-> App supports email login, an individual wallet address, deposit recognition,
-> Agent analysis, simulation, and audit visibility. The first release keeps live
-> trading and autonomous money movement disabled. Users can review what the
-> Agent is doing without installing extra skills or developer tools.
+> 海豚社区 is built for users who want a simple Agent-first Web3 experience. The
+> App includes HWallet as the wallet entry and supports email login, an
+> individual wallet address, deposit recognition, Agent analysis, simulation,
+> and audit visibility. The first release keeps live trading and autonomous
+> money movement disabled. Users can review what the Agent is doing without
+> installing extra skills or developer tools.
 
 Reviewer note:
 
@@ -48,7 +51,7 @@ Reviewer note:
 
 ## App Store Connect Baseline
 
-- App name: HWallet
+- App name: 海豚社区
 - Category: Finance
 - Privacy policy URL: `https://app.hwallet.vip/privacy`
 - Support URL: `https://app.hwallet.vip/support`
@@ -60,7 +63,7 @@ Reviewer note:
 
 ## Google Play Console Baseline
 
-- App name: HWallet
+- App name: 海豚社区
 - App category: Finance
 - Privacy policy URL: `https://app.hwallet.vip/privacy`
 - Support URL: `https://app.hwallet.vip/support`
@@ -86,6 +89,17 @@ HWallet must not collect:
 - Seed phrases.
 - Login verification codes after login completes.
 - Raw access tokens in logs, docs, release notes, or support tickets.
+
+## Icon / Logo Baseline
+
+- Owner-provided source logo: `头像01.png` from local handoff only. Do not commit
+  the original download-path source file.
+- Committed mobile icon assets:
+  - `apps/mobile/assets/icon.png`
+  - `apps/mobile/assets/adaptive-icon.png`
+  - `apps/mobile/assets/splash.png`
+- Required asset baseline: PNG, square, `1024 x 1024`.
+- Public icon meaning: the owner-approved 海豚社区 brand mark.
 
 ## Submission Blockers
 

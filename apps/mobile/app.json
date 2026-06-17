@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Agent Wallet",
+    "name": "海豚社区",
     "slug": "agent-wallet-xlayer-mvp",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.agentwallet.xlayer",
       "buildNumber": "9",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "海豚社区"
       }
     },
     "android": {
@@ -20,7 +21,7 @@
       "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0D7A53"
+        "backgroundColor": "#4B247A"
       },
       "permissions": []
     },

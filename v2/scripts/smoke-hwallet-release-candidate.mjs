@@ -266,7 +266,8 @@ assertIncludes(storeScreenshotPlanSmoke, "Owner approves final visual order and 
 assertIncludes(storeConsoleEvidenceSmoke, "HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED", "store console evidence smoke has strict mode");
 assertIncludes(storeConsoleEvidenceSmoke, "App Store Connect", "store console evidence smoke checks App Store Connect");
 assertIncludes(storeConsoleEvidenceSmoke, "Google Play Console", "store console evidence smoke checks Google Play Console");
-assertIncludes(storeSubmissionPacket, "Product: HWallet", "store submission packet names HWallet");
+assertIncludes(storeSubmissionPacket, "Product: 海豚社区", "store submission packet names owner-approved public app");
+assertIncludes(storeSubmissionPacket, "Internal wallet module: HWallet", "store submission packet preserves HWallet wallet module");
 assertIncludes(storeSubmissionPacket, "docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "store submission packet links screenshot plan");
 assertIncludes(storeSubmissionPacket, "Store console evidence", "store submission packet records store console evidence");
 assertIncludes(storeSubmissionPacket, "https://app.hwallet.vip/privacy", "store submission packet records privacy URL");

@@ -12,6 +12,9 @@ const screenshotPlan = await readFile("docs/HWALLET_STORE_SCREENSHOT_PLAN.md", "
 const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
+const iconPng = await readFile("apps/mobile/assets/icon.png");
+const adaptiveIconPng = await readFile("apps/mobile/assets/adaptive-icon.png");
+const splashPng = await readFile("apps/mobile/assets/splash.png");
 
 const scripts = rootPackage.scripts || {};
 const expo = mobileApp.expo || {};
@@ -28,12 +31,18 @@ assert(
 assert(expo.ios?.bundleIdentifier === "com.agentwallet.xlayer", "submission packet uses current iOS bundle id");
 assert(expo.android?.package === "com.agentwallet.xlayer", "submission packet uses current Android package");
 assert(expo.version === "0.1.0", "submission packet uses current app version");
+assert(expo.name === "海豚社区", "submission packet uses owner-approved public app name");
+assert(expo.ios?.infoPlist?.CFBundleDisplayName === "海豚社区", "iOS binary display name is owner-approved");
+assert(isPng(iconPng), "mobile app icon is a PNG asset");
+assert(isPng(adaptiveIconPng), "mobile adaptive icon is a PNG asset");
+assert(isPng(splashPng), "mobile splash icon is a PNG asset");
 assert(production.env?.EXPO_PUBLIC_API_BASE_URL === "https://app.hwallet.vip", "production build targets public HWallet API");
 checks.push("native identifiers and production API are stable for store submission packet");
 
-assertIncludes(submissionPacket, "Product: HWallet", "submission packet names HWallet");
+assertIncludes(submissionPacket, "Product: 海豚社区", "submission packet names owner-approved public app");
 assertIncludes(submissionPacket, "HWallet wallet entry plus Agent experience", "submission packet names product body");
-assertIncludes(submissionPacket, "Current binary display name: Agent Wallet", "submission packet records current binary display name");
+assertIncludes(submissionPacket, "Current binary display name: 海豚社区", "submission packet records current binary display name");
+assertIncludes(submissionPacket, "Internal wallet module: HWallet", "submission packet preserves HWallet wallet module");
 assertIncludes(submissionPacket, "https://app.hwallet.vip/privacy", "submission packet records privacy URL");
 assertIncludes(submissionPacket, "https://app.hwallet.vip/support", "submission packet records support URL");
 assertIncludes(submissionPacket, "com.agentwallet.xlayer", "submission packet records app identifiers");
@@ -104,7 +113,8 @@ console.log(JSON.stringify({
   ok: true,
   checks,
   submission: {
-    product: "HWallet",
+    product: "海豚社区",
+    walletModule: "HWallet",
     iosBundleIdentifier: expo.ios?.bundleIdentifier || null,
     androidPackage: expo.android?.package || null,
     privacyPolicyUrl: "https://app.hwallet.vip/privacy",
@@ -142,6 +152,19 @@ function assertNoRawSecrets(files) {
       }
     }
   }
+}
+
+function isPng(buffer) {
+  return Buffer.isBuffer(buffer)
+    && buffer.length > 8
+    && buffer[0] === 0x89
+    && buffer[1] === 0x50
+    && buffer[2] === 0x4e
+    && buffer[3] === 0x47
+    && buffer[4] === 0x0d
+    && buffer[5] === 0x0a
+    && buffer[6] === 0x1a
+    && buffer[7] === 0x0a;
 }
 
 function assert(condition, label) {

@@ -260,7 +260,7 @@ export function V2AgentWalletPreview() {
           <View style={styles.previewLoginTop}>
             <Text style={styles.previewLoginBrand}>海豚社区</Text>
             <Text style={styles.previewLoginTitle}>一句话，交给 Agent</Text>
-            <Text style={styles.previewLoginSubtitle}>登录后进入 Agent Wallet，HWallet、市场机会和 Agent 记录都会跟随你的账户。</Text>
+            <Text style={styles.previewLoginSubtitle}>登录后进入海豚社区，HWallet、市场机会和 Agent 记录都会跟随你的账户。</Text>
           </View>
 
           <View style={styles.previewLoginCard}>
@@ -724,7 +724,7 @@ function AgentReceiveCard({ address }: { address: string }) {
       <View style={styles.receiveCardTop}>
         <View>
           <Text style={styles.receiveCardLabel}>充值地址</Text>
-          <Text style={styles.receiveCardTitle}>Agent Wallet</Text>
+          <Text style={styles.receiveCardTitle}>HWallet</Text>
         </View>
         <View style={styles.receiveNetworkPill}>
           <Text style={styles.receiveNetworkText}>X Layer</Text>
