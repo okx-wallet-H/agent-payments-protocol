@@ -251,7 +251,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     try {
       await action();
     } catch (error) {
-      Alert.alert("Agent Wallet", error instanceof Error ? error.message : "请求失败");
+      Alert.alert("海豚社区", error instanceof Error ? error.message : "请求失败");
     }
   }
 
@@ -2798,7 +2798,7 @@ function ReceiveCardMessage({
       <View style={styles.receiveCardTop}>
         <View>
           <Text style={styles.receiveCardLabel}>充值地址</Text>
-          <Text style={styles.receiveCardTitle}>{card.title || "Agent Wallet"}</Text>
+          <Text style={styles.receiveCardTitle}>{card.title || "HWallet"}</Text>
         </View>
         <View style={styles.receiveNetworkPill}>
           <Text style={styles.receiveNetworkText}>{address?.network || "X Layer"}</Text>

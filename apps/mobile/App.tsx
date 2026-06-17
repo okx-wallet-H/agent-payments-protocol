@@ -176,7 +176,7 @@ function AgentWalletApp() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>HWallet · Agent Wallet</Text>
+          <Text style={styles.eyebrow}>海豚社区 · HWallet</Text>
           <Text style={styles.title}>Agent 的钱包入口</Text>
           <View style={styles.chainBadge}>
             <Ionicons name="flash" size={15} color="#0d7a53" />

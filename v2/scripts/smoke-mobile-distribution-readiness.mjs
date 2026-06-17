@@ -14,6 +14,9 @@ const submissionPacket = await readFile("docs/HWALLET_STORE_SUBMISSION_PACKET.md
 const storeConsoleEvidenceExample = await readFile("docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json", "utf8");
 const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
+const iconPng = await readFile("apps/mobile/assets/icon.png");
+const adaptiveIconPng = await readFile("apps/mobile/assets/adaptive-icon.png");
+const splashPng = await readFile("apps/mobile/assets/splash.png");
 
 const rootScripts = rootPackage.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -69,15 +72,19 @@ assert(production.env?.EXPO_PUBLIC_AGENT_WALLET_PREVIEW !== "true", "EAS product
 assert(Boolean(submitProfiles.production), "EAS production submit profile exists");
 checks.push("EAS production build and submit profiles are present");
 
-assert(expoConfig.name === "Agent Wallet", "Expo app name is recorded");
+assert(expoConfig.name === "海豚社区", "Expo app name is owner-approved");
 assert(expoConfig.slug === "agent-wallet-xlayer-mvp", "Expo slug is recorded");
 assert(isSemverLike(expoConfig.version), "Expo app version is semver-like");
 assert(Boolean(expoConfig.icon), "Expo app icon is configured");
+assert(isPng(iconPng), "Expo app icon asset is PNG");
+assert(isPng(adaptiveIconPng), "Expo adaptive icon asset is PNG");
+assert(isPng(splashPng), "Expo splash icon asset is PNG");
 assert(Boolean(expoConfig.scheme), "Expo deep-link scheme is configured");
 assert(expoConfig.orientation === "portrait", "Expo app is portrait locked");
 assert(expoConfig.ios?.bundleIdentifier === "com.agentwallet.xlayer", "iOS bundle id is configured");
 assert(Number(expoConfig.ios?.buildNumber) > 0, "iOS build number is positive");
 assert(expoConfig.ios?.infoPlist?.ITSAppUsesNonExemptEncryption === false, "iOS export compliance flag is configured");
+assert(expoConfig.ios?.infoPlist?.CFBundleDisplayName === "海豚社区", "iOS display name is owner-approved");
 assert(expoConfig.android?.package === "com.agentwallet.xlayer", "Android package is configured");
 assert(Number(expoConfig.android?.versionCode) > 0, "Android version code is positive");
 assert(Array.isArray(expoConfig.android?.permissions), "Android permissions are explicit");
@@ -130,7 +137,8 @@ assertIncludes(distributionPlan, "Live execution remains closed", "distribution 
 assertIncludes(distributionPlan, "No secrets are committed", "distribution plan keeps secret hygiene visible");
 checks.push("distribution plan documents store metadata, evidence, submit, and safety requirements");
 
-assertIncludes(submissionPacket, "Product: HWallet", "submission packet names HWallet");
+assertIncludes(submissionPacket, "Product: 海豚社区", "submission packet names owner-approved public app");
+assertIncludes(submissionPacket, "Internal wallet module: HWallet", "submission packet preserves HWallet wallet module");
 assertIncludes(submissionPacket, "Privacy policy URL: `https://app.hwallet.vip/privacy`", "submission packet records privacy URL");
 assertIncludes(submissionPacket, "Support URL: `https://app.hwallet.vip/support`", "submission packet records support URL");
 assertIncludes(submissionPacket, "Review notes must include the observe/simulate-only boundary", "submission packet records App Store review boundary");
@@ -201,6 +209,19 @@ function isPublicHttps(value) {
   } catch {
     return false;
   }
+}
+
+function isPng(buffer) {
+  return Buffer.isBuffer(buffer)
+    && buffer.length > 8
+    && buffer[0] === 0x89
+    && buffer[1] === 0x50
+    && buffer[2] === 0x4e
+    && buffer[3] === 0x47
+    && buffer[4] === 0x0d
+    && buffer[5] === 0x0a
+    && buffer[6] === 0x1a
+    && buffer[7] === 0x0a;
 }
 
 function assertIncludes(text, needle, label) {
