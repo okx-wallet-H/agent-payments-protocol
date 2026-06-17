@@ -6,8 +6,12 @@ const sourcePath = "docs/HWALLET_STORE_CONSOLE_EVIDENCE.example.json";
 const outputPath =
   process.env.HWALLET_STORE_CONSOLE_EVIDENCE_FILE ||
   ".tmp/hwallet-store-console-evidence.json";
+const storeBuildEvidencePath =
+  process.env.HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE ||
+  ".tmp/hwallet-mobile-store-build-evidence.json";
 const mobileApp = JSON.parse(await readFile("apps/mobile/app.json", "utf8")).expo || {};
-const source = await readEvidence();
+const { evidence: source, fromExample } = await readEvidence();
+const storeBuildEvidence = await readOptionalStoreBuildEvidence(storeBuildEvidencePath);
 const confirmAll = process.env.HWALLET_STORE_CONSOLE_EVIDENCE_CONFIRM_ALL === "true";
 
 const evidence = normalizeEvidence(source);
@@ -30,6 +34,8 @@ console.log(JSON.stringify({
   outputPath,
   iosStatus: evidence.ios.status,
   androidStatus: evidence.android.status,
+  importedBuildEvidence: Boolean(storeBuildEvidence),
+  storeBuildEvidencePath: storeBuildEvidence ? storeBuildEvidencePath : undefined,
   strictReady: isStrictReady(evidence),
   nextStep: `HWALLET_STORE_CONSOLE_EVIDENCE_FILE=${outputPath} HWALLET_STORE_CONSOLE_EVIDENCE_REQUIRED=true npm run smoke:hwallet-store-console-evidence`
 }, null, 2));
@@ -38,12 +44,18 @@ async function readEvidence() {
   if (await exists(outputPath)) {
     const raw = await readFile(outputPath, "utf8");
     assertNoRawSecrets(raw, outputPath);
-    return JSON.parse(raw);
+    return {
+      evidence: JSON.parse(raw),
+      fromExample: false
+    };
   }
 
   const raw = await readFile(sourcePath, "utf8");
   assertNoRawSecrets(raw, sourcePath);
-  return JSON.parse(raw);
+  return {
+    evidence: JSON.parse(raw),
+    fromExample: true
+  };
 }
 
 function normalizeEvidence(evidence) {
@@ -74,26 +86,31 @@ function normalizeEvidence(evidence) {
 function applyIosUpdate(ios) {
   const metadata = ios.metadata || {};
   const testflight = ios.testflight || {};
+  const iosBuildEvidence = storeBuildEvidence?.builds?.ios || {};
+  const buildEnvironment = storeBuildEvidence?.environment || {};
   return {
     ...ios,
-    status: process.env.HWALLET_STORE_CONSOLE_IOS_STATUS || ios.status || "pending",
-    buildId: process.env.HWALLET_STORE_CONSOLE_IOS_BUILD_ID || ios.buildId || "fill-ios-eas-build-id",
-    buildNumber: mobileApp.ios?.buildNumber || ios.buildNumber || "9",
+    status: process.env.HWALLET_STORE_CONSOLE_IOS_STATUS || safeExisting(ios.status) || "pending",
+    buildId: process.env.HWALLET_STORE_CONSOLE_IOS_BUILD_ID ||
+      realBuildId(iosBuildEvidence.buildId) ||
+      safeExisting(ios.buildId) ||
+      "fill-ios-eas-build-id",
+    buildNumber: mobileApp.ios?.buildNumber || buildEnvironment.iosBuildNumber || safeExisting(ios.buildNumber) || "9",
     appRecordLabel:
       realValue(process.env.HWALLET_STORE_CONSOLE_IOS_APP_LABEL) ||
-      realValue(ios.appRecordLabel) ||
+      realValue(safeExisting(ios.appRecordLabel)) ||
       "hwallet-ios-app-record-redacted",
     testflight: {
-      buildUploaded: boolEnv("HWALLET_STORE_CONSOLE_IOS_BUILD_UPLOADED", testflight.buildUploaded),
-      processingComplete: boolEnv("HWALLET_STORE_CONSOLE_IOS_PROCESSING_COMPLETE", testflight.processingComplete),
-      internalTestingReady: boolEnv("HWALLET_STORE_CONSOLE_IOS_INTERNAL_READY", testflight.internalTestingReady),
-      installedAndRetested: boolEnv("HWALLET_STORE_CONSOLE_IOS_RETESTED", testflight.installedAndRetested)
+      buildUploaded: boolEnv("HWALLET_STORE_CONSOLE_IOS_BUILD_UPLOADED", safeExisting(testflight.buildUploaded)),
+      processingComplete: boolEnv("HWALLET_STORE_CONSOLE_IOS_PROCESSING_COMPLETE", safeExisting(testflight.processingComplete)),
+      internalTestingReady: boolEnv("HWALLET_STORE_CONSOLE_IOS_INTERNAL_READY", safeExisting(testflight.internalTestingReady)),
+      installedAndRetested: boolEnv("HWALLET_STORE_CONSOLE_IOS_RETESTED", safeExisting(testflight.installedAndRetested))
     },
     metadata: {
-      privacyPolicyUrlSet: boolEnv("HWALLET_STORE_CONSOLE_IOS_PRIVACY_URL_SET", metadata.privacyPolicyUrlSet),
-      supportUrlSet: boolEnv("HWALLET_STORE_CONSOLE_IOS_SUPPORT_URL_SET", metadata.supportUrlSet),
-      reviewNotesObserveOnly: boolEnv("HWALLET_STORE_CONSOLE_IOS_REVIEW_NOTES_SET", metadata.reviewNotesObserveOnly),
-      screenshotsOwnerApproved: boolEnv("HWALLET_STORE_CONSOLE_IOS_SCREENSHOTS_APPROVED", metadata.screenshotsOwnerApproved)
+      privacyPolicyUrlSet: boolEnv("HWALLET_STORE_CONSOLE_IOS_PRIVACY_URL_SET", safeExisting(metadata.privacyPolicyUrlSet)),
+      supportUrlSet: boolEnv("HWALLET_STORE_CONSOLE_IOS_SUPPORT_URL_SET", safeExisting(metadata.supportUrlSet)),
+      reviewNotesObserveOnly: boolEnv("HWALLET_STORE_CONSOLE_IOS_REVIEW_NOTES_SET", safeExisting(metadata.reviewNotesObserveOnly)),
+      screenshotsOwnerApproved: boolEnv("HWALLET_STORE_CONSOLE_IOS_SCREENSHOTS_APPROVED", safeExisting(metadata.screenshotsOwnerApproved))
     }
   };
 }
@@ -101,27 +118,32 @@ function applyIosUpdate(ios) {
 function applyAndroidUpdate(android) {
   const metadata = android.metadata || {};
   const internalTesting = android.internalTesting || {};
+  const androidBuildEvidence = storeBuildEvidence?.builds?.android || {};
+  const buildEnvironment = storeBuildEvidence?.environment || {};
   return {
     ...android,
-    status: process.env.HWALLET_STORE_CONSOLE_ANDROID_STATUS || android.status || "pending",
-    buildId: process.env.HWALLET_STORE_CONSOLE_ANDROID_BUILD_ID || android.buildId || "fill-android-eas-build-id",
-    versionCode: mobileApp.android?.versionCode || android.versionCode || 9,
+    status: process.env.HWALLET_STORE_CONSOLE_ANDROID_STATUS || safeExisting(android.status) || "pending",
+    buildId: process.env.HWALLET_STORE_CONSOLE_ANDROID_BUILD_ID ||
+      realBuildId(androidBuildEvidence.buildId) ||
+      safeExisting(android.buildId) ||
+      "fill-android-eas-build-id",
+    versionCode: mobileApp.android?.versionCode || buildEnvironment.androidVersionCode || safeExisting(android.versionCode) || 9,
     appRecordLabel:
       realValue(process.env.HWALLET_STORE_CONSOLE_ANDROID_APP_LABEL) ||
-      realValue(android.appRecordLabel) ||
+      realValue(safeExisting(android.appRecordLabel)) ||
       "hwallet-android-app-record-redacted",
     internalTesting: {
-      buildUploaded: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_BUILD_UPLOADED", internalTesting.buildUploaded),
-      processingComplete: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_PROCESSING_COMPLETE", internalTesting.processingComplete),
-      testerTrackReady: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_TRACK_READY", internalTesting.testerTrackReady),
-      installedAndRetested: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_RETESTED", internalTesting.installedAndRetested)
+      buildUploaded: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_BUILD_UPLOADED", safeExisting(internalTesting.buildUploaded)),
+      processingComplete: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_PROCESSING_COMPLETE", safeExisting(internalTesting.processingComplete)),
+      testerTrackReady: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_TRACK_READY", safeExisting(internalTesting.testerTrackReady)),
+      installedAndRetested: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_RETESTED", safeExisting(internalTesting.installedAndRetested))
     },
     metadata: {
-      privacyPolicyUrlSet: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_PRIVACY_URL_SET", metadata.privacyPolicyUrlSet),
-      supportUrlSet: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_SUPPORT_URL_SET", metadata.supportUrlSet),
-      dataSafetyCompleted: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_DATA_SAFETY_DONE", metadata.dataSafetyCompleted),
-      contentRatingCompleted: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_CONTENT_RATING_DONE", metadata.contentRatingCompleted),
-      screenshotsOwnerApproved: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_SCREENSHOTS_APPROVED", metadata.screenshotsOwnerApproved)
+      privacyPolicyUrlSet: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_PRIVACY_URL_SET", safeExisting(metadata.privacyPolicyUrlSet)),
+      supportUrlSet: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_SUPPORT_URL_SET", safeExisting(metadata.supportUrlSet)),
+      dataSafetyCompleted: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_DATA_SAFETY_DONE", safeExisting(metadata.dataSafetyCompleted)),
+      contentRatingCompleted: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_CONTENT_RATING_DONE", safeExisting(metadata.contentRatingCompleted)),
+      screenshotsOwnerApproved: boolEnv("HWALLET_STORE_CONSOLE_ANDROID_SCREENSHOTS_APPROVED", safeExisting(metadata.screenshotsOwnerApproved))
     }
   };
 }
@@ -130,15 +152,15 @@ function applyChecks(checks, confirmAll) {
   return {
     ...checks,
     strictReleaseHandoffPassed:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_STRICT_HANDOFF_PASSED", checks.strictReleaseHandoffPassed),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_STRICT_HANDOFF_PASSED", safeExisting(checks.strictReleaseHandoffPassed)),
     storeSubmissionSmokePassed:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_SUBMISSION_SMOKE_PASSED", checks.storeSubmissionSmokePassed),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_SUBMISSION_SMOKE_PASSED", safeExisting(checks.storeSubmissionSmokePassed)),
     dualDeviceEvidencePassed:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_DUAL_DEVICE_PASSED", checks.dualDeviceEvidencePassed),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_DUAL_DEVICE_PASSED", safeExisting(checks.dualDeviceEvidencePassed)),
     liveExecutionClosed:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_LIVE_EXECUTION_CLOSED", checks.liveExecutionClosed),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_LIVE_EXECUTION_CLOSED", safeExisting(checks.liveExecutionClosed)),
     noSecretsCommitted:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_SECRETS_COMMITTED", checks.noSecretsCommitted)
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_SECRETS_COMMITTED", safeExisting(checks.noSecretsCommitted))
   };
 }
 
@@ -146,13 +168,13 @@ function applyConfirmations(confirmations, confirmAll) {
   return {
     ...confirmations,
     noCredentialsInEvidence:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_CREDENTIALS", confirmations.noCredentialsInEvidence),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_CREDENTIALS", safeExisting(confirmations.noCredentialsInEvidence)),
     noVerificationCodesInEvidence:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_CODES", confirmations.noVerificationCodesInEvidence),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_NO_CODES", safeExisting(confirmations.noVerificationCodesInEvidence)),
     screenshotsRedactedOrExternal:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_SCREENSHOTS_REDACTED", confirmations.screenshotsRedactedOrExternal),
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_SCREENSHOTS_REDACTED", safeExisting(confirmations.screenshotsRedactedOrExternal)),
     readyForInternalReview:
-      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_READY_FOR_INTERNAL_REVIEW", confirmations.readyForInternalReview)
+      confirmAll || boolEnv("HWALLET_STORE_CONSOLE_READY_FOR_INTERNAL_REVIEW", safeExisting(confirmations.readyForInternalReview))
   };
 }
 
@@ -174,6 +196,10 @@ function boolEnv(name, fallback) {
   if (process.env[name] === "true") return true;
   if (process.env[name] === "false") return false;
   return fallback === true;
+}
+
+function safeExisting(value) {
+  return fromExample ? undefined : value;
 }
 
 function isStrictReady(evidence) {
@@ -198,6 +224,21 @@ async function exists(path) {
   }
 }
 
+async function readOptionalStoreBuildEvidence(path) {
+  if (!(await exists(path))) return null;
+  assertGitIgnored(path);
+  const raw = await readFile(path, "utf8");
+  assertNoRawSecrets(raw, path);
+  const evidence = JSON.parse(raw);
+  if (evidence.kind !== "hwallet-mobile-store-build-evidence") {
+    throw new Error(`${path} is not HWallet mobile store build evidence`);
+  }
+  if (evidence.version !== 1) {
+    throw new Error(`${path} has unsupported mobile store build evidence version`);
+  }
+  return evidence;
+}
+
 function assertGitIgnored(path) {
   const ignoreCheck = spawnSync("git", ["check-ignore", "-q", path], {
     cwd: process.cwd(),
@@ -218,6 +259,20 @@ function realValue(value) {
   if (!text) return "";
   if (/^(fill|todo|replace|unresolved|example)(?:[-_\s]|$)/i.test(text)) return "";
   return text;
+}
+
+function realBuildId(value) {
+  const text = realValue(value);
+  if (!text || looksUnresolved(text)) return "";
+  return text;
+}
+
+function looksUnresolved(value) {
+  return (
+    /(?:fill|todo|tbd|placeholder|replace)/i.test(String(value || "")) ||
+    /00000000-0000-4000-8000-000000000000/i.test(String(value || "")) ||
+    /11111111-1111-4111-8111-111111111111/i.test(String(value || ""))
+  );
 }
 
 function assertNoRawSecrets(text, file) {
