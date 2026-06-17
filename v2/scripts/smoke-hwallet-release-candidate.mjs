@@ -108,6 +108,14 @@ assert(evidence.checks?.addressesAreDistinct === true, "device evidence example 
 assert(evidence.checks?.copyFeedbackVisible === true, "device evidence example covers copy feedback");
 assert(evidence.checks?.signedOutHidesWalletAddress === true, "device evidence example covers signed-out clearing");
 assert(evidence.checks?.liveExecutionClosed === true, "device evidence example covers closed live execution");
+assert(
+  evidence.flow?.map((item) => item.step).join(">").includes("user-a-hwallet-ready>copy-feedback>switch-to-user-b"),
+  "device evidence example captures ordered A to B flow"
+);
+assert(
+  evidence.flow?.some((item) => item.step === "switch-back-user-a" && item.observed === true),
+  "device evidence example captures switch-back flow"
+);
 assert(evidence.confirmations?.observedOnPhysicalDevice === true, "device evidence example covers physical-device confirmation");
 assert(evidence.confirmations?.containsNoSecrets === true, "device evidence example covers no-secret confirmation");
 checks.push("device evidence example covers the installed-App multi-user release proof");
@@ -115,6 +123,7 @@ checks.push("device evidence example covers the installed-App multi-user release
 assertIncludes(deviceEvidenceInit, ".tmp/hwallet-device-evidence.json", "device evidence initializer writes to ignored .tmp path");
 assertIncludes(deviceEvidenceInit, "git\", [\"check-ignore\"", "device evidence initializer verifies git ignore coverage");
 assertIncludes(deviceEvidenceInit, "observedOnPhysicalDevice: false", "device evidence initializer requires manual physical-device confirmation");
+assertIncludes(deviceEvidenceInit, "observed: false", "device evidence initializer requires ordered flow observations");
 checks.push("device evidence initializer creates an ignored local file that cannot pass strict mode untouched");
 
 assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile TestFlight smoke includes device QA boundary");

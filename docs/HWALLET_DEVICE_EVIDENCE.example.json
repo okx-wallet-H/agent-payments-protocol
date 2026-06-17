@@ -38,6 +38,53 @@
     "transactionHashOptional": true,
     "liveExecutionClosed": true
   },
+  "flow": [
+    {
+      "step": "app-opened",
+      "label": "Installed App opened without crash",
+      "observed": true
+    },
+    {
+      "step": "user-a-login",
+      "label": "User A logged in",
+      "observed": true
+    },
+    {
+      "step": "user-a-hwallet-ready",
+      "label": "User A HWallet receive address visible",
+      "observed": true
+    },
+    {
+      "step": "copy-feedback",
+      "label": "Receive-address copy feedback visible",
+      "observed": true
+    },
+    {
+      "step": "switch-to-user-b",
+      "label": "Switch/logout path opened before User B login",
+      "observed": true
+    },
+    {
+      "step": "user-b-login",
+      "label": "User B logged in",
+      "observed": true
+    },
+    {
+      "step": "user-b-hwallet-ready",
+      "label": "User B HWallet receive address visible and distinct",
+      "observed": true
+    },
+    {
+      "step": "switch-back-user-a",
+      "label": "Switch back restored User A HWallet address",
+      "observed": true
+    },
+    {
+      "step": "signed-out-boundary",
+      "label": "Signed-out state hides wallet address",
+      "observed": true
+    }
+  ],
   "confirmations": {
     "observedOnPhysicalDevice": true,
     "twoDifferentUsersTested": true,
