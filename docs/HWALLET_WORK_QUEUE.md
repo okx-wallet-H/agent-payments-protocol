@@ -77,6 +77,8 @@ config, or mobile native config at the same time. Those tasks are serialized.
 Subtask agents can run in parallel for bounded research or review, but they do
 not count as implementation branches unless they create a `codex/*` branch.
 Only the controller stages, commits, opens PRs, marks PRs ready, or merges.
+Use `docs/HWALLET_SUBTASK_DISPATCH_MATRIX.md` before dispatching helper agents;
+it defines helper types, dispatch packets, return packets, and hard blocks.
 
 ## Task Packet
 

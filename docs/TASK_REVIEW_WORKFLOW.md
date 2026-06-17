@@ -55,6 +55,10 @@ Task states:
 The controller may use subtask agents to speed up research and review, but the
 controller remains accountable for the final change.
 
+Use `docs/HWALLET_SUBTASK_DISPATCH_MATRIX.md` before assigning helper work. It
+defines the allowed helper types, dispatch packet, return packet, and hard
+blocks for 7x24 development.
+
 - Subtask agents may inspect files, run read-only checks, summarize risks, or
   propose a narrow patch plan.
 - Only the controller stages files, creates commits, opens PRs, marks PRs
@@ -91,6 +95,7 @@ controller remains accountable for the final change.
    - Run task-specific validation.
    - For normal app work, run at least:
      ```bash
+     npm run smoke:subtask-dispatch
      npm run smoke:task-review-workflow
      npm run smoke:release-task-ledger
      npm run typecheck

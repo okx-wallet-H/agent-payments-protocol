@@ -57,6 +57,9 @@ jobs:
       - name: Task workflow smoke
         run: npm run smoke:task-review-workflow
 
+      - name: Subtask dispatch smoke
+        run: npm run smoke:subtask-dispatch
+
       - name: HWallet release candidate smoke
         run: npm run smoke:hwallet-release-candidate
 

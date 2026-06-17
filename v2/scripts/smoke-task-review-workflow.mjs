@@ -5,6 +5,7 @@ const checks = [];
 const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 const workflowDoc = await readFile("docs/TASK_REVIEW_WORKFLOW.md", "utf8");
 const workQueueDoc = await readFile("docs/HWALLET_WORK_QUEUE.md", "utf8");
+const subtaskDispatchMatrix = await readFile("docs/HWALLET_SUBTASK_DISPATCH_MATRIX.md", "utf8");
 const releaseTaskLedger = await readFile("docs/HWALLET_RELEASE_TASK_LEDGER.md", "utf8");
 const issueTemplate = await readFile(".github/ISSUE_TEMPLATE/hwallet_task.yml", "utf8");
 const issueConfig = await readFile(".github/ISSUE_TEMPLATE/config.yml", "utf8");
@@ -22,6 +23,11 @@ assert(typeof scripts["smoke:release-task-ledger"] === "string", "package expose
 assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-task-ledger"),
   "verify:merge includes release task ledger smoke"
+);
+assert(typeof scripts["smoke:subtask-dispatch"] === "string", "package exposes subtask dispatch smoke");
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:subtask-dispatch"),
+  "verify:merge includes subtask dispatch smoke"
 );
 
 for (const lane of [
@@ -51,9 +57,11 @@ for (const state of [
 assertIncludes(workflowDoc, "three implementation branches", "workflow caps active implementation branches");
 assertIncludes(workflowDoc, "owner evidence", "workflow records owner evidence boundary");
 assertIncludes(workflowDoc, "Subtask Dispatch", "workflow defines subtask dispatch");
+assertIncludes(workflowDoc, "HWALLET_SUBTASK_DISPATCH_MATRIX.md", "workflow links subtask dispatch matrix");
 assertIncludes(workflowDoc, "Subtask agents may inspect", "workflow lets subtasks inspect bounded context");
 assertIncludes(workflowDoc, "Only the controller stages files", "workflow keeps writes and merges under controller");
 assertIncludes(workflowDoc, "real trading, swapping, signing, and money movement disabled", "workflow keeps live money movement closed");
+assertIncludes(workflowDoc, "npm run smoke:subtask-dispatch", "workflow self-review runs subtask dispatch smoke");
 assertIncludes(workflowDoc, "npm run smoke:task-review-workflow", "workflow self-review runs workflow smoke");
 assertIncludes(workflowDoc, "HWallet Merge Gate", "workflow requires merge gate");
 
@@ -64,6 +72,7 @@ assertIncludes(workQueueDoc, "Parallelism Rule", "work queue documents paralleli
 assertIncludes(workQueueDoc, "Task Packet", "work queue documents task packet");
 assertIncludes(workQueueDoc, "Claimed", "work queue records claimed task state");
 assertIncludes(workQueueDoc, "Only the controller stages", "work queue keeps controller write authority");
+assertIncludes(workQueueDoc, "HWALLET_SUBTASK_DISPATCH_MATRIX.md", "work queue links subtask dispatch matrix");
 assertIncludes(workQueueDoc, "npm run smoke:release-next-action", "work queue exposes release next-action status");
 assertIncludes(workQueueDoc, "Evidence Rules", "work queue documents evidence rules");
 assertIncludes(workQueueDoc, "Stop Conditions", "work queue documents owner stop conditions");
@@ -114,6 +123,7 @@ assertIncludes(reviewGate, "git diff --check", "GitHub gate checks whitespace");
 assertIncludes(reviewGate, "npm run typecheck", "GitHub gate typechecks root");
 assertIncludes(reviewGate, "npm run mobile:typecheck", "GitHub gate typechecks mobile");
 assertIncludes(reviewGate, "npm run smoke:task-review-workflow", "GitHub gate runs task workflow smoke");
+assertIncludes(reviewGate, "npm run smoke:subtask-dispatch", "GitHub gate runs subtask dispatch smoke");
 assertIncludes(reviewGate, "npm run smoke:hwallet-release-candidate", "GitHub gate runs release candidate smoke");
 assertIncludes(reviewGate, "npm run dev", "GitHub gate starts local Next server");
 assertIncludes(reviewGate, "npm run verify:merge", "GitHub gate runs full merge verification");
@@ -121,6 +131,7 @@ assertIncludes(reviewGate, "npm run verify:merge", "GitHub gate runs full merge 
 assertNoRawSecrets({
   "docs/TASK_REVIEW_WORKFLOW.md": workflowDoc,
   "docs/HWALLET_WORK_QUEUE.md": workQueueDoc,
+  "docs/HWALLET_SUBTASK_DISPATCH_MATRIX.md": subtaskDispatchMatrix,
   "docs/HWALLET_RELEASE_TASK_LEDGER.md": releaseTaskLedger,
   ".github/ISSUE_TEMPLATE/hwallet_task.yml": issueTemplate,
   ".github/pull_request_template.md": prTemplate,
