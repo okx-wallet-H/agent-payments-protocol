@@ -1720,7 +1720,7 @@ function HWalletTab({
         </Pressable>
         {addressCopied ? (
           <Text accessibilityLiveRegion="polite" style={styles.receiveCopyFeedback}>
-            收款地址已复制，可以去交易所或钱包转入。
+            收款地址已复制。转入后点刷新到账，Agent 会识别可用资金。
           </Text>
         ) : null}
       </View>
@@ -1993,9 +1993,9 @@ function HWalletTab({
         </View>
       </View>
 
-      <Pressable accessibilityRole="button" accessibilityLabel="刷新 HWallet 状态" style={styles.hWalletRefreshButton} onPress={onRefresh}>
+      <Pressable accessibilityRole="button" accessibilityLabel="刷新 HWallet 到账状态" style={styles.hWalletRefreshButton} onPress={onRefresh}>
         <Ionicons name="refresh-outline" size={17} color={colors.ink} />
-        <Text style={styles.hWalletRefreshText}>刷新钱包状态</Text>
+        <Text style={styles.hWalletRefreshText}>刷新到账状态</Text>
       </Pressable>
     </ScrollView>
   );
@@ -2029,16 +2029,16 @@ function HWalletActionStrip({
         onPress={onCopy}
       />
       <HWalletActionButton
-        disabled={busy || !canVerify}
-        icon="receipt-outline"
-        label="核对"
-        onPress={onOpenTxCheck}
-      />
-      <HWalletActionButton
         disabled={busy}
         icon="refresh-outline"
-        label="刷新"
+        label="刷新到账"
         onPress={onRefresh}
+      />
+      <HWalletActionButton
+        disabled={busy || !canVerify}
+        icon="receipt-outline"
+        label="哈希"
+        onPress={onOpenTxCheck}
       />
       <HWalletActionButton
         disabled={busy}
@@ -2095,11 +2095,11 @@ function WalletSyncSummaryCard({
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="刷新 HWallet 资产同步状态"
+        accessibilityLabel="刷新 HWallet 到账状态"
         style={styles.walletSyncSummaryButton}
         onPress={onRefresh}
       >
-        <Text style={styles.walletSyncSummaryButtonText}>刷新</Text>
+        <Text style={styles.walletSyncSummaryButtonText}>刷新到账</Text>
       </Pressable>
     </View>
   );
