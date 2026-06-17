@@ -153,7 +153,7 @@ audit task.
 
 ### R-006 Read-only OKX capability adapter
 
-- **Status**: Ready.
+- **Status**: Merged.
 - **Owner evidence**: Required only if MCP/provider credentials are missing.
 - **Goal**: integrate OKX/Onchain capability discovery as read-only or
   simulated data first, so HWallet can route Agent requests without live
@@ -168,8 +168,10 @@ audit task.
   npm run smoke:agent-mcp-tool-adapter
   npm run smoke:agent-policy
   ```
-- **Done evidence**: adapter can return data/simulation records and policy
-  blocks live execution by default.
+- **Done evidence**: PR #96 merged after `npm run verify:merge`; disabled
+  OKX/Onchain and plugin adapter routes now return standardized safe preview
+  payloads while external calls, live execution, and money movement remain
+  disabled.
 - **Rollback**: disable the capability route and leave Agent text-only.
 
 ## Lane 5 - Mobile Release
@@ -238,9 +240,8 @@ audit task.
 
 When no new owner instruction is present, pick in this order:
 
-1. R-006 Read-only OKX capability adapter.
-2. R-003 Supabase postgres cutover candidate.
-3. R-001 Installed App two-user wallet regression.
+1. R-003 Supabase postgres cutover candidate.
+2. R-001 Installed App two-user wallet regression.
 
 R-007, R-008, and R-009 are intentionally owner-gated. Ask the owner only when
 the branch reaches the point where real Apple/Google/device/store evidence is
