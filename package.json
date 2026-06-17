@@ -34,6 +34,7 @@
     "smoke:mobile-release-preflight": "node v2/scripts/smoke-mobile-release-preflight.mjs",
     "smoke:mobile-release-handoff": "node v2/scripts/smoke-mobile-release-handoff.mjs",
     "mobile:store-build-evidence:init": "node v2/scripts/init-mobile-store-build-evidence.mjs",
+    "mobile:store-build-evidence:record": "node v2/scripts/record-mobile-store-build-evidence.mjs",
     "smoke:mobile-testflight-readiness": "npm run smoke:mobile-store-readiness",
     "smoke:task-review-workflow": "node v2/scripts/smoke-task-review-workflow.mjs",
     "smoke:release-task-ledger": "node v2/scripts/smoke-release-task-ledger.mjs",

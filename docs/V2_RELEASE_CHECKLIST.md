@@ -76,6 +76,7 @@ npm run mobile:typecheck
 npm run mobile:build:ios
 npm run mobile:build:android
 npm run mobile:store-build-evidence:init
+HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_CONFIRM_ALL=true HWALLET_MOBILE_STORE_BUILD_IOS_ID=<ios-eas-build-id> HWALLET_MOBILE_STORE_BUILD_ANDROID_ID=<android-eas-build-id> npm run mobile:store-build-evidence:record
 HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 HWALLET_RELEASE_HANDOFF_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-handoff
@@ -87,8 +88,10 @@ App still shows preview-only screens, if HWallet copy feedback is missing, if
 User A and User B can see each other's wallet state, or if live execution
 switches are open. After the iOS and Android builds finish, fill the ignored
 `.tmp/hwallet-mobile-store-build-evidence.json` file with only the EAS build
-ids, build URLs, platform labels, and redacted artifact labels. Do not commit
-that evidence file. For safe JS/UI fixes after a checked preview build, publish
+ids, build URLs, platform labels, and redacted artifact labels. Prefer the
+`mobile:store-build-evidence:record` command above instead of editing the JSON
+by hand, and do not commit that evidence file. For safe JS/UI fixes after a
+checked preview build, publish
 through:
 
 ```sh
