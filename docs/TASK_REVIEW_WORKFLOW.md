@@ -6,6 +6,7 @@ This repo uses a small-task workflow so HWallet can move quickly without mixing 
 
 - **Task owner**: claims one small task, opens a `codex/*` branch, implements it, runs validation, and opens a PR.
 - **Controller**: keeps the release objective intact, assigns small tasks, checks branch scope, and decides whether to merge, return, split, or pause.
+- **Subtask agent**: may inspect code, docs, logs, test output, or external docs for one bounded question and report findings back to the controller.
 - **Reviewer**: checks product scope, safety, validation evidence, and code quality.
 - **Maintainer**: merges only after the review gate is green and the reviewer accepts the change.
 
@@ -40,12 +41,31 @@ other branches are docs-only.
 Task states:
 
 - **Ready**: scoped, has acceptance checks, no external blocker.
+- **Claimed**: selected by the controller for exactly one owner and one
+  `codex/*` branch, before implementation begins.
 - **In progress**: assigned to one owner on one `codex/*` branch.
 - **Review**: PR is open with validation evidence.
 - **Returned for fixes**: CI, reviewer, or product check failed.
 - **Blocked waiting for owner**: needs a real device, account login, domain,
   Apple/Google/Supabase/Privy/OKX action, or other external state.
 - **Merged**: green gate, accepted review, rollback path clear.
+
+## Subtask Dispatch
+
+The controller may use subtask agents to speed up research and review, but the
+controller remains accountable for the final change.
+
+- Subtask agents may inspect files, run read-only checks, summarize risks, or
+  propose a narrow patch plan.
+- Only the controller stages files, creates commits, opens PRs, marks PRs
+  ready, merges, or updates the release ledger.
+- A subtask must name its lane, question, allowed files, validation target, and
+  stop condition before it starts.
+- Subtasks must not receive or print secrets, access tokens, private keys, raw
+  database URLs, verification codes, or unredacted user data.
+- If a subtask finds a failing check, product mismatch, or owner evidence
+  blocker, the controller marks the task **Returned for fixes** or **Blocked
+  waiting for owner** instead of merging around it.
 
 ## Flow
 
@@ -54,6 +74,8 @@ Task states:
    - Choose one lane: wallet flow, Supabase data, Agent orchestration, OKX skill integration, mobile release, or docs/workflow.
    - Define acceptance checks before code changes begin.
    - Mark whether the task is fully automatable or needs owner evidence.
+   - Record the task as **Claimed** with exactly one task id, branch name, and
+     owner before implementation begins.
 
 2. **Branch**
    - Create a branch named `codex/<short-task-name>`.

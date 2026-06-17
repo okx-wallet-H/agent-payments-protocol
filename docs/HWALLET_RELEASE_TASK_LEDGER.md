@@ -12,10 +12,11 @@ At the start of every development cycle:
 1. Read the newest user instruction.
 2. Check `git status --short --branch`.
 3. Pick the first **Ready** task from the highest-priority lane below.
-4. Open one `codex/*` branch for that task.
-5. Run the task validation and the matching release gate.
-6. Open a PR and merge only after `HWallet Merge Gate` passes.
-7. If the first task needs owner evidence, leave a short request and continue
+4. Mark it **Claimed** with one owner and one planned `codex/*` branch.
+5. Open one `codex/*` branch for that task.
+6. Run the task validation and the matching release gate.
+7. Open a PR and merge only after `HWallet Merge Gate` passes.
+8. If the first task needs owner evidence, leave a short request and continue
    with the next Ready task that is fully automatable.
 
 Do not start live trading, signing, swapping, or autonomous money movement from
@@ -25,8 +26,11 @@ audit task.
 ## Status Definitions
 
 - **Ready**: scoped and can start now.
+- **Claimed**: selected by the controller for one owner and one planned branch.
 - **In progress**: one branch is actively working on it.
 - **Review**: PR is open with validation evidence.
+- **Returned for fixes**: CI, product review, safety review, or validation
+  evidence failed and the same branch must be repaired.
 - **Blocked waiting for owner**: needs a real device, dashboard, credential,
   Apple/Google/Supabase/Privy/OKX action, DNS, payment, or other external
   evidence.

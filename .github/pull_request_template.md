@@ -4,6 +4,15 @@
 
 - Task:
 
+## Task State
+
+- [ ] Claimed
+- [ ] In progress
+- [ ] Review
+- [ ] Returned for fixes
+- [ ] Blocked waiting for owner evidence
+- [ ] Approved to merge
+
 ## What Changed
 
 -

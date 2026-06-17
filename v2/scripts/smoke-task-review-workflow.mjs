@@ -38,6 +38,7 @@ for (const lane of [
 
 for (const state of [
   "Ready",
+  "Claimed",
   "In progress",
   "Review",
   "Returned for fixes",
@@ -49,6 +50,9 @@ for (const state of [
 
 assertIncludes(workflowDoc, "three implementation branches", "workflow caps active implementation branches");
 assertIncludes(workflowDoc, "owner evidence", "workflow records owner evidence boundary");
+assertIncludes(workflowDoc, "Subtask Dispatch", "workflow defines subtask dispatch");
+assertIncludes(workflowDoc, "Subtask agents may inspect", "workflow lets subtasks inspect bounded context");
+assertIncludes(workflowDoc, "Only the controller stages files", "workflow keeps writes and merges under controller");
 assertIncludes(workflowDoc, "real trading, swapping, signing, and money movement disabled", "workflow keeps live money movement closed");
 assertIncludes(workflowDoc, "npm run smoke:task-review-workflow", "workflow self-review runs workflow smoke");
 assertIncludes(workflowDoc, "HWallet Merge Gate", "workflow requires merge gate");
@@ -58,6 +62,8 @@ assertIncludes(workQueueDoc, "Controller Loop", "work queue documents controller
 assertIncludes(workQueueDoc, "Priority Order", "work queue documents priority order");
 assertIncludes(workQueueDoc, "Parallelism Rule", "work queue documents parallelism rule");
 assertIncludes(workQueueDoc, "Task Packet", "work queue documents task packet");
+assertIncludes(workQueueDoc, "Claimed", "work queue records claimed task state");
+assertIncludes(workQueueDoc, "Only the controller stages", "work queue keeps controller write authority");
 assertIncludes(workQueueDoc, "Evidence Rules", "work queue documents evidence rules");
 assertIncludes(workQueueDoc, "Stop Conditions", "work queue documents owner stop conditions");
 assertIncludes(workQueueDoc, "Live execution closed", "work queue keeps live execution closed");
@@ -66,6 +72,8 @@ assertIncludes(workQueueDoc, "HWallet Release Task Ledger", "work queue points t
 
 assertIncludes(releaseTaskLedger, "HWallet Release Task Ledger", "release task ledger exists");
 assertIncludes(releaseTaskLedger, "Controller Selection Rule", "release task ledger defines controller selection");
+assertIncludes(releaseTaskLedger, "Claimed", "release task ledger supports claimed state");
+assertIncludes(releaseTaskLedger, "Returned for fixes", "release task ledger supports returned state");
 assertIncludes(releaseTaskLedger, "Current Next Best Tasks", "release task ledger defines next task order");
 assertIncludes(releaseTaskLedger, "R-002 Deposit recognition without mandatory hash paste", "release task ledger includes deposit recognition task");
 assertIncludes(releaseTaskLedger, "R-007 iOS TestFlight candidate build", "release task ledger includes iOS owner-gated task");
@@ -74,6 +82,7 @@ assertIncludes(releaseTaskLedger, "R-007, R-008, and R-009 are intentionally own
 assertIncludes(releaseTaskLedger, "npm run smoke:release-task-ledger", "release task ledger is self-verifiable");
 
 for (const field of [
+  "Task state",
   "Work lane",
   "Goal",
   "In scope",
@@ -90,6 +99,8 @@ assertIncludes(issueTemplate, "No - fully automatable", "issue template can mark
 assertIncludes(issueTemplate, "Yes - owner/device/dashboard evidence required", "issue template can mark owner evidence tasks");
 assertIncludes(issueConfig, "HWallet task workflow", "issue config points to workflow doc");
 assertIncludes(prTemplate, "Linked Task", "PR template links task");
+assertIncludes(prTemplate, "Task State", "PR template records task state");
+assertIncludes(prTemplate, "Returned for fixes", "PR template can return fixes");
 assertIncludes(prTemplate, "What Stayed Out Of Scope", "PR template preserves scope");
 assertIncludes(prTemplate, "Validation", "PR template requires validation");
 assertIncludes(prTemplate, "Owner Evidence", "PR template records owner evidence status");
