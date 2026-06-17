@@ -67,6 +67,11 @@ npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
 npm run smoke:hwallet-staging-handoff
 npm run mobile:store-build-evidence:init
+HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json \
+HWALLET_MOBILE_STORE_BUILD_EVIDENCE_CONFIRM_ALL=true \
+HWALLET_MOBILE_STORE_BUILD_IOS_ID=<ios-eas-build-id> \
+HWALLET_MOBILE_STORE_BUILD_ANDROID_ID=<android-eas-build-id> \
+npm run mobile:store-build-evidence:record
 npm run smoke:mobile-store-build-evidence
 npm --prefix apps/mobile run typecheck
 EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip MOBILE_STAGING_READINESS=true npm run smoke:mobile-build-env

@@ -14,6 +14,7 @@ const privacyPage = await readFile("app/privacy/page.tsx", "utf8");
 const supportPage = await readFile("app/support/page.tsx", "utf8");
 const storeBuildEvidenceExample = await readFile("docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json", "utf8");
 const storeBuildEvidenceSmoke = await readFile("v2/scripts/smoke-mobile-store-build-evidence.mjs", "utf8");
+const storeBuildEvidenceRecorder = await readFile("v2/scripts/record-mobile-store-build-evidence.mjs", "utf8");
 
 const rootScripts = rootPackage.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -42,6 +43,7 @@ const requiredRootScripts = [
   "mobile:build:ios",
   "mobile:build:android",
   "mobile:store-build-evidence:init",
+  "mobile:store-build-evidence:record",
   "verify:merge"
 ];
 
@@ -155,6 +157,7 @@ assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release
 assertIncludes(releaseChecklist, "npm run smoke:mobile-distribution-readiness", "release checklist includes mobile distribution readiness smoke");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist includes mobile store submission smoke");
 assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:init", "release checklist initializes mobile store build evidence");
+assertIncludes(releaseChecklist, "npm run mobile:store-build-evidence:record", "release checklist records mobile store build evidence");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-build-evidence", "release checklist includes mobile store build evidence smoke");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-device-evidence", "release checklist includes device evidence smoke");
 assertIncludes(releaseChecklist, "npm run mobile:build:ios", "release checklist includes iOS build command");
@@ -186,6 +189,12 @@ assert(storeBuildEvidence.confirmations?.bothPlatformsRecorded === true, "store 
 assertIncludes(storeBuildEvidenceSmoke, "iosInstallableOrSubmitted", "store build evidence smoke checks iOS install or submit status");
 assertIncludes(storeBuildEvidenceSmoke, "androidInstallableOrSubmitted", "store build evidence smoke checks Android install or submit status");
 assertIncludes(storeBuildEvidenceSmoke, "containsNoSecrets", "store build evidence smoke requires no-secret confirmation");
+assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_PLATFORM", "store build evidence recorder supports single-platform updates");
+assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_IOS_ID", "store build evidence recorder supports iOS build id");
+assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_ANDROID_ID", "store build evidence recorder supports Android build id");
+assertIncludes(storeBuildEvidenceRecorder, "HWALLET_MOBILE_STORE_BUILD_EVIDENCE_CONFIRM_ALL", "store build evidence recorder requires explicit final confirmation");
+assertIncludes(storeBuildEvidenceRecorder, "assertGitIgnored", "store build evidence recorder keeps real evidence ignored");
+assertIncludes(storeBuildEvidenceRecorder, "assertNoRawSecrets", "store build evidence recorder rejects raw secrets");
 checks.push("mobile store build evidence covers iOS and Android build artifacts");
 
 assertIncludes(deviceQa, "User A", "device QA includes User A");
@@ -214,7 +223,8 @@ assertNoRawSecrets({
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "docs/HWALLET_MOBILE_STORE_BUILD_EVIDENCE.example.json": storeBuildEvidenceExample,
-  "v2/scripts/smoke-mobile-store-build-evidence.mjs": storeBuildEvidenceSmoke
+  "v2/scripts/smoke-mobile-store-build-evidence.mjs": storeBuildEvidenceSmoke,
+  "v2/scripts/record-mobile-store-build-evidence.mjs": storeBuildEvidenceRecorder
 });
 checks.push("release docs and EAS profile avoid raw secret material");
 
