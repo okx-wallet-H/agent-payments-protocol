@@ -68,13 +68,18 @@ npm run smoke:mobile-hwallet-ux
 npm run mobile:typecheck
 npm run mobile:build:ios
 npm run mobile:build:android
+npm run mobile:store-build-evidence:init
+HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_MOBILE_STORE_BUILD_EVIDENCE_REQUIRED=true npm run smoke:mobile-store-build-evidence
 ```
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
 preview/production profiles point to localhost or a LAN URL, if the installed
 App still shows preview-only screens, if HWallet copy feedback is missing, if
 User A and User B can see each other's wallet state, or if live execution
-switches are open. For safe JS/UI fixes after a checked preview build, publish
+switches are open. After the iOS and Android builds finish, fill the ignored
+`.tmp/hwallet-mobile-store-build-evidence.json` file with only the EAS build
+ids, build URLs, platform labels, and redacted artifact labels. Do not commit
+that evidence file. For safe JS/UI fixes after a checked preview build, publish
 through:
 
 ```sh

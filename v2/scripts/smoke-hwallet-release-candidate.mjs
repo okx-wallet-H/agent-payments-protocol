@@ -32,8 +32,10 @@ const requiredScripts = [
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
   "smoke:mobile-store-readiness",
+  "smoke:mobile-store-build-evidence",
   "smoke:hwallet-device-evidence",
   "hwallet:device-evidence:init",
+  "mobile:store-build-evidence:init",
   "smoke:hwallet-staging-handoff",
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-hwallet-ux",
@@ -141,6 +143,7 @@ assertIncludes(
 checks.push("staging handoff cannot treat a supplied device evidence file as an example template");
 
 assertIncludes(mobileTestflightSmoke, "root scripts expose and run the iOS and Android mobile store readiness gate", "mobile store smoke exposes iOS/Android gate");
+assertIncludes(mobileTestflightSmoke, "mobile store build evidence covers iOS and Android build artifacts", "mobile store smoke covers iOS/Android build evidence");
 assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile store smoke includes device QA boundary");
 assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile store smoke checks public HTTPS API URLs");
 assertIncludes(supabaseReadbackSmoke, "release drill mentions other-user isolation", "Supabase readback smoke enforces other-user isolation docs");
