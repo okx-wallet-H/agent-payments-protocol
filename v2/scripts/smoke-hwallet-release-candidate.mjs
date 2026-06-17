@@ -31,6 +31,7 @@ const requiredScripts = [
   "smoke:staging-auth-surface",
   "smoke:mobile-staging-env",
   "smoke:mobile-device-hwallet:live",
+  "smoke:mobile-store-readiness",
   "smoke:hwallet-device-evidence",
   "hwallet:device-evidence:init",
   "smoke:hwallet-staging-handoff",
@@ -49,7 +50,7 @@ assert(
 );
 checks.push("package exposes the HWallet release candidate gate");
 
-for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:ios"]) {
+for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
   assert(typeof mobileScripts[scriptName] === "string", `mobile package script ${scriptName} exists`);
 }
 checks.push("mobile workspace keeps build and OTA commands available");
@@ -139,8 +140,9 @@ assertIncludes(
 );
 checks.push("staging handoff cannot treat a supplied device evidence file as an example template");
 
-assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile TestFlight smoke includes device QA boundary");
-assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile TestFlight smoke checks public HTTPS API URLs");
+assertIncludes(mobileTestflightSmoke, "root scripts expose and run the iOS and Android mobile store readiness gate", "mobile store smoke exposes iOS/Android gate");
+assertIncludes(mobileTestflightSmoke, "device QA covers multi-user, signed-out, copy, HWallet live-smoke, and evidence gates", "mobile store smoke includes device QA boundary");
+assertIncludes(mobileTestflightSmoke, "API URL is public HTTPS", "mobile store smoke checks public HTTPS API URLs");
 assertIncludes(supabaseReadbackSmoke, "release drill mentions other-user isolation", "Supabase readback smoke enforces other-user isolation docs");
 checks.push("existing release smokes are chained into the HWallet candidate gate");
 

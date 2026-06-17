@@ -60,7 +60,7 @@ OTA as the fix path; create a new build.
 Run these before publishing an update:
 
 ```bash
-npm run smoke:mobile-testflight-readiness
+npm run smoke:mobile-store-readiness
 npm run smoke:hwallet-release-candidate
 npm run hwallet:device-evidence:init
 npm run smoke:hwallet-device-evidence
