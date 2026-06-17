@@ -28,7 +28,10 @@ const initialized = {
     iosBuildNumber: mobileApp.ios?.buildNumber || "fill-ios-build-number",
     androidVersionCode: mobileApp.android?.versionCode || "fill-android-version-code",
     apiBaseUrl: "https://app.hwallet.vip",
-    buildChannel: "preview"
+    buildChannel: "preview",
+    publicAppName: mobileApp.name || "海豚社区",
+    internalWalletModule: "HWallet",
+    iconSource: "owner-approved-haitun-logo"
   },
   tester: {
     label: "fill-release-operator-label",

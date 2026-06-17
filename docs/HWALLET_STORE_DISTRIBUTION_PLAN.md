@@ -46,6 +46,12 @@ HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_A
 HWALLET_RELEASE_PREFLIGHT_STRICT=true HWALLET_MOBILE_STORE_BUILD_EVIDENCE_FILE=.tmp/hwallet-mobile-store-build-evidence.json HWALLET_IOS_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-ios.json HWALLET_ANDROID_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence-android.json npm run smoke:mobile-release-preflight
 ```
 
+- Store-build evidence must describe the current public branding before any
+  external testing or submission step: public app name `海豚社区`, internal wallet
+  module `HWallet`, and icon source `owner-approved-haitun-logo`. Regenerate the
+  ignored `.tmp/hwallet-mobile-store-build-evidence.json` after any native build
+  or public branding change; do not reuse older Agent Wallet build evidence.
+
 - Run the strict mobile release handoff gate to verify the handoff document and
   local evidence still describe the same release candidate:
 

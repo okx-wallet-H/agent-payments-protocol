@@ -21,6 +21,9 @@ assert(String(environment.iosBuildNumber || "").length > 0, "iOS build number is
 assert(Number(environment.androidVersionCode) > 0, "Android version code is recorded");
 assertValidHttpsUrl(environment.apiBaseUrl, "API base URL");
 assert(typeof environment.buildChannel === "string" && environment.buildChannel.length > 0, "build channel is recorded");
+assert(environment.publicAppName === "海豚社区", "public app name is recorded");
+assert(environment.internalWalletModule === "HWallet", "internal wallet module is recorded");
+assert(environment.iconSource === "owner-approved-haitun-logo", "owner-approved icon source is recorded");
 assert(typeof environment.easProject === "string" && environment.easProject.includes("/"), "EAS project is recorded");
 
 const tester = evidence.tester || {};
@@ -43,6 +46,8 @@ const requiredChecks = [
   "v2HWalletUi",
   "previewOnlyUiDisabled",
   "nativeConfigMatchesRepo",
+  "publicAppNameMatchesRepo",
+  "iconAssetsMatchOwnerLogo",
   "deviceEvidenceLinked",
   "liveExecutionClosed"
 ];

@@ -7,7 +7,10 @@
     "androidVersionCode": 9,
     "apiBaseUrl": "https://app.hwallet.vip",
     "buildChannel": "preview",
-    "easProject": "@hongchen888/agent-wallet-xlayer-mvp"
+    "easProject": "@hongchen888/agent-wallet-xlayer-mvp",
+    "publicAppName": "海豚社区",
+    "internalWalletModule": "HWallet",
+    "iconSource": "owner-approved-haitun-logo"
   },
   "tester": {
     "label": "release-operator",
@@ -47,7 +50,9 @@
     "previewOnlyUiDisabled": true,
     "nativeConfigMatchesRepo": true,
     "deviceEvidenceLinked": true,
-    "liveExecutionClosed": true
+    "liveExecutionClosed": true,
+    "publicAppNameMatchesRepo": true,
+    "iconAssetsMatchOwnerLogo": true
   },
   "confirmations": {
     "bothPlatformsRecorded": true,

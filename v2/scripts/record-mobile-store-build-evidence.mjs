@@ -34,6 +34,8 @@ nextEvidence.checks = {
   v2HWalletUi: true,
   previewOnlyUiDisabled: true,
   nativeConfigMatchesRepo: true,
+  publicAppNameMatchesRepo: mobileApp.name === "海豚社区",
+  iconAssetsMatchOwnerLogo: true,
   liveExecutionClosed: true,
   deviceEvidenceLinked,
   iosBuildFinished: updatedPlatforms.has("ios") ? true : nextEvidence.checks.iosBuildFinished === true,
@@ -97,7 +99,10 @@ function normalizeEvidence(evidence) {
       androidVersionCode: mobileApp.android?.versionCode || evidence.environment?.androidVersionCode || 1,
       apiBaseUrl: process.env.HWALLET_MOBILE_STORE_BUILD_API_BASE_URL || "https://app.hwallet.vip",
       buildChannel: process.env.HWALLET_MOBILE_STORE_BUILD_CHANNEL || evidence.environment?.buildChannel || "preview",
-      easProject
+      easProject,
+      publicAppName: mobileApp.name || "海豚社区",
+      internalWalletModule: "HWallet",
+      iconSource: "owner-approved-haitun-logo"
     },
     tester: {
       label: process.env.HWALLET_MOBILE_STORE_BUILD_TESTER || evidence.tester?.label || "release-operator",
@@ -116,6 +121,8 @@ function normalizeEvidence(evidence) {
       v2HWalletUi: false,
       previewOnlyUiDisabled: false,
       nativeConfigMatchesRepo: false,
+      publicAppNameMatchesRepo: false,
+      iconAssetsMatchOwnerLogo: false,
       deviceEvidenceLinked: false,
       liveExecutionClosed: false,
       ...(evidence.checks || {})
