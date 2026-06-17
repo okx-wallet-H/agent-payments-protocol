@@ -14,6 +14,9 @@ This repo uses a small-task workflow so HWallet can move quickly without mixing 
 Use this queue for 7x24 development cycles. The controller can keep moving when
 no user input is needed, but must pause tasks that need device, account, DNS,
 App Store, Google Play, Privy, Supabase, OKX, or payment credentials.
+The concrete release task ledger lives in
+`docs/HWALLET_RELEASE_TASK_LEDGER.md`. Use it to claim the next highest-priority
+Ready task after checking the newest user instruction and current repo state.
 
 Recommended active lanes:
 
@@ -67,6 +70,7 @@ Task states:
    - For normal app work, run at least:
      ```bash
      npm run smoke:task-review-workflow
+     npm run smoke:release-task-ledger
      npm run typecheck
      npm run mobile:typecheck
      npm run smoke:mobile-api-auth
