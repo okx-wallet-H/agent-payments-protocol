@@ -17,7 +17,7 @@ codes, or raw build artifact signed URLs.
 
 ## Current Preview Builds
 
-Both builds below were created from the same mainline commit:
+Both builds below were created from the same preview build source commit:
 `253ef6830dc894137701d0ee35aef3340b09a57d`.
 
 | Platform | EAS profile | Channel | Build version | Status | Build page |
@@ -97,7 +97,8 @@ HWALLET_DEVICE_EVIDENCE_FILE=.tmp/hwallet-device-evidence.json HWALLET_DEVICE_EV
 ## Remaining Release Work
 
 - Complete Android physical-device install testing.
-- Refresh iOS physical-device testing with the current-main iOS preview build.
+- Refresh iOS physical-device testing with the recorded iOS preview build, or
+  create a newer preview build if mobile runtime code changes.
 - Fill and verify redacted `.tmp/hwallet-device-evidence.json`.
 - Decide the first distribution route:
   - iOS: continue with internal/ad-hoc device testing, then TestFlight when App

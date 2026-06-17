@@ -165,7 +165,8 @@ checks.push("existing release smokes are chained into the HWallet candidate gate
 
 assertIncludes(mobileReleaseHandoff, "HWallet wallet entry plus Agent experience", "mobile release handoff names the product body");
 assertIncludes(mobileReleaseHandoff, "https://app.hwallet.vip", "mobile release handoff records staging API");
-assertIncludes(mobileReleaseHandoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "mobile release handoff records current main commit");
+assertIncludes(mobileReleaseHandoff, "preview build source commit", "mobile release handoff labels the build source commit");
+assertIncludes(mobileReleaseHandoff, "253ef6830dc894137701d0ee35aef3340b09a57d", "mobile release handoff records preview build source commit");
 assertIncludes(mobileReleaseHandoff, "e4603d5d-2123-4502-94f9-3e9035ba3c9e", "mobile release handoff records current iOS preview build");
 assertIncludes(mobileReleaseHandoff, "ab124aea-fbe7-47e1-aea8-b69ceddae248", "mobile release handoff records current Android preview build");
 assertIncludes(mobileReleaseHandoff, "MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-hwallet:live", "mobile release handoff records staging device auth boundary smoke");
