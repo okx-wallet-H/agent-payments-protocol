@@ -70,6 +70,7 @@ Run:
 
 ```bash
 npm run smoke:prediction-phase-two-readiness
+npm run smoke:prediction-phase-two-goal-audit
 npm run smoke:okx-outcomes-simulation-preview
 npm run smoke:okx-outcomes-live-field-mapping
 ```
@@ -79,3 +80,19 @@ For merge candidates, this smoke is also part of:
 ```bash
 npm run verify:merge
 ```
+
+## Goal Audit Gate
+
+`npm run smoke:prediction-phase-two-goal-audit` is the owner-facing acceptance
+gate for this phase. It checks the phase-two goal directly:
+
+- OKX Outcomes prediction-market data is connected as read-only API coverage.
+- The App has frontend query/display surfaces for explore and detail views.
+- Detail actions expose observe, simulate, track, strategy, and a disabled
+  order placeholder.
+- The API Key binding area is visible but remains a placeholder; no secret
+  lifecycle is enabled in the App.
+- The controller/subtask/review workflow is documented and protected by merge
+  smokes.
+- Archived prediction-market preview files stay out of the active app path.
+- Live order placement, signing, swap, and broadcast stay closed.
