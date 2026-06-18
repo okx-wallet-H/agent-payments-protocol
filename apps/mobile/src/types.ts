@@ -323,6 +323,60 @@ export interface V2WorldCupExploreView {
   updatedAt: string;
 }
 
+export type V2PredictionDetailActionId = "observe" | "simulate";
+export type V2PredictionDetailOutcomeSide = "yes" | "no";
+
+export interface V2PredictionDetailOutcomeRow {
+  side: V2PredictionDetailOutcomeSide;
+  label: "会" | "不会";
+  price?: number;
+  priceLabel?: string;
+  bidLabel?: string;
+  askLabel?: string;
+  volume24hLabel?: string;
+  assetIdLabel?: string;
+}
+
+export interface V2PredictionDetailOrderBookSide {
+  side: V2PredictionDetailOutcomeSide;
+  bestBidLabel?: string;
+  bestAskLabel?: string;
+  spreadLabel?: string;
+  depthLabel?: string;
+}
+
+export interface V2PredictionDetailView {
+  type: "prediction_detail_view";
+  title: string;
+  providerLabel: string;
+  readOnly: true;
+  liveExecutionClosed: true;
+  marketRef: {
+    provider: V2MarketSnapshot["provider"];
+    chainId: V2MarketSnapshot["chainId"];
+    marketId: string;
+    eventId?: string;
+    status?: string;
+    acceptingOrders: boolean;
+  };
+  outcomes: V2PredictionDetailOutcomeRow[];
+  metrics: {
+    liquidityLabel?: string;
+    volume24hLabel?: string;
+    volumeLabel?: string;
+    statusLabel: string;
+  };
+  orderBook?: V2PredictionDetailOrderBookSide[];
+  insight: string;
+  actions: Array<{
+    id: V2PredictionDetailActionId;
+    label: string;
+    kind: "read_only" | "dry_run";
+    disabledLiveExecution: true;
+  }>;
+  updatedAt: string;
+}
+
 export interface V2ReceiveAddress {
   id: string;
   label: string;

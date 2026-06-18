@@ -29,6 +29,7 @@ import type {
   V2MobileChatMessage,
   V2MobileHomeView,
   V2PredictionCard,
+  V2PredictionDetailView,
   V2SimulationCard,
   V2StrategyCard,
   V2TrackingCard,
@@ -404,6 +405,8 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             items={agent.session.home?.panels.topLeft.items || []}
             onAsk={(text) => run(() => send(text))}
             onAnalyzeMarket={(text, market) => run(() => agent.analyzeMarket(text, market))}
+            onLoadPredictionDetail={agent.loadPredictionDetail}
+            onRunMarketAction={(action, market) => run(() => agent.runMarketAction({ action, market }))}
             onHome={() => setActiveTab("agent")}
             onProfile={() => setActiveTab("mine")}
           />
@@ -554,9 +557,14 @@ function AgentTab({
     return (
       <WorldCupMarketDetailPage
         card={selectedMarket}
+        detailLoading={false}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
           onSend(`帮我继续分析：${card.displayTitle || card.title}`);
+          setWorldCupView("home");
+        }}
+        onSimulate={(card) => {
+          onSend(`帮我做一次模拟预览：${card.displayTitle || card.title}`);
           setWorldCupView("home");
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -631,6 +639,8 @@ function WorldCupTab({
   items,
   onAsk,
   onAnalyzeMarket,
+  onLoadPredictionDetail,
+  onRunMarketAction,
   onHome,
   onProfile
 }: {
@@ -640,14 +650,51 @@ function WorldCupTab({
   items: { id: string; title: string; subtitle?: string; value?: string }[];
   onAsk: (text: string) => void;
   onAnalyzeMarket: (text: string, market: V2MarketSnapshot) => void;
+  onLoadPredictionDetail: (marketId: string) => Promise<V2PredictionDetailView>;
+  onRunMarketAction: (action: "simulate" | "track" | "build_strategy", market: V2MarketSnapshot) => void;
   onHome: () => void;
   onProfile: () => void;
 }) {
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
   const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
+  const [selectedMarketDetail, setSelectedMarketDetail] = useState<V2PredictionDetailView | undefined>();
+  const [selectedMarketDetailLoading, setSelectedMarketDetailLoading] = useState(false);
+  const [selectedMarketDetailError, setSelectedMarketDetailError] = useState<string | undefined>();
   const insight = createWorldCupInsightCopy(explore);
   const previewCards = createWorldCupPreviewCards(explore);
+  const selectedMarketId = selectedMarket?.market.marketId;
+
+  useEffect(() => {
+    if (worldCupView !== "detail" || !selectedMarketId) {
+      setSelectedMarketDetail(undefined);
+      setSelectedMarketDetailError(undefined);
+      setSelectedMarketDetailLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedMarketDetailLoading(true);
+    setSelectedMarketDetail(undefined);
+    setSelectedMarketDetailError(undefined);
+    onLoadPredictionDetail(selectedMarketId)
+      .then((detail) => {
+        if (!cancelled) setSelectedMarketDetail(detail);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSelectedMarketDetail(undefined);
+          setSelectedMarketDetailError(error instanceof Error ? error.message : "预测详情暂时不可用");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSelectedMarketDetailLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onLoadPredictionDetail, selectedMarketId, worldCupView]);
 
   if (worldCupView === "explore") {
     return (
@@ -673,9 +720,16 @@ function WorldCupTab({
     return (
       <WorldCupMarketDetailPage
         card={selectedMarket}
+        detail={selectedMarketDetail}
+        detailError={selectedMarketDetailError}
+        detailLoading={selectedMarketDetailLoading}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
           onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+          onHome();
+        }}
+        onSimulate={(card) => {
+          onRunMarketAction("simulate", card.market);
           onHome();
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -1200,23 +1254,38 @@ function DynamicMatchMarketList({
 
 function WorldCupMarketDetailPage({
   card,
+  detail,
+  detailError,
+  detailLoading,
   onBack,
   onExplore,
   onHome,
   onAskAgent,
+  onSimulate,
   onNewChat,
   onProfile
 }: {
   card: V2WorldCupExploreMarketCard;
+  detail?: V2PredictionDetailView;
+  detailError?: string;
+  detailLoading: boolean;
   onBack: () => void;
   onExplore: () => void;
   onHome: () => void;
   onAskAgent: (card: V2WorldCupExploreMarketCard) => void;
+  onSimulate: (card: V2WorldCupExploreMarketCard) => void;
   onNewChat: () => void;
   onProfile: () => void;
 }) {
   const yesOption = card.options.find((option) => option.side === "yes") || card.options[0];
   const noOption = card.options.find((option) => option.side === "no") || card.options[1];
+  const yesDetail = detail?.outcomes.find((outcome) => outcome.side === "yes");
+  const noDetail = detail?.outcomes.find((outcome) => outcome.side === "no");
+  const yesLabel = yesDetail?.priceLabel || card.probabilityLabel || yesOption?.priceLabel || "观察";
+  const noLabel = noDetail?.priceLabel || noOption?.priceLabel || "观察";
+  const volumeLabel = detail?.metrics.volume24hLabel || detail?.metrics.volumeLabel || card.volumeLabel || "待同步";
+  const orderBookSummary = createPredictionOrderBookSummary(detail);
+  const detailStatus = detailLoading ? "同步中" : detail ? "只读详情已同步" : detailError ? "样例显示" : "已接入";
   const provider = marketProviderLabel(card.market.provider);
   const marketIdLabel = shortenMarketReference(card.market.marketId);
 
@@ -1245,11 +1314,11 @@ function WorldCupMarketDetailPage({
       <View style={styles.marketDetailOddsRow}>
         <View style={styles.marketDetailOddCard}>
           <Text style={styles.marketDetailOddLabel}>会</Text>
-          <Text style={styles.marketDetailOddValue}>{card.probabilityLabel || yesOption?.priceLabel || "观察"}</Text>
+          <Text style={styles.marketDetailOddValue}>{yesLabel}</Text>
         </View>
         <View style={styles.marketDetailOddCard}>
           <Text style={styles.marketDetailOddLabel}>不会</Text>
-          <Text style={styles.marketDetailOddValue}>{noOption?.priceLabel || "观察"}</Text>
+          <Text style={styles.marketDetailOddValue}>{noLabel}</Text>
         </View>
       </View>
 
@@ -1262,7 +1331,7 @@ function WorldCupMarketDetailPage({
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>交易额</Text>
-          <Text style={styles.marketDetailMetaValue}>{card.volumeLabel || "实时更新"}</Text>
+          <Text style={styles.marketDetailMetaValue}>{volumeLabel}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>结束时间</Text>
@@ -1287,7 +1356,7 @@ function WorldCupMarketDetailPage({
             <Text style={styles.predictionMarketConsoleEyebrow}>预测市场</Text>
             <Text style={styles.predictionMarketConsoleTitle}>OKX Outcomes 只读查询</Text>
           </View>
-          <Text style={styles.predictionMarketConsoleStatus}>已接入</Text>
+          <Text style={styles.predictionMarketConsoleStatus}>{detailStatus}</Text>
         </View>
 
         <View style={styles.predictionMarketQueryGrid}>
@@ -1298,17 +1367,41 @@ function WorldCupMarketDetailPage({
           <View style={styles.predictionMarketQueryCell}>
             <Text style={styles.predictionMarketQueryLabel}>会 / 不会</Text>
             <Text style={styles.predictionMarketQueryValue}>
-              {card.probabilityLabel || yesOption?.priceLabel || "观察"} / {noOption?.priceLabel || "观察"}
+              {yesLabel} / {noLabel}
             </Text>
           </View>
           <View style={styles.predictionMarketQueryCell}>
             <Text style={styles.predictionMarketQueryLabel}>订单簿</Text>
-            <Text style={styles.predictionMarketQueryValue}>摘要查询</Text>
+            <Text style={styles.predictionMarketQueryValue}>{orderBookSummary || "等待同步"}</Text>
           </View>
           <View style={styles.predictionMarketQueryCell}>
             <Text style={styles.predictionMarketQueryLabel}>成交量</Text>
-            <Text style={styles.predictionMarketQueryValue}>{card.volumeLabel || "待同步"}</Text>
+            <Text style={styles.predictionMarketQueryValue}>{volumeLabel}</Text>
           </View>
+        </View>
+
+        <View style={styles.predictionOrderBookPanel}>
+          <View style={styles.predictionOrderBookHeader}>
+            <Text style={styles.predictionOrderBookTitle}>订单簿摘要</Text>
+            {detailLoading ? <ActivityIndicator size="small" color="#c9ff4d" /> : null}
+          </View>
+          {detail?.orderBook?.length ? (
+            detail.orderBook.map((row) => (
+              <View key={row.side} style={styles.predictionOrderBookRow}>
+                <Text style={styles.predictionOrderBookSide}>{row.side === "yes" ? "会" : "不会"}</Text>
+                <Text style={styles.predictionOrderBookText}>
+                  买 {row.bestBidLabel || "-"} · 卖 {row.bestAskLabel || "-"} · 差 {row.spreadLabel || "-"} · {row.depthLabel || "0 档"}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.predictionOrderBookEmpty}>
+              {detailError ? "实时订单簿暂时不可用，先展示市场基础数据。" : "正在等待订单簿同步。"}
+            </Text>
+          )}
+          <Text style={styles.predictionDetailInsight}>
+            {detail?.insight || "Agent 目前只读取赔率、流动性和订单簿摘要，再给出观察或模拟建议。"}
+          </Text>
         </View>
 
         <View style={styles.predictionApiKeySlot}>
@@ -1324,9 +1417,9 @@ function WorldCupMarketDetailPage({
             <Ionicons name="eye-outline" size={18} color="#0c2113" />
             <Text style={styles.predictionMarketActionText}>观察</Text>
           </Pressable>
-          <Pressable style={styles.predictionMarketActionButton} onPress={() => onAskAgent(card)}>
+          <Pressable style={styles.predictionMarketActionButton} onPress={() => onSimulate(card)}>
             <Ionicons name="flask-outline" size={18} color="#0c2113" />
-            <Text style={styles.predictionMarketActionText}>模拟</Text>
+            <Text style={styles.predictionMarketActionText}>模拟预览</Text>
           </Pressable>
           <View style={styles.predictionMarketDisabledAction}>
             <Ionicons name="lock-closed-outline" size={18} color="#8a8278" />
@@ -3194,6 +3287,12 @@ function shortenMarketReference(value?: string): string {
   if (!value) return "待同步";
   if (value.length <= 14) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function createPredictionOrderBookSummary(detail?: V2PredictionDetailView): string | undefined {
+  const row = detail?.orderBook?.find((item) => item.bestBidLabel || item.bestAskLabel);
+  if (!row) return undefined;
+  return `买 ${row.bestBidLabel || "-"} / 卖 ${row.bestAskLabel || "-"}`;
 }
 
 function marketTypeLabel(type?: string): string {
@@ -6051,6 +6150,54 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 12,
     fontWeight: "900"
+  },
+  predictionOrderBookPanel: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    padding: 14,
+    gap: 10
+  },
+  predictionOrderBookHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  predictionOrderBookTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionOrderBookRow: {
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 3
+  },
+  predictionOrderBookSide: {
+    color: "#c9ff4d",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionOrderBookText: {
+    color: "rgba(255, 255, 255, 0.84)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800"
+  },
+  predictionOrderBookEmpty: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  predictionDetailInsight: {
+    color: "rgba(255, 255, 255, 0.78)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
   },
   predictionMarketActionRow: {
     flexDirection: "row",
