@@ -24,6 +24,10 @@ const requirements = [
     pass: () => /只读查询/.test(screen)
   },
   {
+    label: "mobile prediction-market UI renders read-only detail sync and order book summary",
+    pass: () => /只读详情已同步/.test(screen) && /订单簿摘要/.test(screen) && /买/.test(screen) && /卖/.test(screen)
+  },
+  {
     label: "mobile prediction-market UI offers 观察/模拟",
     pass: () => /观察/.test(screen) && /模拟/.test(screen)
   },

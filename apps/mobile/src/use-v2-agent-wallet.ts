@@ -10,12 +10,13 @@ import {
   loadV2AgentWalletState,
   openV2AgentWalletCard,
   refreshV2AgentWallet,
+  runV2AgentWalletAction,
   runV2AgentWalletCardAction,
   sendV2AgentWalletText,
   verifyV2AgentWalletTx,
   type V2AgentWalletSession
 } from "./v2-session";
-import type { V2ConversationCard, V2MarketSnapshot } from "./types";
+import type { V2ConversationCard, V2MarketSnapshot, V2PredictionDetailView } from "./types";
 
 type GetAccessToken = () => Promise<string | null | undefined>;
 
@@ -142,6 +143,30 @@ export function useV2AgentWallet(input: {
     updateSession(next);
   }, [api, beginRequest, input.userId, isCurrentScope, patchSession, scopeKey, updateSession]);
 
+  const runMarketAction = useCallback(async (params: {
+    action: "simulate" | "track" | "build_strategy";
+    market: V2MarketSnapshot;
+    amountUsd?: number;
+    idempotencyKey?: string;
+  }) => {
+    if (!beginRequest()) return;
+    const requestScopeKey = scopeKey;
+
+    const next = await runV2AgentWalletAction(api, sessionRef.current, {
+      action: params.action,
+      market: params.market,
+      amountUsd: params.amountUsd,
+      idempotencyKey: params.idempotencyKey,
+      userId: input.userId
+    });
+    if (!isCurrentScope(requestScopeKey)) return;
+    updateSession(next);
+  }, [api, beginRequest, input.userId, isCurrentScope, scopeKey, updateSession]);
+
+  const loadPredictionDetail = useCallback((marketId: string): Promise<V2PredictionDetailView> => {
+    return api.getPredictionDetail(marketId);
+  }, [api]);
+
   const openCard = useCallback((card: V2ConversationCard) => {
     updateSession(openV2AgentWalletCard(sessionRef.current, card));
   }, [updateSession]);
@@ -177,6 +202,8 @@ export function useV2AgentWallet(input: {
     sendText,
     analyzeMarket,
     runCardAction,
+    runMarketAction,
+    loadPredictionDetail,
     openCard,
     latestCard: getLatestV2Card(session),
     orchestration: session.orchestration,
