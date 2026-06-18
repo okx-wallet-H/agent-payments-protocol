@@ -8,6 +8,7 @@ import { PrivyProvider, useEmbeddedEthereumWallet, useLoginWithEmail, usePrivy }
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -53,11 +54,11 @@ const xLayerChain = {
 
 export default function App() {
   if (usePreviewUi) {
-    return <V2AgentWalletPreview />;
+    return <MobileWebFrame><V2AgentWalletPreview /></MobileWebFrame>;
   }
 
   if (Platform.OS === "web" && useV2Ui) {
-    return <V2AgentWalletPreview />;
+    return <MobileWebFrame><V2AgentWalletPreview /></MobileWebFrame>;
   }
 
   if (!privyAppId || !privyClientId) return <MissingPrivyConfig />;
@@ -77,6 +78,16 @@ export default function App() {
     >
       <AgentWalletApp />
     </PrivyProvider>
+  );
+}
+
+function MobileWebFrame({ children }: { children: ReactNode }) {
+  if (Platform.OS !== "web") return <>{children}</>;
+
+  return (
+    <View style={styles.mobileWebStage}>
+      <View style={styles.mobileWebFrame}>{children}</View>
+    </View>
   );
 }
 
@@ -851,6 +862,18 @@ function getUserEmail(user: unknown): string | undefined {
 }
 
 const styles = StyleSheet.create({
+  mobileWebStage: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "#ffffff"
+  },
+  mobileWebFrame: {
+    flex: 1,
+    width: "100%",
+    maxWidth: 430,
+    backgroundColor: "#ffffff",
+    overflow: "hidden"
+  },
   safe: {
     flex: 1,
     backgroundColor: "#f5f7f4"

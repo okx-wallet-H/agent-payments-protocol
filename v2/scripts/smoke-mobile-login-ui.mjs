@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 const screen = await readFile("apps/mobile/src/V2AgentWalletScreen.tsx", "utf8");
 const preview = await readFile("apps/mobile/src/V2AgentWalletPreview.tsx", "utf8");
+const app = await readFile("apps/mobile/App.tsx", "utf8");
 
 const checks = [];
 
@@ -24,6 +25,11 @@ assertIncludes(preview, 'placeholder="6 位验证码"', "web preview login shows
 assertIncludes(preview, "<Text style={styles.previewLoginSecondaryButtonText}>发送验证码</Text>", "web preview login shows the send-code button");
 assertIncludes(preview, "disabled={!canEnter}", "web preview login keeps disabled state before email input");
 checks.push("web preview login mirrors the real mobile entry");
+
+assertIncludes(app, "function MobileWebFrame", "mobile web preview has a dedicated phone-width frame");
+assertIncludes(app, 'if (Platform.OS !== "web") return <>{children}</>;', "mobile web frame does not affect native builds");
+assertIncludes(app, "maxWidth: 430", "web preview is capped to a phone-sized canvas");
+checks.push("web preview stays responsive and phone-sized on desktop browsers");
 
 console.log(JSON.stringify({ ok: true, checks }, null, 2));
 
