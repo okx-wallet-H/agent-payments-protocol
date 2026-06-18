@@ -49,6 +49,15 @@ Reviewer note:
 > and show audit records. It cannot submit live orders or move money
 > autonomously. Private keys and seed phrases are not collected by HWallet.
 
+Review account plan:
+
+- Follow `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`.
+- Review login uses email-code login through Privy.
+- Review emails and any temporary mailbox access belong only in private App
+  Store Connect / Google Play reviewer fields.
+- Static demo codes are not allowed for production review.
+- Do not commit reviewer credentials, one-time codes, raw emails, or passwords.
+
 ## App Store Connect Baseline
 
 - App name: 海豚社区
@@ -106,6 +115,7 @@ HWallet must not collect:
 Do not submit to public production tracks until all are true:
 
 - `npm run smoke:mobile-store-submission` passes.
+- `npm run smoke:store-review-account-plan` passes.
 - `npm run smoke:mobile-release-handoff` passes.
 - Strict build and dual-device evidence gates pass.
 - TestFlight and Android internal testing are installed and rechecked.

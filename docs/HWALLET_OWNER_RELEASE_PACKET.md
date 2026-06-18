@@ -70,12 +70,16 @@ verification codes, or unredacted personal data.
 
 - Required owner action: final App name, subtitle, short description, long
   description, screenshots, support contact, privacy/support URL review, data
-  safety answers, content rating answers, and App Store review notes.
+  safety answers, content rating answers, App Store review notes, and a private
+  review account / reviewer mailbox plan.
 - Current public URLs:
   - Privacy policy: `https://app.hwallet.vip/privacy`.
   - Support: `https://app.hwallet.vip/support`.
+- Review account plan: `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`.
 - Required safe evidence: owner approval note, redacted screenshot approval,
-  metadata readiness flags, data safety/content rating completion labels.
+  metadata readiness flags, data safety/content rating completion labels, and a
+  confirmation that reviewer credentials were entered only in private
+  store-console fields.
 - Evidence file: `.tmp/hwallet-store-console-evidence.json`.
 
 ## Commands The Controller Runs
