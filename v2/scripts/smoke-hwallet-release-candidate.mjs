@@ -38,6 +38,8 @@ const ownerReleasePacketSmoke = await readFile("v2/scripts/smoke-release-owner-p
 const ownerReleaseStatusSmoke = await readFile("v2/scripts/smoke-owner-release-status.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 const predictionDetailViewSmoke = await readFile("v2/scripts/smoke-prediction-detail-view.mjs", "utf8");
+const predictionPhaseTwoReadinessSmoke = await readFile("v2/scripts/smoke-prediction-phase-two-readiness.mjs", "utf8");
+const predictionPhaseTwoReadinessDoc = await readFile("docs/PREDICTION_MARKET_PHASE_TWO_READINESS.md", "utf8");
 const projectExecutionPlan = await readFile("docs/PROJECT_EXECUTION_PLAN.md", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -77,6 +79,7 @@ const requiredScripts = [
   "smoke:mobile-hwallet-ux",
   "smoke:privy-wallet-status",
   "smoke:prediction-detail-view",
+  "smoke:prediction-phase-two-readiness",
   "verify:merge"
 ];
 
@@ -135,6 +138,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:prediction-detail-view"),
   "verify:merge includes prediction detail view gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:prediction-phase-two-readiness"),
+  "verify:merge includes prediction phase-two readiness gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -178,6 +185,13 @@ assertIncludes(predictionDetailViewSmoke, "detail actions are observe and simula
 assertIncludes(predictionDetailViewSmoke, "forbidden token", "prediction detail smoke checks forbidden action tokens");
 assertIncludes(predictionDetailViewSmoke, '"broadcast"', "prediction detail smoke blocks broadcast token");
 assertIncludes(predictionDetailViewSmoke, "detail view does not expose full yes asset id", "prediction detail smoke redacts asset ids");
+assertIncludes(predictionPhaseTwoReadinessSmoke, "OKX Outcomes client does not expose live execution methods", "prediction phase-two readiness smoke protects client boundary");
+assertIncludes(predictionPhaseTwoReadinessSmoke, "API Key 绑定位", "prediction phase-two readiness smoke protects API Key placeholder");
+assertIncludes(predictionPhaseTwoReadinessSmoke, "prediction detail route requests order book data", "prediction phase-two readiness smoke protects detail order book");
+assertIncludes(predictionPhaseTwoReadinessSmoke, "verify:merge includes prediction phase-two readiness smoke", "prediction phase-two readiness smoke is self-gated");
+assertIncludes(predictionPhaseTwoReadinessDoc, "API Key binding", "prediction phase-two readiness doc records API Key placeholder");
+assertIncludes(predictionPhaseTwoReadinessDoc, "Live trading", "prediction phase-two readiness doc records closed live trading");
+assertIncludes(predictionPhaseTwoReadinessDoc, "Known Follow-Up Risks", "prediction phase-two readiness doc records follow-up risks");
 assertIncludes(projectExecutionPlan, "Carry OKX Outcomes market snapshots into Agent observe replies", "project plan records Agent market snapshots in replies");
 assertIncludes(projectExecutionPlan, "read-only prediction detail view", "project plan records read-only prediction detail view");
 assertIncludes(projectExecutionPlan, "order book summary", "project plan records order book detail summary");
