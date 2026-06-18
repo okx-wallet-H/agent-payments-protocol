@@ -20,6 +20,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - World Cup Explore subpage exists with four market categories: champion, golden boot, group stage, and upcoming matches.
 - Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
 - OKX Outcomes adapter smoke currently passes: `npm run smoke:outcomes`.
+- Read-only prediction detail view smoke currently passes: `npm run smoke:prediction-detail-view`.
 - EAS CLI is pinned in the mobile workspace and available through mobile npm scripts.
 - EAS project is initialized as `@hongchen888/agent-wallet-xlayer-mvp`.
 - Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
@@ -63,6 +64,7 @@ npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:store-screenshot-plan
 npm run smoke:mobile-store-submission
+npm run smoke:store-review-account-plan
 npm run smoke:hwallet-store-console-evidence
 npm run smoke:release-owner-packet
 npm run smoke:hwallet-release-candidate
@@ -96,6 +98,10 @@ the Agent home, HWallet receive, assets-ready, Agent analysis, and audit/records
 story on iOS and Android, with raw emails, full wallet addresses, full
 transaction hashes, verification codes, tokens, and local `.tmp` evidence paths
 redacted before owner approval.
+Store review login instructions must follow
+`docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`: reviewers use email-code login,
+reviewer credentials stay in private store-console fields only, and static demo
+codes such as `123456` are not allowed for production review.
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
 preview/production profiles point to localhost or a LAN URL, if the installed
@@ -128,6 +134,7 @@ HWallet release candidate gate:
 
 ```sh
 npm run smoke:hwallet-release-candidate
+npm run smoke:prediction-detail-view
 npm run smoke:supabase-readback-drill
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
@@ -176,6 +183,7 @@ EXPO_PUBLIC_API_BASE_URL=http://YOUR_LAN_IP:3000 MOBILE_DEVICE_READINESS=true np
 npm run smoke:v2
 npm run smoke:v2:auth
 npm run smoke:outcomes
+npm run smoke:prediction-detail-view
 npm run mobile:typecheck
 ```
 

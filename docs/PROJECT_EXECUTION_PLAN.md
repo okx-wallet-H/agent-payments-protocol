@@ -54,6 +54,9 @@ Acceptance:
 - `[x]` Add OKX Outcomes adapter foundation: Event -> Market -> Outcome -> assetId normalization, X Layer chain id, market status, and watch-only handling when assetId is missing.
 - `[x]` Add prediction-market explore view model so real Outcomes data can feed example market cards.
 - `[x]` Add market data source status and fallback mode: OKX Outcomes live data, plugin fallback, or local sample data with user-friendly copy.
+- `[x]` Carry OKX Outcomes market snapshots into Agent observe replies with friendly `会 / 不会` odds.
+- `[x]` Add a read-only prediction detail view for `会 / 不会` outcomes, order book summary, volume/liquidity labels, and redacted asset ids.
+- `[x]` Add smoke coverage that keeps prediction detail actions limited to observe/simulate and blocks order, signature, swap, and broadcast wording.
 - `[~]` Real execution remains gated until TEE signing, production policy, and release approvals are complete.
 - `[!]` Live trading requires a final decision on supported market venues, execution account model, and compliance boundaries.
 
@@ -61,6 +64,9 @@ Acceptance:
 - The Agent can generate prediction cards from live plugin data.
 - Simulation cannot move funds or submit an order.
 - `npm run smoke:outcomes`
+- `npm run smoke:agent-readonly-explanation`
+- `npm run smoke:prediction-detail-view`
+- `npm run smoke:execution-gates`
 
 ## Phase 4 - Mobile App Functional Skeleton
 

@@ -36,6 +36,13 @@ export interface AgentCapabilityExecutionRequest {
     eventId?: string;
     marketId: string;
     question: string;
+    status?: string;
+    yesPrice?: number;
+    noPrice?: number;
+    liquidity?: number;
+    volume24h?: number;
+    volume?: number;
+    acceptingOrders?: boolean;
   };
   liveExecutionEnabled: false;
   createdAt: string;
@@ -102,7 +109,14 @@ export function buildAgentCapabilityExecutionRequest(input: {
           chainId: input.orchestration.candidateMarket.chainId,
           eventId: input.orchestration.candidateMarket.eventId,
           marketId: input.orchestration.candidateMarket.marketId,
-          question: input.orchestration.candidateMarket.question
+          question: input.orchestration.candidateMarket.question,
+          status: input.orchestration.candidateMarket.status,
+          yesPrice: input.orchestration.candidateMarket.yesPrice,
+          noPrice: input.orchestration.candidateMarket.noPrice,
+          liquidity: input.orchestration.candidateMarket.liquidity,
+          volume24h: input.orchestration.candidateMarket.volume24h,
+          volume: input.orchestration.candidateMarket.volume,
+          acceptingOrders: input.orchestration.candidateMarket.acceptingOrders
         }
       : undefined,
     liveExecutionEnabled: false,
@@ -185,15 +199,17 @@ export const safeMockMcpExecutor: AgentMcpCapabilityExecutor = {
     }
 
     if (request.mode === "observe") {
+      const marketObservation = createMarketObservationPayload(request.market);
       return createResult(request, {
         status: "observed",
-        summary: "已生成只读观察任务，等待接入真实 MCP 后可读取市场和链上数据。",
+        summary: createObserveSummary(request, marketObservation),
         mcpCallStatus: "mocked",
         adapterResult,
         payload: {
           externalCall: false,
           mockOnly: true,
-          marketId: request.market?.marketId
+          marketId: request.market?.marketId,
+          market: marketObservation
         }
       });
     }
@@ -274,6 +290,57 @@ function toPayloadContract(contract: AgentMcpToolContract): Record<string, unkno
     externalCallEnabled: contract.externalCallEnabled,
     moneyMovementEnabled: contract.moneyMovementEnabled
   };
+}
+
+function createMarketObservationPayload(
+  market: AgentCapabilityExecutionRequest["market"] | undefined
+): Record<string, unknown> | undefined {
+  if (!market) return undefined;
+
+  return {
+    provider: market.provider,
+    chainId: market.chainId,
+    eventId: market.eventId,
+    marketId: market.marketId,
+    question: market.question,
+    status: market.status,
+    acceptingOrders: market.acceptingOrders,
+    yesPrice: market.yesPrice,
+    noPrice: market.noPrice,
+    yesPercent: toPercent(market.yesPrice),
+    noPercent: toPercent(market.noPrice),
+    liquidity: market.liquidity,
+    volume24h: market.volume24h,
+    volume: market.volume,
+    source: "candidate_market_snapshot",
+    readOnly: true,
+    moneyMovementEnabled: false
+  };
+}
+
+function createObserveSummary(
+  request: AgentCapabilityExecutionRequest,
+  marketObservation: Record<string, unknown> | undefined
+): string {
+  if (request.serviceId === "okx-outcomes" && marketObservation) {
+    const yesPercent = marketObservation.yesPercent;
+    const noPercent = marketObservation.noPercent;
+    if (typeof yesPercent === "number" && typeof noPercent === "number") {
+      return `已读取 OKX Outcomes 只读市场快照：会 ${yesPercent}% / 不会 ${noPercent}%。Agent 只做分析和记录，不提交订单。`;
+    }
+    return "已读取 OKX Outcomes 只读市场快照。Agent 只做分析和记录，不提交订单。";
+  }
+
+  if (marketObservation) {
+    return "已生成只读观察任务，并带入当前市场快照供 Agent 分析。";
+  }
+
+  return "已生成只读观察任务，等待接入真实 MCP 后可读取市场和链上数据。";
+}
+
+function toPercent(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || Number.isNaN(value)) return undefined;
+  return Math.round(value * 10000) / 100;
 }
 
 function toFallbackServiceId(

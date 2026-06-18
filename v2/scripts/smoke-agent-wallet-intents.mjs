@@ -136,6 +136,17 @@ assert(fundedReplyContext.summaryText.includes("0.005 USDT0"), "wallet reply con
 assert(fundedReplyContext.summaryText.includes("下一步"), "wallet reply context should include next safe action");
 assert(fundedReplyContext.summaryText.includes("不开放真实下单"), "wallet reply context should include live-execution boundary");
 
+const fundedAnalysisTurn = handlePhaseOneUserText({
+  userText: "我已经转好了，继续看看机会",
+  xLayerAddress,
+  polygonAddress,
+  candidateMarket: market,
+  walletStatusText: fundedReplyContext.statusText,
+  walletFundText: fundedReplyContext.summaryText,
+  goalType: fundedPlan.goalType
+});
+assert(fundedAnalysisTurn.finalText?.includes("会 17% / 不会 83%"), "funded analysis reply should include market odds");
+
 const executeLikeTurn = handlePhaseOneUserText({
   userText: "买西班牙冠军 500U",
   xLayerAddress,
@@ -145,6 +156,7 @@ const executeLikeTurn = handlePhaseOneUserText({
   walletFundText: fundedReplyContext.summaryText,
   goalType: executeLikePlan.goalType
 });
+assert(executeLikeTurn.finalText?.includes("会 17% / 不会 83%"), "execute-like reply should still include market odds");
 assert(executeLikeTurn.finalText?.includes("只做分析和模拟"), "execute-like reply should explain downgrade to analysis/simulation");
 assert(executeLikeTurn.finalText?.includes("不会真实下单"), "execute-like reply should keep live execution closed in user copy");
 
@@ -179,6 +191,7 @@ console.log(JSON.stringify({
     "transfer-done text refreshes wallet funds",
     "funded follow-up enters read-only analysis",
     "wallet context summarizes funds and safety",
+    "Agent replies include read-only market odds",
     "execute-like text downgrades to analysis",
     "execute-like reply explains no live order",
     "dry-run stays simulated",
