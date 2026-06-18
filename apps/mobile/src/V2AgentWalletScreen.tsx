@@ -29,6 +29,7 @@ import type {
   V2MobileChatMessage,
   V2MobileHomeView,
   V2PredictionCard,
+  V2PredictionDetailResponse,
   V2PredictionDetailView,
   V2SimulationCard,
   V2StrategyCard,
@@ -650,7 +651,7 @@ function WorldCupTab({
   items: { id: string; title: string; subtitle?: string; value?: string }[];
   onAsk: (text: string) => void;
   onAnalyzeMarket: (text: string, market: V2MarketSnapshot) => void;
-  onLoadPredictionDetail: (marketId: string) => Promise<V2PredictionDetailView>;
+  onLoadPredictionDetail: (marketId: string) => Promise<V2PredictionDetailResponse>;
   onRunMarketAction: (action: "simulate" | "track" | "build_strategy", market: V2MarketSnapshot) => void;
   onHome: () => void;
   onProfile: () => void;
@@ -658,7 +659,7 @@ function WorldCupTab({
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
   const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
-  const [selectedMarketDetail, setSelectedMarketDetail] = useState<V2PredictionDetailView | undefined>();
+  const [selectedMarketDetail, setSelectedMarketDetail] = useState<V2PredictionDetailResponse | undefined>();
   const [selectedMarketDetailLoading, setSelectedMarketDetailLoading] = useState(false);
   const [selectedMarketDetailError, setSelectedMarketDetailError] = useState<string | undefined>();
   const insight = createWorldCupInsightCopy(explore);
@@ -678,8 +679,8 @@ function WorldCupTab({
     setSelectedMarketDetail(undefined);
     setSelectedMarketDetailError(undefined);
     onLoadPredictionDetail(selectedMarketId)
-      .then((detail) => {
-        if (!cancelled) setSelectedMarketDetail(detail);
+      .then((response) => {
+        if (!cancelled) setSelectedMarketDetail(response);
       })
       .catch((error) => {
         if (!cancelled) {
@@ -720,7 +721,8 @@ function WorldCupTab({
     return (
       <WorldCupMarketDetailPage
         card={selectedMarket}
-        detail={selectedMarketDetail}
+        detail={selectedMarketDetail?.detail}
+        detailSource={selectedMarketDetail?.source}
         detailError={selectedMarketDetailError}
         detailLoading={selectedMarketDetailLoading}
         onBack={() => setWorldCupView("explore")}
@@ -1255,6 +1257,7 @@ function DynamicMatchMarketList({
 function WorldCupMarketDetailPage({
   card,
   detail,
+  detailSource,
   detailError,
   detailLoading,
   onBack,
@@ -1267,6 +1270,7 @@ function WorldCupMarketDetailPage({
 }: {
   card: V2WorldCupExploreMarketCard;
   detail?: V2PredictionDetailView;
+  detailSource?: V2PredictionDetailResponse["source"];
   detailError?: string;
   detailLoading: boolean;
   onBack: () => void;
@@ -1285,7 +1289,10 @@ function WorldCupMarketDetailPage({
   const noLabel = noDetail?.priceLabel || noOption?.priceLabel || "观察";
   const volumeLabel = detail?.metrics.volume24hLabel || detail?.metrics.volumeLabel || card.volumeLabel || "待同步";
   const orderBookSummary = createPredictionOrderBookSummary(detail);
-  const detailStatus = detailLoading ? "同步中" : detail ? "只读详情已同步" : detailError ? "样例显示" : "已接入";
+  const sourceModeLabel = predictionSourceModeLabel(detailSource);
+  const executionLabel = predictionExecutionLabel(detailSource, detail);
+  const detailStatus = detailLoading ? "同步中" : detail ? predictionSourceStatusLabel(detailSource, detail) : detailError ? "样例显示" : "已接入";
+  const detailActions = createPredictionDetailActions(detail);
   const provider = marketProviderLabel(card.market.provider);
   const marketIdLabel = shortenMarketReference(card.market.marketId);
 
@@ -1378,6 +1385,14 @@ function WorldCupMarketDetailPage({
             <Text style={styles.predictionMarketQueryLabel}>成交量</Text>
             <Text style={styles.predictionMarketQueryValue}>{volumeLabel}</Text>
           </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>同步模式</Text>
+            <Text style={styles.predictionMarketQueryValue}>{sourceModeLabel}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>执行</Text>
+            <Text style={styles.predictionMarketQueryValue}>{executionLabel}</Text>
+          </View>
         </View>
 
         <View style={styles.predictionOrderBookPanel}>
@@ -1413,14 +1428,16 @@ function WorldCupMarketDetailPage({
         </View>
 
         <View style={styles.predictionMarketActionRow}>
-          <Pressable style={styles.predictionMarketActionButton} onPress={() => onAskAgent(card)}>
-            <Ionicons name="eye-outline" size={18} color="#0c2113" />
-            <Text style={styles.predictionMarketActionText}>观察</Text>
-          </Pressable>
-          <Pressable style={styles.predictionMarketActionButton} onPress={() => onSimulate(card)}>
-            <Ionicons name="flask-outline" size={18} color="#0c2113" />
-            <Text style={styles.predictionMarketActionText}>模拟预览</Text>
-          </Pressable>
+          {detailActions.map((action) => (
+            <Pressable
+              key={action.id}
+              style={styles.predictionMarketActionButton}
+              onPress={() => (action.id === "simulate" ? onSimulate(card) : onAskAgent(card))}
+            >
+              <Ionicons name={action.id === "simulate" ? "flask-outline" : "eye-outline"} size={18} color="#0c2113" />
+              <Text style={styles.predictionMarketActionText}>{action.label}</Text>
+            </Pressable>
+          ))}
           <View style={styles.predictionMarketDisabledAction}>
             <Ionicons name="lock-closed-outline" size={18} color="#8a8278" />
             <Text style={styles.predictionMarketDisabledActionText}>下单未开放</Text>
@@ -3293,6 +3310,31 @@ function createPredictionOrderBookSummary(detail?: V2PredictionDetailView): stri
   const row = detail?.orderBook?.find((item) => item.bestBidLabel || item.bestAskLabel);
   if (!row) return undefined;
   return `买 ${row.bestBidLabel || "-"} / 卖 ${row.bestAskLabel || "-"}`;
+}
+
+function predictionSourceStatusLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
+  if (!detail) return "等待同步";
+  if (source?.mode === "sample") return "样例数据";
+  return "只读详情已同步";
+}
+
+function predictionSourceModeLabel(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.mode === "sample") return "样例数据";
+  if (source?.mode === "live_or_fallback") return "实时/回退";
+  return "等待同步";
+}
+
+function predictionExecutionLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
+  if (source?.liveExecutionClosed || detail?.liveExecutionClosed) return "真实执行关闭";
+  return "只读占位";
+}
+
+function createPredictionDetailActions(detail?: V2PredictionDetailView): V2PredictionDetailView["actions"] {
+  if (detail?.actions?.length) return detail.actions;
+  return [
+    { id: "observe", label: "观察", kind: "read_only", disabledLiveExecution: true },
+    { id: "simulate", label: "模拟预览", kind: "dry_run", disabledLiveExecution: true }
+  ];
 }
 
 function marketTypeLabel(type?: string): string {

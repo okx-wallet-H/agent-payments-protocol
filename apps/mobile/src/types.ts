@@ -377,6 +377,17 @@ export interface V2PredictionDetailView {
   updatedAt: string;
 }
 
+export interface V2PredictionDetailSource {
+  mode: "live_or_fallback" | "sample";
+  readOnly: true;
+  liveExecutionClosed: true;
+}
+
+export interface V2PredictionDetailResponse {
+  detail: V2PredictionDetailView;
+  source: V2PredictionDetailSource;
+}
+
 export interface V2ReceiveAddress {
   id: string;
   label: string;

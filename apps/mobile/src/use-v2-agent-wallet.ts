@@ -16,7 +16,7 @@ import {
   verifyV2AgentWalletTx,
   type V2AgentWalletSession
 } from "./v2-session";
-import type { V2ConversationCard, V2MarketSnapshot, V2PredictionDetailView } from "./types";
+import type { V2ConversationCard, V2MarketSnapshot, V2PredictionDetailResponse } from "./types";
 
 type GetAccessToken = () => Promise<string | null | undefined>;
 
@@ -163,7 +163,7 @@ export function useV2AgentWallet(input: {
     updateSession(next);
   }, [api, beginRequest, input.userId, isCurrentScope, scopeKey, updateSession]);
 
-  const loadPredictionDetail = useCallback((marketId: string): Promise<V2PredictionDetailView> => {
+  const loadPredictionDetail = useCallback((marketId: string): Promise<V2PredictionDetailResponse> => {
     return api.getPredictionDetail(marketId);
   }, [api]);
 
