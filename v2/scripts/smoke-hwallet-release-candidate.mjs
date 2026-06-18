@@ -38,6 +38,7 @@ const ownerReleasePacketSmoke = await readFile("v2/scripts/smoke-release-owner-p
 const ownerReleaseStatusSmoke = await readFile("v2/scripts/smoke-owner-release-status.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
 const predictionDetailViewSmoke = await readFile("v2/scripts/smoke-prediction-detail-view.mjs", "utf8");
+const projectExecutionPlan = await readFile("docs/PROJECT_EXECUTION_PLAN.md", "utf8");
 
 const scripts = packageJson.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -177,6 +178,14 @@ assertIncludes(predictionDetailViewSmoke, "detail actions are observe and simula
 assertIncludes(predictionDetailViewSmoke, "forbidden token", "prediction detail smoke checks forbidden action tokens");
 assertIncludes(predictionDetailViewSmoke, '"broadcast"', "prediction detail smoke blocks broadcast token");
 assertIncludes(predictionDetailViewSmoke, "detail view does not expose full yes asset id", "prediction detail smoke redacts asset ids");
+assertIncludes(projectExecutionPlan, "Carry OKX Outcomes market snapshots into Agent observe replies", "project plan records Agent market snapshots in replies");
+assertIncludes(projectExecutionPlan, "read-only prediction detail view", "project plan records read-only prediction detail view");
+assertIncludes(projectExecutionPlan, "order book summary", "project plan records order book detail summary");
+assertIncludes(projectExecutionPlan, "redacted asset ids", "project plan records asset id redaction");
+assertIncludes(projectExecutionPlan, "limited to observe/simulate", "project plan records observe/simulate action limit");
+assertIncludes(projectExecutionPlan, "npm run smoke:agent-readonly-explanation", "project plan requires read-only Agent explanation smoke");
+assertIncludes(projectExecutionPlan, "npm run smoke:prediction-detail-view", "project plan requires prediction detail smoke");
+assertIncludes(projectExecutionPlan, "npm run smoke:execution-gates", "project plan requires execution gate smoke");
 
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-release-candidate", "staging deployment runs the release candidate gate");
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-staging-handoff", "staging deployment runs the staging handoff gate");
@@ -425,6 +434,7 @@ assertNoRawSecrets({
   "v2/scripts/smoke-release-owner-packet.mjs": ownerReleasePacketSmoke,
   "v2/scripts/smoke-owner-release-status.mjs": ownerReleaseStatusSmoke,
   "v2/scripts/smoke-prediction-detail-view.mjs": predictionDetailViewSmoke,
+  "docs/PROJECT_EXECUTION_PLAN.md": projectExecutionPlan,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
