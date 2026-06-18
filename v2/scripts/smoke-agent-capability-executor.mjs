@@ -60,9 +60,12 @@ const okxMarket = {
   chainId: 196,
   marketId: "okx-worldcup-spain",
   question: "西班牙会赢得 2026 年世界杯冠军吗？",
+  status: "active",
   acceptingOrders: true,
   yesPrice: 0.17,
-  noPrice: 0.83
+  noPrice: 0.83,
+  liquidity: 4210,
+  volume24h: 988
 };
 
 const polymarketMarket = {
@@ -106,6 +109,14 @@ assert(okxResult.safety === "read_only", "OKX observe stays read-only");
 assert(okxResult.mcpCallStatus === "mocked", "OKX observe uses safe mock before real MCP");
 assert(okxResult.liveExecutionEnabled === false, "OKX observe keeps live execution off");
 assert(okxResult.moneyMoved === false, "OKX observe cannot move money");
+assert(okxResult.summary.includes("会 17% / 不会 83%"), "OKX observe summary includes friendly market odds");
+assert(okxResult.summary.includes("不提交订单"), "OKX observe summary keeps no-order boundary");
+assert(okxResult.payload.market?.provider === "okx-outcomes", "OKX observe carries market snapshot");
+assert(okxResult.payload.market?.yesPercent === 17, "OKX observe exposes YES percent");
+assert(okxResult.payload.market?.noPercent === 83, "OKX observe exposes NO percent");
+assert(okxResult.payload.market?.volume24h === 988, "OKX observe preserves 24h volume");
+assert(okxResult.payload.market?.readOnly === true, "OKX observe payload is read-only");
+assert(okxResult.payload.market?.moneyMovementEnabled === false, "OKX observe payload cannot move money");
 
 const dryRunPlan = await createAgentOrchestrationPlan({
   userText: "先模拟一下法国",
@@ -158,6 +169,7 @@ console.log(JSON.stringify({
   checks: [
     "wallet receive skips MCP calls",
     "OKX Outcomes route produces safe read-only observe result",
+    "OKX observe result carries read-only market snapshot for Agent analysis",
     "Polymarket plugin route produces safe dry-run result",
     "unfunded dry-run blocks before any MCP call",
     "execute-like text is downgraded to observe",
