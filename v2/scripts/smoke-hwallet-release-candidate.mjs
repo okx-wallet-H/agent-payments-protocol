@@ -192,7 +192,7 @@ assertIncludes(predictionDetailViewSmoke, "forbidden token", "prediction detail 
 assertIncludes(predictionDetailViewSmoke, '"broadcast"', "prediction detail smoke blocks broadcast token");
 assertIncludes(predictionDetailViewSmoke, "detail view does not expose full yes asset id", "prediction detail smoke redacts asset ids");
 assertIncludes(predictionPhaseTwoReadinessSmoke, "OKX Outcomes client does not expose live execution methods", "prediction phase-two readiness smoke protects client boundary");
-assertIncludes(predictionPhaseTwoReadinessSmoke, "API Key 绑定位", "prediction phase-two readiness smoke protects API Key placeholder");
+assertIncludes(predictionPhaseTwoReadinessSmoke, "绑定入口预留", "prediction phase-two readiness smoke protects API Key placeholder");
 assertIncludes(predictionPhaseTwoReadinessSmoke, "prediction detail route requests order book data", "prediction phase-two readiness smoke protects detail order book");
 assertIncludes(predictionPhaseTwoReadinessSmoke, "verify:merge includes prediction phase-two readiness smoke", "prediction phase-two readiness smoke is self-gated");
 assertIncludes(predictionPhaseTwoReadinessDoc, "API Key binding", "prediction phase-two readiness doc records API Key placeholder");

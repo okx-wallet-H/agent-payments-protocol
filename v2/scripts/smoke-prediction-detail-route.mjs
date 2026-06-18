@@ -42,6 +42,14 @@ check(
   "route explicitly requests order book data"
 );
 check(
+  source.includes("providerStatus") && source.includes("credentialsBound") && source.includes("apiKeyBindingLabel"),
+  "route returns redacted provider/API key binding status"
+);
+check(
+  !/apiSecret|passphrase|OK-ACCESS-KEY|OK-ACCESS-PASSPHRASE/.test(source),
+  "route does not expose raw OKX credential material"
+);
+check(
   !/\bexport\s+async\s+function\s+POST\b/.test(source),
   "route does not define a POST handler"
 );

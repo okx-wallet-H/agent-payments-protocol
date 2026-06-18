@@ -304,6 +304,8 @@ export interface V2WorldCupExploreSource {
   mode: "live" | "fallback" | "sample";
   label: string;
   message: string;
+  providerStatus?: "connected" | "not_configured" | "sample";
+  credentialsBound?: boolean;
   updatedAt: string;
   warning?: string;
 }
@@ -379,6 +381,9 @@ export interface V2PredictionDetailView {
 
 export interface V2PredictionDetailSource {
   mode: "live_or_fallback" | "sample";
+  providerStatus?: "connected" | "not_configured" | "sample";
+  credentialsBound?: boolean;
+  apiKeyBindingLabel?: string;
   readOnly: true;
   liveExecutionClosed: true;
 }

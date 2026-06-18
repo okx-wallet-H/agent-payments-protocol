@@ -11,6 +11,7 @@ const verifyMerge = String(scripts["verify:merge"] || "");
 
 const okxClient = read("v2/execution/okx-outcomes-client.ts");
 const detailView = read("v2/app/prediction-detail-view.ts");
+const worldCupExplore = read("v2/app/world-cup-explore.ts");
 const detailRoute = read("app/api/v2/prediction/detail/route.ts");
 const worldCupRoute = read("app/api/v2/world-cup/explore/route.ts");
 const predictionReadGuard = read("v2/auth/prediction-read-guard.ts");
@@ -74,11 +75,13 @@ check(detailRoute.includes("getOkxOutcomeMarketData"), "prediction detail route 
 check(detailRoute.includes("guardPredictionReadRequest"), "prediction detail route guards read access before provider reads");
 check(detailRoute.includes("createPredictionDetailView"), "prediction detail route returns normalized detail view");
 check(/includeOrderBook\s*:\s*true/.test(detailRoute), "prediction detail route requests order book data");
+check(detailRoute.includes("providerStatus") && detailRoute.includes("credentialsBound"), "prediction detail route returns redacted provider status");
 check(!/\bexport\s+async\s+function\s+POST\b/.test(detailRoute), "prediction detail route remains GET-only");
 
 check(worldCupRoute.includes("listOkxWorldCupMarkets"), "explore route can read OKX market catalog");
 check(worldCupRoute.includes("guardPredictionReadRequest"), "explore route guards read access before provider reads");
 check(worldCupRoute.includes("createWorldCupExploreView"), "explore route returns app-facing explore view");
+check(worldCupExplore.includes("credentialsBound") && worldCupExplore.includes("providerStatus"), "explore source carries redacted provider status");
 
 check(predictionReadGuard.includes("resolvePhaseOneUser"), "prediction read guard reuses Privy user boundary");
 check(predictionReadGuard.includes("PREDICTION_READ_RATE_LIMIT"), "prediction read guard exposes rate-limit tuning");
@@ -101,7 +104,8 @@ for (const text of [
   "OKX Outcomes",
   "只读查询",
   "订单簿摘要",
-  "API Key 绑定位",
+  "API Key ·",
+  "绑定入口预留",
   "观察",
   "模拟预览",
   "下单未开放"

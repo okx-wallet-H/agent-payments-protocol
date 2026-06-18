@@ -23,7 +23,7 @@ const requirements = [
   },
   {
     label: "mobile prediction-market UI exposes an API Key/API KEY binding slot",
-    pass: () => /\bAPI\s*(?:Key|KEY)\b/.test(screen) && /绑定位|绑定/.test(screen)
+    pass: () => /\bAPI\s*(?:Key|KEY)\b/.test(screen) && /绑定入口预留/.test(screen) && /待开放/.test(screen)
   },
   {
     label: "mobile prediction-market UI states 只读查询",
@@ -59,6 +59,9 @@ const requirements = [
     pass: () =>
       /interface V2PredictionDetailSource/.test(types) &&
       /mode: "live_or_fallback" \| "sample"/.test(types) &&
+      /providerStatus\?: "connected" \| "not_configured" \| "sample"/.test(types) &&
+      /credentialsBound\?: boolean/.test(types) &&
+      /apiKeyBindingLabel\?: string/.test(types) &&
       /liveExecutionClosed: true/.test(types) &&
       /interface V2PredictionDetailResponse/.test(types)
   },
@@ -69,6 +72,19 @@ const requirements = [
   {
     label: "mobile prediction-market UI renders backend action model",
     pass: () => /createPredictionDetailActions/.test(screen) && /detailActions\.map/.test(screen)
+  },
+  {
+    label: "mobile prediction-market UI avoids misleading live-execution reward copy",
+    pass: () => !/执行都会累计积分|执行或分享会额外加成/.test(screen)
+  },
+  {
+    label: "mobile prediction-market UI keeps API key binding disabled in app",
+    pass: () =>
+      /predictionApiKeySlot} disabled/.test(screen) &&
+      /暂未开放绑定/.test(screen) &&
+      /credentialsBound/.test(screen) &&
+      /apiKeyBindingLabel/.test(screen) &&
+      /不在本机保存密钥/.test(screen)
   }
 ];
 
