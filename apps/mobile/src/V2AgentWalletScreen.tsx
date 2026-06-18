@@ -797,7 +797,7 @@ function WorldCupTab({
           <View style={styles.sectionTitleRow}>
             <View>
               <Text style={styles.bigSectionTitle}>我的 Agent 战绩</Text>
-              <Text style={styles.sectionSub}>Agent 预测、跟踪和执行都会累计积分</Text>
+              <Text style={styles.sectionSub}>Agent 预测、跟踪和模拟都会累计积分</Text>
             </View>
             <Pressable style={styles.helpPill}>
               <Ionicons name="help-circle-outline" size={15} color={colors.ink} />
@@ -855,7 +855,7 @@ function WorldCupTab({
           </View>
           <View style={styles.taskCard}>
             <Text style={styles.taskTitle}>让 Agent 看一场</Text>
-            <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；执行或分享会额外加成</Text>
+            <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；跟踪或分享会额外加成</Text>
             <View style={styles.checkRow}>
               {["周一", "周二", "周三", "周四", "周五", "周六", "周日"].map((day, index) => (
                 <View key={day} style={styles.checkDay}>
@@ -1291,6 +1291,8 @@ function WorldCupMarketDetailPage({
   const orderBookSummary = createPredictionOrderBookSummary(detail);
   const sourceModeLabel = predictionSourceModeLabel(detailSource);
   const executionLabel = predictionExecutionLabel(detailSource, detail);
+  const apiKeyBindingTitle = detailSource?.apiKeyBindingLabel || "绑定入口预留";
+  const apiKeyBadge = predictionApiKeyBadgeLabel(detailSource);
   const detailStatus = detailLoading ? "同步中" : detail ? predictionSourceStatusLabel(detailSource, detail) : detailError ? "样例显示" : "已接入";
   const detailActions = createPredictionDetailActions(detail);
   const provider = marketProviderLabel(card.market.provider);
@@ -1419,13 +1421,16 @@ function WorldCupMarketDetailPage({
           </Text>
         </View>
 
-        <View style={styles.predictionApiKeySlot}>
+        <Pressable style={styles.predictionApiKeySlot} disabled accessibilityRole="button" accessibilityState={{ disabled: true }}>
           <View style={styles.predictionApiKeyCopy}>
-            <Text style={styles.predictionApiKeyTitle}>API Key 绑定位</Text>
-            <Text style={styles.predictionApiKeyText}>后端绑定 OKX API Key 后，App 只显示连接状态，不在本机保存密钥。</Text>
+            <Text style={styles.predictionApiKeyTitle}>API Key · {apiKeyBindingTitle}</Text>
+            <Text style={styles.predictionApiKeyText}>{predictionApiKeyStatusText(detailSource)}</Text>
           </View>
-          <Text style={styles.predictionApiKeyBadge}>待绑定</Text>
-        </View>
+          <View style={styles.predictionApiKeyBadge}>
+            <Ionicons name="lock-closed-outline" size={13} color="#0c2113" />
+            <Text style={styles.predictionApiKeyBadgeText}>{apiKeyBadge}</Text>
+          </View>
+        </Pressable>
 
         <View style={styles.predictionMarketActionRow}>
           {detailActions.map((action) => (
@@ -3327,6 +3332,18 @@ function predictionSourceModeLabel(source?: V2PredictionDetailResponse["source"]
 function predictionExecutionLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
   if (source?.liveExecutionClosed || detail?.liveExecutionClosed) return "真实执行关闭";
   return "只读占位";
+}
+
+function predictionApiKeyBadgeLabel(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.credentialsBound) return "已接入";
+  return "待开放";
+}
+
+function predictionApiKeyStatusText(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.credentialsBound) {
+    return "后端已接入 OKX 只读凭据，App 只显示连接状态，不在本机保存密钥。";
+  }
+  return "暂未开放绑定。后端接入后，App 只显示连接状态，不在本机保存密钥。";
 }
 
 function createPredictionDetailActions(detail?: V2PredictionDetailView): V2PredictionDetailView["actions"] {
@@ -6162,7 +6179,9 @@ const styles = StyleSheet.create({
   },
   predictionApiKeySlot: {
     borderRadius: 18,
-    backgroundColor: "rgba(201, 255, 77, 0.12)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.14)",
     padding: 13,
     flexDirection: "row",
     alignItems: "center",
@@ -6184,12 +6203,16 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   predictionApiKeyBadge: {
-    overflow: "hidden",
     borderRadius: 13,
     backgroundColor: "#c9ff4d",
-    color: "#0c2113",
     paddingHorizontal: 10,
     paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4
+  },
+  predictionApiKeyBadgeText: {
+    color: "#0c2113",
     fontSize: 12,
     fontWeight: "900"
   },

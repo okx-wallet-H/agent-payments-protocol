@@ -38,6 +38,8 @@ export interface WorldCupExploreSource {
   mode: "live" | "fallback" | "sample";
   label: string;
   message: string;
+  providerStatus: "connected" | "not_configured" | "sample";
+  credentialsBound: boolean;
   updatedAt: string;
   warning?: string;
 }
@@ -147,6 +149,8 @@ export function createWorldCupExploreSource(
     mode,
     label: labelByProvider[provider],
     message: messageByProvider[provider],
+    providerStatus: provider === "okx-outcomes" ? "connected" : provider === "local-sample" ? "sample" : "not_configured",
+    credentialsBound: provider === "okx-outcomes",
     updatedAt: new Date().toISOString(),
     warning
   };

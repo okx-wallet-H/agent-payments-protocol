@@ -27,7 +27,7 @@ The App can show a prediction market as a read-only console:
 - 24h volume, liquidity, market status, and order-book summary
 - `观察` entry for Agent explanation
 - `模拟预览` entry for dry-run planning
-- `API Key 绑定位` as a future binding slot
+- `API Key · 绑定入口预留` as a future binding slot
 - `下单未开放` for the closed live-execution path
 
 ## Closed Capability

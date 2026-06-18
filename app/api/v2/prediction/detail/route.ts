@@ -38,14 +38,19 @@ export async function GET(request: Request) {
   }
 
   const mode = readDetailMode(url);
+  const credentialsBound = hasOkxOutcomesCredentials();
   const data = await readPredictionDetailSafely(marketId, mode);
   const liveCandidate = isOutcomeMarketData(data) && data.market?.marketId === marketId;
+  const sourceMode = liveCandidate && mode !== "sample" && credentialsBound ? "live_or_fallback" : "sample";
 
   return NextResponse.json(
     {
       detail: createPredictionDetailView(data),
       source: {
-        mode: liveCandidate && mode !== "sample" && hasOkxOutcomesCredentials() ? "live_or_fallback" : "sample",
+        mode: sourceMode,
+        providerStatus: credentialsBound ? "connected" : "not_configured",
+        credentialsBound,
+        apiKeyBindingLabel: credentialsBound ? "后端已接入" : "绑定入口预留",
         readOnly: true,
         liveExecutionClosed: true
       }
