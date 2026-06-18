@@ -29,6 +29,7 @@ import type {
   V2MobileChatMessage,
   V2MobileHomeView,
   V2PredictionCard,
+  V2PredictionDetailActionId,
   V2PredictionDetailResponse,
   V2PredictionDetailView,
   V2SimulationCard,
@@ -1299,6 +1300,7 @@ function WorldCupMarketDetailPage({
   const yesLabel = yesDetail?.priceLabel || card.probabilityLabel || yesOption?.priceLabel || "观察";
   const noLabel = noDetail?.priceLabel || noOption?.priceLabel || "观察";
   const volumeLabel = detail?.metrics.volume24hLabel || detail?.metrics.volumeLabel || card.volumeLabel || "待同步";
+  const liquidityLabel = detail?.metrics.liquidityLabel || "待同步";
   const orderBookSummary = createPredictionOrderBookSummary(detail);
   const sourceModeLabel = predictionSourceModeLabel(detailSource);
   const executionLabel = predictionExecutionLabel(detailSource, detail);
@@ -1395,8 +1397,8 @@ function WorldCupMarketDetailPage({
             <Text style={styles.predictionMarketQueryValue}>{orderBookSummary || "等待同步"}</Text>
           </View>
           <View style={styles.predictionMarketQueryCell}>
-            <Text style={styles.predictionMarketQueryLabel}>成交量</Text>
-            <Text style={styles.predictionMarketQueryValue}>{volumeLabel}</Text>
+            <Text style={styles.predictionMarketQueryLabel}>成交 / 流动性</Text>
+            <Text style={styles.predictionMarketQueryValue}>{volumeLabel} / {liquidityLabel}</Text>
           </View>
           <View style={styles.predictionMarketQueryCell}>
             <Text style={styles.predictionMarketQueryLabel}>同步模式</Text>
@@ -1475,28 +1477,37 @@ function WorldCupMarketDetailPage({
           {detailActions.map((action) => (
             <Pressable
               key={action.id}
-              style={styles.predictionMarketActionButton}
-              onPress={() => (action.id === "simulate" ? onSimulate(card) : onAskAgent(card))}
+              disabled={action.enabled === false}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: action.enabled === false }}
+              style={action.enabled === false ? styles.predictionMarketDisabledAction : styles.predictionMarketActionButton}
+              onPress={() => {
+                if (action.id === "simulate") {
+                  onSimulate(card);
+                  return;
+                }
+                if (action.id === "track" || action.id === "build_strategy") {
+                  onRunMarketAction(action.id, card);
+                  return;
+                }
+                onAskAgent(card);
+              }}
             >
-              <Ionicons name={action.id === "simulate" ? "flask-outline" : "eye-outline"} size={18} color="#0c2113" />
-              <Text style={styles.predictionMarketActionText}>{action.label}</Text>
+              <Ionicons
+                name={predictionDetailActionIcon(action.id)}
+                size={18}
+                color={action.enabled === false ? "#8a8278" : "#0c2113"}
+              />
+              <Text style={action.enabled === false ? styles.predictionMarketDisabledActionText : styles.predictionMarketActionText}>
+                {action.label}
+              </Text>
             </Pressable>
           ))}
-          <Pressable style={styles.predictionMarketActionButton} onPress={() => onRunMarketAction("track", card)}>
-            <Ionicons name="bookmark-outline" size={18} color="#0c2113" />
-            <Text style={styles.predictionMarketActionText}>加入跟踪</Text>
-          </Pressable>
-          <Pressable style={styles.predictionMarketActionButton} onPress={() => onRunMarketAction("build_strategy", card)}>
-            <Ionicons name="sparkles-outline" size={18} color="#0c2113" />
-            <Text style={styles.predictionMarketActionText}>生成策略</Text>
-          </Pressable>
-          <View style={styles.predictionMarketDisabledAction}>
-            <Ionicons name="lock-closed-outline" size={18} color="#8a8278" />
-            <Text style={styles.predictionMarketDisabledActionText}>下单未开放</Text>
-          </View>
         </View>
 
-        <Text style={styles.predictionMarketSafetyText}>真实下单关闭：当前只允许只读查询、Agent 观察和模拟，不会签名或广播交易。</Text>
+        <Text style={styles.predictionMarketSafetyText}>
+          真实下单关闭：当前只允许只读查询、Agent 观察、模拟、本地跟踪和策略草稿，不会签名或广播交易。
+        </Text>
       </View>
 
         <Pressable style={styles.marketDetailPrimaryButton} onPress={() => onAskAgent(card)}>
@@ -3396,9 +3407,27 @@ function predictionApiKeyStatusText(source?: V2PredictionDetailResponse["source"
 function createPredictionDetailActions(detail?: V2PredictionDetailView): V2PredictionDetailView["actions"] {
   if (detail?.actions?.length) return detail.actions;
   return [
-    { id: "observe", label: "观察", kind: "read_only", disabledLiveExecution: true },
-    { id: "simulate", label: "模拟预览", kind: "dry_run", disabledLiveExecution: true }
+    { id: "observe", label: "观察", kind: "read_only", enabled: true, disabledLiveExecution: true },
+    { id: "simulate", label: "模拟预览", kind: "dry_run", enabled: true, disabledLiveExecution: true },
+    { id: "track", label: "加入跟踪", kind: "local_record", enabled: true, disabledLiveExecution: true },
+    { id: "build_strategy", label: "生成策略", kind: "local_record", enabled: true, disabledLiveExecution: true },
+    {
+      id: "order_closed",
+      label: "下单未开放",
+      kind: "closed",
+      enabled: false,
+      disabledLiveExecution: true,
+      disabledReason: "第二阶段不开放真实下单。"
+    }
   ];
+}
+
+function predictionDetailActionIcon(actionId: V2PredictionDetailActionId): keyof typeof Ionicons.glyphMap {
+  if (actionId === "simulate") return "flask-outline";
+  if (actionId === "track") return "bookmark-outline";
+  if (actionId === "build_strategy") return "sparkles-outline";
+  if (actionId === "order_closed") return "lock-closed-outline";
+  return "eye-outline";
 }
 
 function marketTypeLabel(type?: string): string {

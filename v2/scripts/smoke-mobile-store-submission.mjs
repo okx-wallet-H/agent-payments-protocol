@@ -49,7 +49,7 @@ assertIncludes(submissionPacket, "com.agentwallet.xlayer", "submission packet re
 assertIncludes(submissionPacket, "Finance", "submission packet records category");
 assertIncludes(submissionPacket, "App Store Connect Baseline", "submission packet includes App Store baseline");
 assertIncludes(submissionPacket, "Google Play Console Baseline", "submission packet includes Google Play baseline");
-assertIncludes(submissionPacket, "observe/simulate only", "submission packet records review safety boundary");
+assertIncludes(submissionPacket, "read-only observation, simulation, local tracking", "submission packet records review safety boundary");
 assertIncludes(submissionPacket, "Live execution status: closed", "submission packet records closed execution");
 assertIncludes(submissionPacket, "Data safety answers", "submission packet records Play data safety baseline");
 assertIncludes(submissionPacket, "Store screenshots are approved by the owner", "submission packet keeps owner screenshot approval gate");

@@ -5,7 +5,8 @@ import type {
   OkxOutcomeTicker
 } from "../execution/okx-outcomes-client";
 
-export type PredictionDetailActionId = "observe" | "simulate";
+export type PredictionDetailActionId = "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+export type PredictionDetailActionKind = "read_only" | "dry_run" | "local_record" | "closed";
 export type PredictionDetailOutcomeSide = "yes" | "no";
 
 export interface PredictionDetailOutcomeRow {
@@ -53,8 +54,10 @@ export interface PredictionDetailView {
   actions: Array<{
     id: PredictionDetailActionId;
     label: string;
-    kind: "read_only" | "dry_run";
+    kind: PredictionDetailActionKind;
+    enabled: boolean;
     disabledLiveExecution: true;
+    disabledReason?: string;
   }>;
   updatedAt: string;
 }
@@ -92,22 +95,50 @@ export function createPredictionDetailView(input: MarketSnapshot | OkxOutcomeMar
     },
     orderBook,
     insight: createReadOnlyInsight(market, outcomes),
-    actions: [
-      {
-        id: "observe",
-        label: "让 Agent 观察",
-        kind: "read_only",
-        disabledLiveExecution: true
-      },
-      {
-        id: "simulate",
-        label: "模拟看看",
-        kind: "dry_run",
-        disabledLiveExecution: true
-      }
-    ],
+    actions: createDetailActions(),
     updatedAt: new Date().toISOString()
   };
+}
+
+function createDetailActions(): PredictionDetailView["actions"] {
+  return [
+    {
+      id: "observe",
+      label: "让 Agent 观察",
+      kind: "read_only",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "simulate",
+      label: "模拟预览",
+      kind: "dry_run",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "track",
+      label: "加入跟踪",
+      kind: "local_record",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "build_strategy",
+      label: "生成策略",
+      kind: "local_record",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "order_closed",
+      label: "下单未开放",
+      kind: "closed",
+      enabled: false,
+      disabledLiveExecution: true,
+      disabledReason: "第二阶段不开放真实下单、签名或广播。"
+    }
+  ];
 }
 
 function createOutcomeRow(

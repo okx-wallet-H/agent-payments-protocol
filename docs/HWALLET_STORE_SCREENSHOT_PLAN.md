@@ -28,7 +28,8 @@ Use this sequence for both iOS and Android:
    - Agent can continue analysis or simulation only.
 4. **Agent Analysis**
    - Shows a friendly Agent response and one sample card.
-   - The card must say or imply observe/simulate, not live trading.
+   - The card must say or imply read-only observation, simulation, or local
+     tracking/strategy drafts, not live trading.
 5. **Audit / Records**
    - Shows transparent records or activity history.
    - Records must be redacted and user-readable.
@@ -53,7 +54,8 @@ The owner may adjust final copy, but screenshots must keep these facts true:
 - Email login creates a user session.
 - The visible wallet address is one receive address.
 - Deposit recognition can happen by refresh; tx hash is optional.
-- The first release is observe/simulate only.
+- The first release supports read-only observation, simulation, local tracking,
+  and strategy drafts only.
 - Live signing, swaps, orders, and autonomous money movement are closed.
 
 ## Redaction Rules

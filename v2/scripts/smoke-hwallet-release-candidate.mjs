@@ -187,7 +187,8 @@ checks.push("release checklist keeps HWallet candidate checks in safe order");
 
 assertIncludes(predictionDetailViewSmoke, "detail view is explicitly read-only", "prediction detail smoke enforces read-only detail view");
 assertIncludes(predictionDetailViewSmoke, "detail view keeps live execution closed", "prediction detail smoke keeps live execution closed");
-assertIncludes(predictionDetailViewSmoke, "detail actions are observe and simulate only", "prediction detail smoke limits actions");
+assertIncludes(predictionDetailViewSmoke, "detail actions expose observe, simulate, track, strategy, and closed order placeholder", "prediction detail smoke protects server action model");
+assertIncludes(predictionDetailViewSmoke, "order placeholder is disabled", "prediction detail smoke keeps order placeholder disabled");
 assertIncludes(predictionDetailViewSmoke, "forbidden token", "prediction detail smoke checks forbidden action tokens");
 assertIncludes(predictionDetailViewSmoke, '"broadcast"', "prediction detail smoke blocks broadcast token");
 assertIncludes(predictionDetailViewSmoke, "detail view does not expose full yes asset id", "prediction detail smoke redacts asset ids");
@@ -204,7 +205,7 @@ assertIncludes(projectExecutionPlan, "Carry OKX Outcomes market snapshots into A
 assertIncludes(projectExecutionPlan, "read-only prediction detail view", "project plan records read-only prediction detail view");
 assertIncludes(projectExecutionPlan, "order book summary", "project plan records order book detail summary");
 assertIncludes(projectExecutionPlan, "redacted asset ids", "project plan records asset id redaction");
-assertIncludes(projectExecutionPlan, "limited to observe/simulate", "project plan records observe/simulate action limit");
+assertIncludes(projectExecutionPlan, "observe/simulate/local-record/closed-order model", "project plan records server action model");
 assertIncludes(projectExecutionPlan, "npm run smoke:agent-readonly-explanation", "project plan requires read-only Agent explanation smoke");
 assertIncludes(projectExecutionPlan, "npm run smoke:prediction-detail-view", "project plan requires prediction detail smoke");
 assertIncludes(projectExecutionPlan, "npm run smoke:execution-gates", "project plan requires execution gate smoke");

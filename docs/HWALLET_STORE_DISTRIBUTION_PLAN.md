@@ -121,7 +121,8 @@ HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWA
    - Export compliance answer. Current app config sets
      `ITSAppUsesNonExemptEncryption` to `false`.
    - Screenshots for required iPhone sizes.
-   - Review notes that explain HWallet is observe/simulate only and live money
+   - Review notes that explain HWallet supports read-only observation,
+     simulation, local tracking, and strategy drafts only, and live money
      movement is disabled in this version.
    - Reviewer login instructions from
      `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`.

@@ -325,7 +325,8 @@ export interface V2WorldCupExploreView {
   updatedAt: string;
 }
 
-export type V2PredictionDetailActionId = "observe" | "simulate";
+export type V2PredictionDetailActionId = "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+export type V2PredictionDetailActionKind = "read_only" | "dry_run" | "local_record" | "closed";
 export type V2PredictionDetailOutcomeSide = "yes" | "no";
 
 export interface V2PredictionDetailOutcomeRow {
@@ -373,8 +374,10 @@ export interface V2PredictionDetailView {
   actions: Array<{
     id: V2PredictionDetailActionId;
     label: string;
-    kind: "read_only" | "dry_run";
+    kind: V2PredictionDetailActionKind;
+    enabled: boolean;
     disabledLiveExecution: true;
+    disabledReason?: string;
   }>;
   updatedAt: string;
 }
