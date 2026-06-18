@@ -670,7 +670,7 @@ function WorldCupTab({
   const [selectedMarketDetailError, setSelectedMarketDetailError] = useState<string | undefined>();
   const insight = createWorldCupInsightCopy(explore);
   const previewCards = createWorldCupPreviewCards(explore);
-  const selectedMarketId = selectedMarket?.market.marketId;
+  const selectedMarketId = selectedMarket?.marketRef.marketId;
 
   useEffect(() => {
     if (worldCupView !== "detail" || !selectedMarketId) {
@@ -733,15 +733,15 @@ function WorldCupTab({
         detailLoading={selectedMarketDetailLoading}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
-          onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+          onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, marketSnapshotFromExploreCard(card));
           onHome();
         }}
         onSimulate={(card) => {
-          onRunMarketAction("simulate", card.market);
+          onRunMarketAction("simulate", marketSnapshotFromExploreCard(card));
           onHome();
         }}
         onRunMarketAction={(action, card) => {
-          onRunMarketAction(action, card.market);
+          onRunMarketAction(action, marketSnapshotFromExploreCard(card));
           onHome();
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -836,7 +836,10 @@ function WorldCupTab({
           style={styles.agentInsightCard}
           onPress={() => {
             if (insight.marketCard) {
-              onAnalyzeMarket(`帮我继续分析：${insight.marketCard.displayTitle || insight.marketCard.title}`, insight.marketCard.market);
+              onAnalyzeMarket(
+                `帮我继续分析：${insight.marketCard.displayTitle || insight.marketCard.title}`,
+                marketSnapshotFromExploreCard(insight.marketCard)
+              );
               onHome();
               return;
             }
@@ -924,7 +927,7 @@ function WorldCupTab({
             key={card.id}
             style={styles.watchCard}
             onPress={() => {
-              onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+              onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, marketSnapshotFromExploreCard(card));
               onHome();
             }}
           >
@@ -1308,8 +1311,8 @@ function WorldCupMarketDetailPage({
   const apiKeyBadge = predictionApiKeyBadgeLabel(detailSource);
   const detailStatus = detailLoading ? "同步中" : detail ? predictionSourceStatusLabel(detailSource, detail) : detailError ? "样例显示" : "已接入";
   const detailActions = createPredictionDetailActions(detail);
-  const provider = marketProviderLabel(card.market.provider);
-  const marketIdLabel = shortenMarketReference(card.market.marketId);
+  const provider = marketProviderLabel(card.marketRef.provider);
+  const marketIdLabel = shortenMarketReference(card.marketRef.marketId);
 
   return (
     <View style={styles.worldCupShell}>
@@ -1357,11 +1360,11 @@ function WorldCupMarketDetailPage({
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>结束时间</Text>
-          <Text style={styles.marketDetailMetaValue}>{formatMarketEndTime(card.market.endDate) || "待同步"}</Text>
+          <Text style={styles.marketDetailMetaValue}>{formatMarketEndTime(card.marketRef.endDate) || "待同步"}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>市场类型</Text>
-          <Text style={styles.marketDetailMetaValue}>{marketTypeLabel(card.market.marketType)}</Text>
+          <Text style={styles.marketDetailMetaValue}>{marketTypeLabel(card.marketRef.marketType)}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>状态</Text>
@@ -3310,6 +3313,27 @@ function groupTitleFromCard(card: V2WorldCupExploreMarketCard): string {
   return "2026 年世界杯小组赛";
 }
 
+function marketSnapshotFromExploreCard(card: V2WorldCupExploreMarketCard): V2MarketSnapshot {
+  const ref = card.marketRef;
+  return {
+    provider: ref.provider,
+    chainId: ref.chainId,
+    eventId: ref.eventId,
+    marketId: ref.marketId,
+    question: ref.question,
+    status: ref.status,
+    marketType: ref.marketType,
+    yesPrice: ref.yesPrice,
+    noPrice: ref.noPrice,
+    acceptingOrders: ref.acceptingOrders,
+    liquidity: ref.liquidity,
+    volume24h: ref.volume24h,
+    volume: ref.volume,
+    startTime: ref.startTime,
+    endDate: ref.endDate
+  };
+}
+
 function predictionProgressWidth(card: V2PredictionCard): `${number}%` {
   const price = card.market.yesPrice || 0.1;
   const percent = Math.max(3, Math.min(100, Math.round(price * 100)));
@@ -3358,7 +3382,7 @@ function timingBadgeStyle(status: NonNullable<V2WorldCupExploreMarketCard["timin
   return { backgroundColor: "#ececec", color: "#4f4a45" };
 }
 
-function marketProviderLabel(provider: V2WorldCupExploreMarketCard["market"]["provider"]): string {
+function marketProviderLabel(provider: V2WorldCupExploreMarketCard["marketRef"]["provider"]): string {
   if (provider === "okx-outcomes") return "OKX Outcomes";
   return "插件数据";
 }
@@ -3437,9 +3461,9 @@ function marketTypeLabel(type?: string): string {
 }
 
 function marketStatusLabel(card: V2WorldCupExploreMarketCard): string {
-  if (card.status === "observable" && card.market.acceptingOrders) return "可观察";
-  if (card.market.status === "resolved") return "已结算";
-  if (card.market.status === "settling") return "结算中";
+  if (card.status === "observable" && card.marketRef.acceptingOrders) return "可观察";
+  if (card.marketRef.status === "resolved") return "已结算";
+  if (card.marketRef.status === "settling") return "结算中";
   return "观察中";
 }
 

@@ -7,8 +7,29 @@ export interface WorldCupExploreOption {
   label: string;
   price?: number;
   priceLabel?: string;
-  assetId?: string;
+  assetIdLabel?: string;
   side?: "yes" | "no";
+}
+
+export interface WorldCupExploreMarketRef {
+  provider: MarketSnapshot["provider"];
+  chainId: MarketSnapshot["chainId"];
+  eventId?: string;
+  marketId: string;
+  question: string;
+  status?: MarketSnapshot["status"];
+  marketType?: MarketSnapshot["marketType"];
+  yesPrice?: number;
+  noPrice?: number;
+  acceptingOrders: boolean;
+  liquidity?: number;
+  volume24h?: number;
+  volume?: number;
+  startTime?: string;
+  endDate?: string;
+  providerLabel: string;
+  readOnly: true;
+  liveExecutionClosed: true;
 }
 
 export interface WorldCupExploreMarketCard {
@@ -27,7 +48,7 @@ export interface WorldCupExploreMarketCard {
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "observable" | "watch_only";
-  market: MarketSnapshot;
+  marketRef: WorldCupExploreMarketRef;
   options: WorldCupExploreOption[];
 }
 
@@ -104,18 +125,18 @@ function sortExploreCards(cards: WorldCupExploreMarketCard[]): WorldCupExploreMa
       if (timeDelta !== 0) return timeDelta;
     }
 
-    const volumeDelta = marketVolumeScore(b.market) - marketVolumeScore(a.market);
+    const volumeDelta = marketVolumeScore(b.marketRef) - marketVolumeScore(a.marketRef);
     if (volumeDelta !== 0) return volumeDelta;
 
-    const statusDelta = Number(b.market.acceptingOrders) - Number(a.market.acceptingOrders);
+    const statusDelta = Number(b.marketRef.acceptingOrders) - Number(a.marketRef.acceptingOrders);
     if (statusDelta !== 0) return statusDelta;
 
-    return (b.market.yesPrice || 0) - (a.market.yesPrice || 0);
+    return (b.marketRef.yesPrice || 0) - (a.marketRef.yesPrice || 0);
   });
 }
 
 function upcomingSortScore(card: WorldCupExploreMarketCard): number {
-  const time = parseMarketTime(card.market.startTime);
+  const time = parseMarketTime(card.marketRef.startTime);
   if (!time) return Number.MAX_SAFE_INTEGER;
   const now = Date.now();
   const diffMs = time.getTime() - now;
@@ -124,7 +145,7 @@ function upcomingSortScore(card: WorldCupExploreMarketCard): number {
   return Number.MAX_SAFE_INTEGER - Math.min(Math.abs(diffMs), 10_000_000_000);
 }
 
-function marketVolumeScore(market: MarketSnapshot): number {
+function marketVolumeScore(market: Pick<MarketSnapshot, "volume24h" | "volume" | "liquidity">): number {
   return market.volume24h || market.volume || market.liquidity || 0;
 }
 
@@ -188,14 +209,14 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
     probabilityLabel: yesPrice === undefined ? undefined : `${Math.round(yesPrice * 100)}%`,
     volumeLabel: formatVolume(market.volume24h || market.volume),
     status: market.acceptingOrders ? "observable" : "watch_only",
-    market,
+    marketRef: createExploreMarketRef(market),
     options: [
       {
         id: `${market.marketId}:yes`,
         label: "Yes",
         price: yesPrice,
         priceLabel: formatPrice(yesPrice),
-        assetId: market.yesAssetId,
+        assetIdLabel: market.yesAssetId ? shortenId(market.yesAssetId) : undefined,
         side: "yes" as const
       },
       {
@@ -203,10 +224,33 @@ function toExploreCard(market: MarketSnapshot): WorldCupExploreMarketCard {
         label: "No",
         price: noPrice,
         priceLabel: formatPrice(noPrice),
-        assetId: market.noAssetId,
+        assetIdLabel: market.noAssetId ? shortenId(market.noAssetId) : undefined,
         side: "no" as const
       }
-    ].filter((option) => option.price !== undefined || option.assetId)
+    ].filter((option) => option.price !== undefined || option.assetIdLabel)
+  };
+}
+
+function createExploreMarketRef(market: MarketSnapshot): WorldCupExploreMarketRef {
+  return {
+    provider: market.provider,
+    chainId: market.chainId,
+    eventId: market.eventId,
+    marketId: market.marketId,
+    question: market.question,
+    status: market.status,
+    marketType: market.marketType,
+    yesPrice: market.yesPrice,
+    noPrice: market.noPrice,
+    acceptingOrders: market.acceptingOrders,
+    liquidity: market.liquidity,
+    volume24h: market.volume24h,
+    volume: market.volume,
+    startTime: market.startTime,
+    endDate: market.endDate,
+    providerLabel: market.provider === "okx-outcomes" ? "OKX Outcomes" : "插件数据",
+    readOnly: true,
+    liveExecutionClosed: true
   };
 }
 
@@ -275,6 +319,11 @@ function formatVolume(volume?: number): string | undefined {
   if (!volume) return undefined;
   if (volume >= 10_000) return `${(volume / 10_000).toFixed(2)}万 交易额`;
   return `${Math.round(volume)} 交易额`;
+}
+
+function shortenId(value: string): string {
+  if (value.length <= 14) return value;
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
 function parseMarketTime(value?: string): Date | undefined {
