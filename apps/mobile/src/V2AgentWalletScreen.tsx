@@ -1217,6 +1217,8 @@ function WorldCupMarketDetailPage({
 }) {
   const yesOption = card.options.find((option) => option.side === "yes") || card.options[0];
   const noOption = card.options.find((option) => option.side === "no") || card.options[1];
+  const provider = marketProviderLabel(card.market.provider);
+  const marketIdLabel = shortenMarketReference(card.market.marketId);
 
   return (
     <View style={styles.worldCupShell}>
@@ -1256,7 +1258,7 @@ function WorldCupMarketDetailPage({
         <Text style={styles.marketDetailNote}>{card.agentNote || "数据已经同步，先观察热度和资金变化。"}</Text>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>数据来源</Text>
-          <Text style={styles.marketDetailMetaValue}>{marketProviderLabel(card.market.provider)}</Text>
+          <Text style={styles.marketDetailMetaValue}>{provider}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>交易额</Text>
@@ -1274,6 +1276,65 @@ function WorldCupMarketDetailPage({
           <Text style={styles.marketDetailMeta}>状态</Text>
           <Text style={styles.marketDetailMetaValue}>{marketStatusLabel(card)}</Text>
         </View>
+      </View>
+
+      <View style={styles.predictionMarketConsoleCard}>
+        <View style={styles.predictionMarketConsoleHeader}>
+          <View style={styles.predictionMarketConsoleIcon}>
+            <Ionicons name="analytics-outline" size={20} color="#0c2113" />
+          </View>
+          <View style={styles.predictionMarketConsoleTitleStack}>
+            <Text style={styles.predictionMarketConsoleEyebrow}>预测市场</Text>
+            <Text style={styles.predictionMarketConsoleTitle}>OKX Outcomes 只读查询</Text>
+          </View>
+          <Text style={styles.predictionMarketConsoleStatus}>已接入</Text>
+        </View>
+
+        <View style={styles.predictionMarketQueryGrid}>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>市场</Text>
+            <Text style={styles.predictionMarketQueryValue}>{marketIdLabel}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>会 / 不会</Text>
+            <Text style={styles.predictionMarketQueryValue}>
+              {card.probabilityLabel || yesOption?.priceLabel || "观察"} / {noOption?.priceLabel || "观察"}
+            </Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>订单簿</Text>
+            <Text style={styles.predictionMarketQueryValue}>摘要查询</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>成交量</Text>
+            <Text style={styles.predictionMarketQueryValue}>{card.volumeLabel || "待同步"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.predictionApiKeySlot}>
+          <View style={styles.predictionApiKeyCopy}>
+            <Text style={styles.predictionApiKeyTitle}>API Key 绑定位</Text>
+            <Text style={styles.predictionApiKeyText}>后端绑定 OKX API Key 后，App 只显示连接状态，不在本机保存密钥。</Text>
+          </View>
+          <Text style={styles.predictionApiKeyBadge}>待绑定</Text>
+        </View>
+
+        <View style={styles.predictionMarketActionRow}>
+          <Pressable style={styles.predictionMarketActionButton} onPress={() => onAskAgent(card)}>
+            <Ionicons name="eye-outline" size={18} color="#0c2113" />
+            <Text style={styles.predictionMarketActionText}>观察</Text>
+          </Pressable>
+          <Pressable style={styles.predictionMarketActionButton} onPress={() => onAskAgent(card)}>
+            <Ionicons name="flask-outline" size={18} color="#0c2113" />
+            <Text style={styles.predictionMarketActionText}>模拟</Text>
+          </Pressable>
+          <View style={styles.predictionMarketDisabledAction}>
+            <Ionicons name="lock-closed-outline" size={18} color="#8a8278" />
+            <Text style={styles.predictionMarketDisabledActionText}>下单未开放</Text>
+          </View>
+        </View>
+
+        <Text style={styles.predictionMarketSafetyText}>真实下单关闭：当前只允许只读查询、Agent 观察和模拟，不会签名或广播交易。</Text>
       </View>
 
         <Pressable style={styles.marketDetailPrimaryButton} onPress={() => onAskAgent(card)}>
@@ -3127,6 +3188,12 @@ function timingBadgeStyle(status: NonNullable<V2WorldCupExploreMarketCard["timin
 function marketProviderLabel(provider: V2WorldCupExploreMarketCard["market"]["provider"]): string {
   if (provider === "okx-outcomes") return "OKX Outcomes";
   return "插件数据";
+}
+
+function shortenMarketReference(value?: string): string {
+  if (!value) return "待同步";
+  if (value.length <= 14) return value;
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
 function marketTypeLabel(type?: string): string {
@@ -5877,6 +5944,153 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "900"
+  },
+  predictionMarketConsoleCard: {
+    borderRadius: 24,
+    backgroundColor: "#0f2118",
+    padding: 18,
+    gap: 16,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 3
+  },
+  predictionMarketConsoleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionMarketConsoleIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionMarketConsoleTitleStack: {
+    flex: 1,
+    gap: 3
+  },
+  predictionMarketConsoleEyebrow: {
+    color: "#aaff35",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketConsoleTitle: {
+    color: "#fff",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  predictionMarketConsoleStatus: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.8)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketQueryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  predictionMarketQueryCell: {
+    width: "48%",
+    minHeight: 72,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 12,
+    gap: 7,
+    justifyContent: "center"
+  },
+  predictionMarketQueryLabel: {
+    color: "rgba(255, 255, 255, 0.58)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketQueryValue: {
+    color: "#fff",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  predictionApiKeySlot: {
+    borderRadius: 18,
+    backgroundColor: "rgba(201, 255, 77, 0.12)",
+    padding: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionApiKeyCopy: {
+    flex: 1,
+    gap: 4
+  },
+  predictionApiKeyTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionApiKeyText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
+  },
+  predictionApiKeyBadge: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "#c9ff4d",
+    color: "#0c2113",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketActionRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  predictionMarketActionButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "#c9ff4d",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionMarketActionText: {
+    color: "#0c2113",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionMarketDisabledAction: {
+    flex: 1.25,
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionMarketDisabledActionText: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionMarketSafetyText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
   },
   detailButton: {
     minHeight: 48,
