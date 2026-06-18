@@ -44,10 +44,12 @@ const worldCupPoster = require("../assets/world-cup-agent-poster.png");
 const appIcon = require("../assets/icon.png");
 
 type MainTab = "agent" | "worldcup" | "mine" | "wallet";
+type LoginStep = "email" | "code";
 type WorldCupView = "home" | "explore" | "detail";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 type VerifiedWalletTransfer = NonNullable<V2MobileAgentMemory["wallet"]>["verifiedTransfers"][number];
 
+const loginDigits = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const marketCategories: MarketCategory[] = ["冠军", "金靴奖得主", "小组赛", "近期比赛"];
 const exploreCategoryByTab: Record<MarketCategory, V2WorldCupExploreCategory> = {
   冠军: "champion",
@@ -130,6 +132,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const { wallets, create } = useEmbeddedEthereumWallet();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [loginStep, setLoginStep] = useState<LoginStep>("email");
   const [input, setInput] = useState("");
   const [walletProvisioning, setWalletProvisioning] = useState(false);
   const [walletProvisionError, setWalletProvisionError] = useState<string | undefined>();
@@ -146,9 +149,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const activeUserLabel = getHWalletUserLabel(user);
   const agentSessionReady = isReady && Boolean(activeUserId);
   const normalizedLoginEmail = email.trim();
-  const normalizedLoginCode = code.trim();
+  const normalizedLoginCode = normalizeOtpCode(code);
   const canSendLoginCode = normalizedLoginEmail.length > 3;
-  const canSubmitLoginCode = canSendLoginCode && normalizedLoginCode.length >= 4;
+  const canSubmitLoginCode = canSendLoginCode && normalizedLoginCode.length >= 6;
   const loginStatusText = getLoginStatusText(state.status);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
@@ -166,6 +169,13 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     isProvisioning: walletProvisioning,
     provisionError: walletProvisionError
   });
+
+  useEffect(() => {
+    if (!normalizedLoginEmail) {
+      setLoginStep("email");
+      setCode("");
+    }
+  }, [normalizedLoginEmail]);
 
   useEffect(() => {
     if (!isReady || !user || activeTab !== "worldcup") return;
@@ -263,6 +273,28 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     }
   }
 
+  async function requestLoginCode() {
+    if (!canSendLoginCode) return;
+    await sendCode({ email: normalizedLoginEmail });
+    setCode("");
+    setLoginStep("code");
+  }
+
+  async function submitLoginCode() {
+    if (!canSubmitLoginCode) return;
+    await loginWithCode({ email: normalizedLoginEmail, code: normalizedLoginCode });
+    setCode("");
+    setLoginStep("email");
+  }
+
+  function appendLoginCodeDigit(digit: string) {
+    setCode((current) => normalizeOtpCode(`${current}${digit}`));
+  }
+
+  function deleteLoginCodeDigit() {
+    setCode((current) => normalizeOtpCode(current).slice(0, -1));
+  }
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -336,13 +368,23 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   if (!user) {
     return (
       <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView style={styles.loginKeyboardAvoid} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView
+          style={styles.loginKeyboardAvoid}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 16 : 0}
+        >
           <ScrollView
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.loginScrollContent}
+            contentContainerStyle={[
+              styles.loginScrollContent,
+              loginStep === "code" ? styles.loginScrollContentCode : null
+            ]}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.loginHero}>
+              <View style={styles.loginDoorLeft} />
+              <View style={styles.loginDoorRight} />
+              <View style={styles.loginDoorSeam} />
               <View style={styles.loginHeroGlow} />
               <View style={styles.loginLogoShell}>
                 <Image source={appIcon} style={styles.loginLogo} resizeMode="cover" />
@@ -353,56 +395,65 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             </View>
 
             <View style={styles.loginCard}>
-              <Text style={styles.loginCardTitle}>邮箱进入</Text>
-              <View style={styles.loginFieldGroup}>
-                <Text style={styles.loginLabel}>邮箱</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  inputMode="email"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="输入邮箱"
-                  placeholderTextColor="#aaa39b"
-                  style={styles.loginInput}
-                />
-              </View>
+              <Text style={styles.loginCardTitle}>{loginStep === "email" ? "邮箱进入" : "验证码开锁"}</Text>
+              {loginStep === "email" ? (
+                <>
+                  <View style={styles.loginFieldGroup}>
+                    <Text style={styles.loginLabel}>邮箱</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      inputMode="email"
+                      keyboardType="email-address"
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="输入邮箱"
+                      placeholderTextColor="#aaa39b"
+                      style={styles.loginInput}
+                    />
+                  </View>
 
-              <View style={styles.loginFieldGroup}>
-                <Text style={styles.loginLabel}>验证码</Text>
-                <TextInput
-                  inputMode="numeric"
-                  keyboardType="number-pad"
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="6 位验证码"
-                  placeholderTextColor="#aaa39b"
-                  style={styles.loginInput}
-                />
-              </View>
+                  <Pressable
+                    style={[styles.loginButton, !canSendLoginCode ? styles.loginButtonDisabled : null]}
+                    disabled={!canSendLoginCode}
+                    onPress={() => run(requestLoginCode)}
+                  >
+                    <Text style={styles.loginButtonText}>进入</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <View style={styles.loginCodeDots}>
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <View
+                        key={`login-code-dot-${index}`}
+                        style={[styles.loginCodeDot, index < normalizedLoginCode.length ? styles.loginCodeDotFilled : null]}
+                      />
+                    ))}
+                  </View>
 
-              <Pressable
-                style={[styles.loginSecondaryButton, !canSendLoginCode ? styles.loginButtonDisabled : null]}
-                disabled={!canSendLoginCode}
-                onPress={() => run(() => sendCode({ email: normalizedLoginEmail }))}
-              >
-                <Ionicons name="mail-outline" size={17} color={colors.ink} />
-                <Text style={styles.loginSecondaryButtonText}>发送验证码</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.loginButton, !canSubmitLoginCode ? styles.loginButtonDisabled : null]}
-                disabled={!canSubmitLoginCode}
-                onPress={() =>
-                  run(async () => {
-                    await loginWithCode({ email: normalizedLoginEmail, code: normalizedLoginCode });
-                    setCode("");
-                  })
-                }
-              >
-                <Text style={styles.loginButtonText}>进入</Text>
-              </Pressable>
+                  <View style={styles.loginKeypad}>
+                    {loginDigits.map((digit) => (
+                      <Pressable key={digit} style={styles.loginKey} onPress={() => appendLoginCodeDigit(digit)}>
+                        <Text style={styles.loginKeyText}>{digit}</Text>
+                      </Pressable>
+                    ))}
+                    <Pressable style={styles.loginKey} onPress={deleteLoginCodeDigit}>
+                      <Ionicons name="backspace-outline" size={22} color={colors.ink} />
+                    </Pressable>
+                    <Pressable style={styles.loginKey} onPress={() => appendLoginCodeDigit("0")}>
+                      <Text style={styles.loginKeyText}>0</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.loginKey, styles.loginKeyConfirm, !canSubmitLoginCode ? styles.loginButtonDisabled : null]}
+                      disabled={!canSubmitLoginCode}
+                      onPress={() => run(submitLoginCode)}
+                    >
+                      <Ionicons name="checkmark" size={24} color="#ffffff" />
+                    </Pressable>
+                  </View>
+                </>
+              )}
 
               {loginStatusText ? <Text style={styles.loginState}>{loginStatusText}</Text> : null}
             </View>
@@ -3202,6 +3253,10 @@ function shortAddress(address?: string): string | undefined {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function normalizeOtpCode(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 6);
+}
+
 function getLoginStatusText(status: unknown): string | undefined {
   if (typeof status !== "string" || status === "initial") return undefined;
   const normalized = status.toLowerCase();
@@ -3248,6 +3303,10 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     gap: 18
   },
+  loginScrollContentCode: {
+    paddingTop: 32,
+    paddingBottom: 96
+  },
   login: {
     flex: 1,
     justifyContent: "center",
@@ -3268,6 +3327,30 @@ const styles = StyleSheet.create({
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 18 },
     elevation: 7
+  },
+  loginDoorLeft: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: "50%",
+    backgroundColor: "rgba(255, 255, 255, 0.035)"
+  },
+  loginDoorRight: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: "50%",
+    backgroundColor: "rgba(0, 0, 0, 0.16)"
+  },
+  loginDoorSeam: {
+    position: "absolute",
+    top: 26,
+    bottom: 26,
+    left: "50%",
+    width: 1,
+    backgroundColor: "rgba(201, 255, 63, 0.38)"
   },
   loginHeroGlow: {
     position: "absolute",
@@ -3349,6 +3432,43 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 16,
     fontWeight: "800"
+  },
+  loginCodeDots: {
+    height: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9
+  },
+  loginCodeDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#e2ddd6"
+  },
+  loginCodeDotFilled: {
+    backgroundColor: "#c9ff3f"
+  },
+  loginKeypad: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  loginKey: {
+    width: "30.6%",
+    minHeight: 56,
+    borderRadius: 22,
+    backgroundColor: "#f6f3ef",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  loginKeyConfirm: {
+    backgroundColor: colors.ink
+  },
+  loginKeyText: {
+    color: colors.ink,
+    fontSize: 21,
+    fontWeight: "900"
   },
   loginButton: {
     minHeight: 54,

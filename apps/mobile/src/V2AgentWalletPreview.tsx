@@ -10,9 +10,11 @@ const worldCupPoster = require("../assets/world-cup-agent-poster.png");
 const appIcon = require("../assets/icon.png");
 
 type Tab = "agent" | "worldcup" | "mine" | "wallet";
+type LoginStep = "email" | "code";
 type WorldCupView = "sentiment" | "prediction" | "explore" | "profile";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 
+const loginDigits = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const marketCategories: MarketCategory[] = ["冠军", "金靴奖得主", "小组赛", "近期比赛"];
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000";
 const previewEmailStorageKey = "agent-wallet-preview-email";
@@ -122,6 +124,7 @@ const matchMarkets = [
 export function V2AgentWalletPreview() {
   const [previewEmail, setPreviewEmail] = useState(readStoredPreviewEmail);
   const [previewCode, setPreviewCode] = useState("");
+  const [previewLoginStep, setPreviewLoginStep] = useState<LoginStep>("email");
   const [previewAuthed, setPreviewAuthed] = useState(() => readStoredPreviewEmail().length > 0);
   const [tab, setTab] = useState<Tab>("agent");
   const [input, setInput] = useState("");
@@ -146,6 +149,8 @@ export function V2AgentWalletPreview() {
   function switchPreviewAccount() {
     clearStoredPreviewEmail();
     setPreviewEmail("");
+    setPreviewCode("");
+    setPreviewLoginStep("email");
     setPreviewAuthed(false);
     setTab("agent");
     setInput("");
@@ -255,16 +260,51 @@ export function V2AgentWalletPreview() {
 
   if (!previewAuthed) {
     const canEnter = previewEmail.trim().length > 3;
+    const normalizedPreviewCode = normalizePreviewOtpCode(previewCode);
+    const canUnlock = canEnter && normalizedPreviewCode.length >= 6;
+
+    function appendPreviewCodeDigit(digit: string) {
+      setPreviewCode((current) => normalizePreviewOtpCode(`${current}${digit}`));
+    }
+
+    function deletePreviewCodeDigit() {
+      setPreviewCode((current) => normalizePreviewOtpCode(current).slice(0, -1));
+    }
+
+    function enterPreview() {
+      if (!canEnter) return;
+      if (previewLoginStep === "email") {
+        setPreviewLoginStep("code");
+        return;
+      }
+      if (!canUnlock) return;
+      const normalizedEmail = previewEmail.trim().toLowerCase();
+      setPreviewEmail(normalizedEmail);
+      saveStoredPreviewEmail(normalizedEmail);
+      setPreviewCode("");
+      setPreviewLoginStep("email");
+      setPreviewAuthed(true);
+    }
 
     return (
       <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView style={styles.keyboardAvoid} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 16 : 0}
+        >
           <ScrollView
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.previewLogin}
+            contentContainerStyle={[
+              styles.previewLogin,
+              previewLoginStep === "code" ? styles.previewLoginCode : null
+            ]}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.previewLoginTop}>
+              <View style={styles.previewLoginDoorLeft} />
+              <View style={styles.previewLoginDoorRight} />
+              <View style={styles.previewLoginDoorSeam} />
               <View style={styles.previewLoginHeroGlow} />
               <View style={styles.previewLoginLogoShell}>
                 <Image source={appIcon} style={styles.previewLoginLogo} resizeMode="cover" />
@@ -275,49 +315,63 @@ export function V2AgentWalletPreview() {
             </View>
 
             <View style={styles.previewLoginCard}>
-              <Text style={styles.previewLoginCardTitle}>邮箱进入</Text>
-              <View style={styles.previewLoginFieldGroup}>
-                <Text style={styles.previewLoginLabel}>邮箱</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  inputMode="email"
-                  keyboardType="email-address"
-                  value={previewEmail}
-                  onChangeText={setPreviewEmail}
-                  placeholder="输入邮箱"
-                  placeholderTextColor="#aaa39b"
-                  style={styles.previewLoginInput}
-                />
-              </View>
-              <View style={styles.previewLoginFieldGroup}>
-                <Text style={styles.previewLoginLabel}>验证码</Text>
-                <TextInput
-                  inputMode="numeric"
-                  keyboardType="number-pad"
-                  value={previewCode}
-                  onChangeText={setPreviewCode}
-                  placeholder="6 位验证码"
-                  placeholderTextColor="#aaa39b"
-                  style={styles.previewLoginInput}
-                />
-              </View>
-              <Pressable style={[styles.previewLoginSecondaryButton, !canEnter ? styles.previewLoginButtonDisabled : null]} disabled={!canEnter}>
-                <Ionicons name="mail-outline" size={17} color={colors.ink} />
-                <Text style={styles.previewLoginSecondaryButtonText}>发送验证码</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
-                disabled={!canEnter}
-                onPress={() => {
-                  const normalizedEmail = previewEmail.trim().toLowerCase();
-                  setPreviewEmail(normalizedEmail);
-                  saveStoredPreviewEmail(normalizedEmail);
-                  setPreviewAuthed(true);
-                }}
-              >
-                <Text style={styles.previewLoginButtonText}>进入</Text>
-              </Pressable>
+              <Text style={styles.previewLoginCardTitle}>{previewLoginStep === "email" ? "邮箱进入" : "验证码开锁"}</Text>
+              {previewLoginStep === "email" ? (
+                <>
+                  <View style={styles.previewLoginFieldGroup}>
+                    <Text style={styles.previewLoginLabel}>邮箱</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      inputMode="email"
+                      keyboardType="email-address"
+                      value={previewEmail}
+                      onChangeText={setPreviewEmail}
+                      placeholder="输入邮箱"
+                      placeholderTextColor="#aaa39b"
+                      style={styles.previewLoginInput}
+                    />
+                  </View>
+                  <Pressable
+                    style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
+                    disabled={!canEnter}
+                    onPress={enterPreview}
+                  >
+                    <Text style={styles.previewLoginButtonText}>进入</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <View style={styles.previewLoginCodeDots}>
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <View
+                        key={`preview-code-dot-${index}`}
+                        style={[styles.previewLoginCodeDot, index < normalizedPreviewCode.length ? styles.previewLoginCodeDotFilled : null]}
+                      />
+                    ))}
+                  </View>
+                  <View style={styles.previewLoginKeypad}>
+                    {loginDigits.map((digit) => (
+                      <Pressable key={digit} style={styles.previewLoginKey} onPress={() => appendPreviewCodeDigit(digit)}>
+                        <Text style={styles.previewLoginKeyText}>{digit}</Text>
+                      </Pressable>
+                    ))}
+                    <Pressable style={styles.previewLoginKey} onPress={deletePreviewCodeDigit}>
+                      <Ionicons name="backspace-outline" size={22} color={colors.ink} />
+                    </Pressable>
+                    <Pressable style={styles.previewLoginKey} onPress={() => appendPreviewCodeDigit("0")}>
+                      <Text style={styles.previewLoginKeyText}>0</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.previewLoginKey, styles.previewLoginKeyConfirm, !canUnlock ? styles.previewLoginButtonDisabled : null]}
+                      disabled={!canUnlock}
+                      onPress={enterPreview}
+                    >
+                      <Ionicons name="checkmark" size={24} color="#ffffff" />
+                    </Pressable>
+                  </View>
+                </>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -808,6 +862,10 @@ function lifecycleDotStyle(status: NonNullable<V2WalletContext["lifecycle"]>[num
 
 function shortPreviewAddress(address: string): string {
   return `${address.slice(0, 8)}...${address.slice(-6)}`;
+}
+
+function normalizePreviewOtpCode(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 6);
 }
 
 function readStoredPreviewEmail(): string {
@@ -1600,6 +1658,10 @@ const styles = StyleSheet.create({
     gap: 18,
     backgroundColor: "#ffffff"
   },
+  previewLoginCode: {
+    paddingTop: 32,
+    paddingBottom: 96
+  },
   previewLoginTop: {
     position: "relative",
     minHeight: 316,
@@ -1614,6 +1676,30 @@ const styles = StyleSheet.create({
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 18 },
     elevation: 7
+  },
+  previewLoginDoorLeft: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: "50%",
+    backgroundColor: "rgba(255, 255, 255, 0.035)"
+  },
+  previewLoginDoorRight: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: "50%",
+    backgroundColor: "rgba(0, 0, 0, 0.16)"
+  },
+  previewLoginDoorSeam: {
+    position: "absolute",
+    top: 26,
+    bottom: 26,
+    left: "50%",
+    width: 1,
+    backgroundColor: "rgba(201, 255, 63, 0.38)"
   },
   previewLoginHeroGlow: {
     position: "absolute",
@@ -1695,6 +1781,43 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 16,
     fontWeight: "700"
+  },
+  previewLoginCodeDots: {
+    height: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9
+  },
+  previewLoginCodeDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#e2ddd6"
+  },
+  previewLoginCodeDotFilled: {
+    backgroundColor: "#c9ff3f"
+  },
+  previewLoginKeypad: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  previewLoginKey: {
+    width: "30.6%",
+    minHeight: 56,
+    borderRadius: 22,
+    backgroundColor: "#f6f3ef",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  previewLoginKeyConfirm: {
+    backgroundColor: colors.ink
+  },
+  previewLoginKeyText: {
+    color: colors.ink,
+    fontSize: 21,
+    fontWeight: "900"
   },
   previewLoginButton: {
     minHeight: 54,
