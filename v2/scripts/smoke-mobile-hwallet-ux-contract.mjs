@@ -9,12 +9,17 @@ const checks = [];
 
 assertIncludes(screen, 'type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community and HWallet as separate tabs");
 assertIncludes(screen, 'onLeft={() => setActiveTab(activeTab === "community" ? "agent" : "community")}', "top-left entry toggles the community page instead of the sample market page");
+assertIncludes(screen, 'leftIcon={activeTab === "community" ? "chevron-back" : "menu"}', "community page changes the top-left entry into a back affordance");
+assertIncludes(screen, 'rightIcon={activeTab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}', "community page changes the top-right entry into a message affordance");
 assertIncludes(screen, 'activeTab === "community"', "mobile shell renders the community page from the top-left entry");
 assertIncludes(screen, "function CommunityTab", "community page is implemented as its own screen");
 assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community"', "community page hides the bottom menu");
 assertIncludes(screen, "communityMemberLine", "community page shows compact member identity");
-assertIncludes(screen, "communitySearchPill", "community page has a light search and avatar header");
+assertIncludes(screen, "communityNicknameRow", "community page shows an edit affordance next to the nickname");
+assert(!screen.includes("communitySearchPill"), "community page removes the redundant internal search button");
 assertIncludes(screen, "communityCarousel", "community page shows a colorful carousel below the member panel");
+assertIncludes(screen, "snapToInterval={communityCarouselSnap}", "community carousel snaps between cards while swiping");
+assertIncludes(screen, "communityCarouselDots", "community carousel exposes visible page dots");
 assertIncludes(screen, "communityEntryList", "community page uses a vertical entry list");
 assertIncludes(screen, "communityFloatingNewChat", "community page keeps new chat as a floating action instead of a clipped list item");
 assertIncludes(screen, "海豚会员", "community page shows a member nickname");

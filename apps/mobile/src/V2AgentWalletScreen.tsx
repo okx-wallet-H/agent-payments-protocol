@@ -42,6 +42,27 @@ import type {
 
 const worldCupPoster = require("../assets/world-cup-agent-poster.png");
 const appIcon = require("../assets/icon.png");
+const communityCarouselSnap = 236;
+const communityCarouselItems = [
+  {
+    id: "invite",
+    kicker: "社区任务",
+    title: "邀请好友一起开通 Agent",
+    text: "好友进入后，你的卡库和等级进度都会记录。"
+  },
+  {
+    id: "cards",
+    kicker: "卡库",
+    title: "收集你的预测卡和策略卡",
+    text: "后面会把常用卡片沉淀到这里。"
+  },
+  {
+    id: "discover",
+    kicker: "发现",
+    title: "看看社区正在玩什么",
+    text: "先把入口留好，后续接真实内容。"
+  }
+] as const;
 
 type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet";
 type LoginStep = "email" | "code";
@@ -469,9 +490,11 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
         {activeTab !== "worldcup" ? (
           <TopBar
             onLeft={() => setActiveTab(activeTab === "community" ? "agent" : "community")}
-            onRight={() => setActiveTab("mine")}
+            onRight={() => setActiveTab(activeTab === "community" ? "agent" : "mine")}
             leftActive={activeTab === "community"}
+            leftIcon={activeTab === "community" ? "chevron-back" : "menu"}
             rightActive={activeTab === "mine"}
+            rightIcon={activeTab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}
           />
         ) : null}
 
@@ -574,23 +597,27 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
 
 function TopBar({
   leftActive,
+  leftIcon = "menu",
   onLeft,
   onRight,
-  rightActive
+  rightActive,
+  rightIcon = "person-outline"
 }: {
   leftActive: boolean;
+  leftIcon?: keyof typeof Ionicons.glyphMap;
   onLeft: () => void;
   onRight: () => void;
   rightActive: boolean;
+  rightIcon?: keyof typeof Ionicons.glyphMap;
 }) {
   return (
     <View style={styles.topbar}>
       <Pressable style={[styles.roundButton, leftActive ? styles.roundButtonActive : null]} onPress={onLeft}>
-        <Ionicons name="menu" size={24} color="#1c1a17" />
+        <Ionicons name={leftIcon} size={leftIcon === "chevron-back" ? 25 : 24} color="#1c1a17" />
       </Pressable>
       <View style={styles.topbarCenterSpacer} />
       <Pressable style={[styles.roundButton, rightActive ? styles.roundButtonActive : null]} onPress={onRight}>
-        <Ionicons name="person-outline" size={21} color="#1c1a17" />
+        <Ionicons name={rightIcon} size={rightIcon === "chatbubble-ellipses-outline" ? 22 : 21} color="#1c1a17" />
       </Pressable>
     </View>
   );
@@ -610,26 +637,43 @@ function CommunityTab({
   onNewChat: () => void;
 }) {
   const displayEmail = email || "demo@hwallet.vip";
+  const carouselRef = useRef<ScrollView>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const records = [
     { id: "receive", title: "收款地址", text: "刚刚打开 HWallet 收款入口", time: "刚刚" },
     { id: "agent", title: "Agent 对话", text: "查看可用资金和下一步机会", time: "今天" },
     { id: "wallet", title: "钱包同步", text: "多账号地址已经分开记录", time: "昨天" }
   ];
+  const carouselTones = [
+    styles.communityCarouselGreen,
+    styles.communityCarouselPurple,
+    styles.communityCarouselBlue
+  ];
+
+  function updateCarouselIndex(event: { nativeEvent: { contentOffset: { x: number } } }) {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / communityCarouselSnap);
+    setCarouselIndex(Math.max(0, Math.min(nextIndex, communityCarouselItems.length - 1)));
+  }
+
+  function scrollCarouselTo(index: number) {
+    carouselRef.current?.scrollTo({ x: index * communityCarouselSnap, animated: true });
+    setCarouselIndex(index);
+  }
 
   return (
     <View style={styles.communityShell}>
       <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
-      <View style={styles.communityHeader}>
-        <Text style={styles.communityHeaderTitle}>海豚社区</Text>
-        <Pressable style={styles.communitySearchPill}>
-          <Ionicons name="search" size={24} color={colors.ink} />
-        </Pressable>
-      </View>
-
       <View style={styles.communityMemberLine}>
         <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
         <View style={styles.communityMemberInfo}>
-          <Text style={styles.communityMemberName}>海豚会员</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="修改昵称"
+            style={styles.communityNicknameRow}
+          >
+            <Text style={styles.communityMemberName}>海豚会员</Text>
+            <Ionicons name="create-outline" size={15} color={colors.muted} />
+          </Pressable>
           <Text style={styles.communityMemberEmail}>{displayEmail}</Text>
         </View>
         <View style={styles.communityLevelBadge}>
@@ -648,26 +692,41 @@ function CommunityTab({
       </View>
 
       <ScrollView
+        ref={carouselRef}
         horizontal
         contentContainerStyle={styles.communityCarousel}
+        decelerationRate="fast"
+        disableIntervalMomentum
+        nestedScrollEnabled
+        onMomentumScrollEnd={updateCarouselIndex}
+        onScrollEndDrag={updateCarouselIndex}
+        scrollEventThrottle={16}
         showsHorizontalScrollIndicator={false}
+        snapToAlignment="start"
+        snapToInterval={communityCarouselSnap}
       >
-        <View style={[styles.communityCarouselCard, styles.communityCarouselGreen]}>
-          <Text style={styles.communityCarouselKicker}>社区任务</Text>
-          <Text style={styles.communityCarouselTitle}>邀请好友一起开通 Agent</Text>
-          <Text style={styles.communityCarouselText}>好友进入后，你的卡库和等级进度都会记录。</Text>
-        </View>
-        <View style={[styles.communityCarouselCard, styles.communityCarouselPurple]}>
-          <Text style={styles.communityCarouselKicker}>卡库</Text>
-          <Text style={styles.communityCarouselTitle}>收集你的预测卡和策略卡</Text>
-          <Text style={styles.communityCarouselText}>后面会把常用卡片沉淀到这里。</Text>
-        </View>
-        <View style={[styles.communityCarouselCard, styles.communityCarouselBlue]}>
-          <Text style={styles.communityCarouselKicker}>发现</Text>
-          <Text style={styles.communityCarouselTitle}>看看社区正在玩什么</Text>
-          <Text style={styles.communityCarouselText}>先把入口留好，后续接真实内容。</Text>
-        </View>
+        {communityCarouselItems.map((item, index) => (
+          <View key={item.id} style={[styles.communityCarouselCard, carouselTones[index]]}>
+            <Text style={styles.communityCarouselKicker}>{item.kicker}</Text>
+            <Text style={styles.communityCarouselTitle}>{item.title}</Text>
+            <Text style={styles.communityCarouselText}>{item.text}</Text>
+          </View>
+        ))}
       </ScrollView>
+      <View style={styles.communityCarouselDots}>
+        {communityCarouselItems.map((item, index) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={`切换到${item.kicker}`}
+            onPress={() => scrollCarouselTo(index)}
+            style={[
+              styles.communityCarouselDot,
+              index === carouselIndex ? styles.communityCarouselDotActive : null
+            ]}
+          />
+        ))}
+      </View>
 
       <View style={styles.communitySection}>
         <Text style={styles.communitySectionTitle}>入口</Text>
@@ -3708,34 +3767,10 @@ const styles = StyleSheet.create({
   communityPage: {
     minHeight: "100%",
     paddingHorizontal: 32,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 156,
     gap: 24,
     backgroundColor: "#ffffff"
-  },
-  communityHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  communityHeaderTitle: {
-    color: colors.ink,
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: "900"
-  },
-  communitySearchPill: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#d8cec4",
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 3
   },
   communityMemberLine: {
     flexDirection: "row",
@@ -3751,6 +3786,12 @@ const styles = StyleSheet.create({
   communityMemberInfo: {
     flex: 1,
     gap: 4
+  },
+  communityNicknameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6
   },
   communityMemberName: {
     color: colors.ink,
@@ -3846,6 +3887,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "800"
+  },
+  communityCarouselDots: {
+    marginTop: -14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7
+  },
+  communityCarouselDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ded7cf"
+  },
+  communityCarouselDotActive: {
+    width: 18,
+    backgroundColor: colors.ink
   },
   communitySection: {
     marginBottom: -8
