@@ -20,6 +20,7 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - World Cup Explore subpage exists with four market categories: champion, golden boot, group stage, and upcoming matches.
 - Local smoke checks currently pass: `npm run smoke:v2`, `npm run smoke:v2:auth`, and `npm run mobile:typecheck`.
 - OKX Outcomes adapter smoke currently passes: `npm run smoke:outcomes`.
+- Read-only prediction detail view smoke currently passes: `npm run smoke:prediction-detail-view`.
 - EAS CLI is pinned in the mobile workspace and available through mobile npm scripts.
 - EAS project is initialized as `@hongchen888/agent-wallet-xlayer-mvp`.
 - Local physical-device API readiness passes when `EXPO_PUBLIC_API_BASE_URL` uses the LAN backend URL.
@@ -133,6 +134,7 @@ HWallet release candidate gate:
 
 ```sh
 npm run smoke:hwallet-release-candidate
+npm run smoke:prediction-detail-view
 npm run smoke:supabase-readback-drill
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-server
 STAGING_API_BASE_URL=https://app.hwallet.vip npm run smoke:staging-storage-summary
@@ -181,6 +183,7 @@ EXPO_PUBLIC_API_BASE_URL=http://YOUR_LAN_IP:3000 MOBILE_DEVICE_READINESS=true np
 npm run smoke:v2
 npm run smoke:v2:auth
 npm run smoke:outcomes
+npm run smoke:prediction-detail-view
 npm run mobile:typecheck
 ```
 
