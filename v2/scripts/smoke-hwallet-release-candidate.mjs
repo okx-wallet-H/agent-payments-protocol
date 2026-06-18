@@ -40,6 +40,7 @@ const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback
 const predictionDetailViewSmoke = await readFile("v2/scripts/smoke-prediction-detail-view.mjs", "utf8");
 const predictionPhaseTwoReadinessSmoke = await readFile("v2/scripts/smoke-prediction-phase-two-readiness.mjs", "utf8");
 const predictionPhaseTwoReadinessDoc = await readFile("docs/PREDICTION_MARKET_PHASE_TWO_READINESS.md", "utf8");
+const predictionReadGuardSmoke = await readFile("v2/scripts/smoke-prediction-read-guard.mjs", "utf8");
 const projectExecutionPlan = await readFile("docs/PROJECT_EXECUTION_PLAN.md", "utf8");
 
 const scripts = packageJson.scripts || {};
@@ -80,6 +81,7 @@ const requiredScripts = [
   "smoke:privy-wallet-status",
   "smoke:prediction-detail-view",
   "smoke:prediction-phase-two-readiness",
+  "smoke:prediction-read-guard",
   "verify:merge"
 ];
 
@@ -142,6 +144,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:prediction-phase-two-readiness"),
   "verify:merge includes prediction phase-two readiness gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:prediction-read-guard"),
+  "verify:merge includes prediction read guard gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -192,6 +198,8 @@ assertIncludes(predictionPhaseTwoReadinessSmoke, "verify:merge includes predicti
 assertIncludes(predictionPhaseTwoReadinessDoc, "API Key binding", "prediction phase-two readiness doc records API Key placeholder");
 assertIncludes(predictionPhaseTwoReadinessDoc, "Live trading", "prediction phase-two readiness doc records closed live trading");
 assertIncludes(predictionPhaseTwoReadinessDoc, "Known Follow-Up Risks", "prediction phase-two readiness doc records follow-up risks");
+assertIncludes(predictionReadGuardSmoke, "missing Privy token is rejected", "prediction read guard smoke checks auth rejection");
+assertIncludes(predictionReadGuardSmoke, "third read request is rate limited", "prediction read guard smoke checks rate limiting");
 assertIncludes(projectExecutionPlan, "Carry OKX Outcomes market snapshots into Agent observe replies", "project plan records Agent market snapshots in replies");
 assertIncludes(projectExecutionPlan, "read-only prediction detail view", "project plan records read-only prediction detail view");
 assertIncludes(projectExecutionPlan, "order book summary", "project plan records order book detail summary");

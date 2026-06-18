@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createPredictionDetailView } from "@/v2/app/prediction-detail-view";
+import { guardPredictionReadRequest } from "@/v2/auth/prediction-read-guard";
 import {
   getOkxOutcomeMarketData,
   hasOkxOutcomesCredentials,
@@ -28,18 +29,31 @@ export async function GET(request: Request) {
     );
   }
 
+  const guard = await guardPredictionReadRequest(request, { route: "prediction-detail" });
+  if (!guard.ok) {
+    return NextResponse.json(guard.body, {
+      status: guard.status,
+      headers: guard.headers
+    });
+  }
+
   const mode = readDetailMode(url);
   const data = await readPredictionDetailSafely(marketId, mode);
   const liveCandidate = isOutcomeMarketData(data) && data.market?.marketId === marketId;
 
-  return NextResponse.json({
-    detail: createPredictionDetailView(data),
-    source: {
-      mode: liveCandidate && mode !== "sample" && hasOkxOutcomesCredentials() ? "live_or_fallback" : "sample",
-      readOnly: true,
-      liveExecutionClosed: true
+  return NextResponse.json(
+    {
+      detail: createPredictionDetailView(data),
+      source: {
+        mode: liveCandidate && mode !== "sample" && hasOkxOutcomesCredentials() ? "live_or_fallback" : "sample",
+        readOnly: true,
+        liveExecutionClosed: true
+      }
+    },
+    {
+      headers: guard.headers
     }
-  });
+  );
 }
 
 async function readPredictionDetailSafely(marketId: string, mode: DetailMode): Promise<MarketSnapshot | OkxOutcomeMarketData> {

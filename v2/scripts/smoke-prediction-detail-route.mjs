@@ -34,6 +34,10 @@ check(
   "route reads OKX Outcomes market data through the read-only client"
 );
 check(
+  source.includes("guardPredictionReadRequest"),
+  "route guards read access before reading OKX Outcomes data"
+);
+check(
   /includeOrderBook\s*:\s*true/.test(source),
   "route explicitly requests order book data"
 );
