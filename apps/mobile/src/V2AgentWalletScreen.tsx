@@ -683,6 +683,9 @@ function CommunityTab({
   const displayEmail = email || "demo@hwallet.vip";
   const carouselRef = useRef<ScrollView>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [nickname, setNickname] = useState("海豚会员");
+  const [nicknameDraft, setNicknameDraft] = useState("海豚会员");
+  const [editingNickname, setEditingNickname] = useState(false);
   const records = [
     { id: "receive", title: "收款地址", text: "刚刚打开 HWallet 收款入口", time: "刚刚" },
     { id: "agent", title: "Agent 对话", text: "查看可用资金和下一步机会", time: "今天" },
@@ -704,20 +707,57 @@ function CommunityTab({
     setCarouselIndex(index);
   }
 
+  function startNicknameEdit() {
+    setNicknameDraft(nickname);
+    setEditingNickname(true);
+  }
+
+  function saveNickname() {
+    const nextNickname = nicknameDraft.trim() || "海豚会员";
+    setNickname(nextNickname.slice(0, 16));
+    setNicknameDraft(nextNickname.slice(0, 16));
+    setEditingNickname(false);
+  }
+
   return (
     <View style={styles.communityShell}>
       <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
       <View style={styles.communityMemberLine}>
         <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
         <View style={styles.communityMemberInfo}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="修改昵称"
-            style={styles.communityNicknameRow}
-          >
-            <Text style={styles.communityMemberName}>海豚会员</Text>
-            <Ionicons name="create-outline" size={15} color={colors.muted} />
-          </Pressable>
+          {editingNickname ? (
+            <View style={styles.communityNicknameEditRow}>
+              <TextInput
+                accessibilityLabel="昵称输入框"
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={16}
+                onChangeText={setNicknameDraft}
+                onSubmitEditing={saveNickname}
+                returnKeyType="done"
+                style={styles.communityNicknameInput}
+                value={nicknameDraft}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="保存昵称"
+                onPress={saveNickname}
+                style={styles.communityNicknameSave}
+              >
+                <Ionicons name="checkmark" size={17} color="#ffffff" />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="修改昵称"
+              onPress={startNicknameEdit}
+              style={styles.communityNicknameRow}
+            >
+              <Text style={styles.communityMemberName}>{nickname}</Text>
+              <Ionicons name="create-outline" size={15} color={colors.muted} />
+            </Pressable>
+          )}
           <Text style={styles.communityMemberEmail}>{displayEmail}</Text>
         </View>
         <View style={styles.communityLevelBadge}>
@@ -3876,7 +3916,7 @@ const styles = StyleSheet.create({
   },
   topbar: {
     height: 72,
-    backgroundColor: colors.shell,
+    backgroundColor: "#ffffff",
     paddingHorizontal: 26,
     flexDirection: "row",
     alignItems: "center",
@@ -3940,6 +3980,32 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 24,
     fontWeight: "900"
+  },
+  communityNicknameEditRow: {
+    minHeight: 31,
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 7
+  },
+  communityNicknameInput: {
+    minWidth: 112,
+    maxWidth: 170,
+    minHeight: 31,
+    borderRadius: 15,
+    backgroundColor: "#f4eee9",
+    paddingHorizontal: 12,
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  communityNicknameSave: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: colors.ink,
+    alignItems: "center",
+    justifyContent: "center"
   },
   communityMemberEmail: {
     color: colors.muted,

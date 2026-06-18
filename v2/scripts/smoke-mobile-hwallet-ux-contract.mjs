@@ -11,7 +11,7 @@ assertIncludes(screen, 'type MainTab = "agent" | "community" | "notices" | "invi
 assertIncludes(screen, 'activeTab === "notices" || activeTab === "invite" ? "community" : activeTab === "community" ? "agent" : "community"', "top-left entry returns from community child pages to community and from community to Agent");
 assertIncludes(screen, 'leftIcon={isCommunityStack ? "chevron-back" : "menu"}', "community stack changes the top-left entry into a back affordance");
 assertIncludes(screen, 'rightIcon={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}', "community stack changes the top-right entry into a message affordance");
-assertIncludes(screen, "backgroundColor: colors.shell", "top bar background stays aligned with the page shell");
+assertIncludes(screen, 'backgroundColor: "#ffffff"', "top bar background stays aligned with the white page shell");
 assertIncludes(screen, 'activeTab === "community"', "mobile shell renders the community page from the top-left entry");
 assertIncludes(screen, "function CommunityTab", "community page is implemented as its own screen");
 assertIncludes(screen, 'activeTab === "notices" ? <NoticeTab /> : null', "community message entry opens the platform notice page");
@@ -25,6 +25,10 @@ assertIncludes(screen, "复制邀请链接", "invite page exposes invite link co
 assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices" && activeTab !== "invite"', "community child pages hide the bottom menu");
 assertIncludes(screen, "communityMemberLine", "community page shows compact member identity");
 assertIncludes(screen, "communityNicknameRow", "community page shows an edit affordance next to the nickname");
+assertIncludes(screen, "startNicknameEdit", "community nickname edit affordance enters edit mode");
+assertIncludes(screen, "communityNicknameInput", "community nickname can be edited inline");
+assertIncludes(screen, "saveNickname", "community nickname edit has a save action");
+assertIncludes(screen, 'accessibilityLabel="保存昵称"', "community nickname save action is accessible");
 assert(!screen.includes("communitySearchPill"), "community page removes the redundant internal search button");
 assertIncludes(screen, "communityCarousel", "community page shows a colorful carousel below the member panel");
 assertIncludes(screen, "snapToInterval={communityCarouselSnap}", "community carousel snaps between cards while swiping");
