@@ -12,7 +12,7 @@ placement stays closed.
 | Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback. |
 | Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, and order-book summary. |
 | Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |
-| Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, API Key placeholder, observe, simulate, and disabled order placement. |
+| Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, API Key placeholder, capability tags, observe, track, strategy, simulate, and disabled order placement. |
 | Agent explanation | Ready for read-only analysis | Agent observe replies can carry friendly yes/no odds and the no-live-order boundary. |
 | API Key binding | Placeholder only | The App has a visible binding position. Secret storage and user API-key lifecycle are not enabled in this release. |
 | Live trading | Closed | Order placement, signing, swap, and broadcast remain disabled by execution gates. |
@@ -28,6 +28,7 @@ The App can show a prediction market as a read-only console:
 - `观察` entry for Agent explanation
 - `模拟预览` entry for dry-run planning
 - `API Key · 绑定入口预留` as a future binding slot
+- `当前能力` to separate query abilities, safe Agent actions, and closed live execution
 - `下单未开放` for the closed live-execution path
 
 ## Closed Capability
