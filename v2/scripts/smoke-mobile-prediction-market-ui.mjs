@@ -38,6 +38,27 @@ const requirements = [
     pass: () => /观察/.test(screen) && /模拟/.test(screen)
   },
   {
+    label: "mobile prediction-market UI exposes capability panel",
+    pass: () =>
+      /当前能力/.test(screen) &&
+      /可查询/.test(screen) &&
+      /市场详情/.test(screen) &&
+      /会\/不会赔率/.test(screen) &&
+      /订单簿摘要/.test(screen) &&
+      /成交量\/流动性/.test(screen) &&
+      /可操作/.test(screen) &&
+      /加入跟踪/.test(screen) &&
+      /生成策略/.test(screen) &&
+      /占位关闭/.test(screen) &&
+      /真实下单/.test(screen) &&
+      /签名/.test(screen) &&
+      /广播/.test(screen)
+  },
+  {
+    label: "mobile prediction-market UI wires track and strategy to safe Agent actions",
+    pass: () => /onRunMarketAction\("track", card\)/.test(screen) && /onRunMarketAction\("build_strategy", card\)/.test(screen)
+  },
+  {
     label: "mobile prediction-market UI says live order placement is closed",
     pass: () => /下单未开放|暂不开放下单|真实下单关闭/.test(screen)
   },

@@ -568,6 +568,11 @@ function AgentTab({
           onSend(`帮我做一次模拟预览：${card.displayTitle || card.title}`);
           setWorldCupView("home");
         }}
+        onRunMarketAction={(action, card) => {
+          const actionText = action === "track" ? "加入跟踪" : "生成策略";
+          onSend(`${actionText}：${card.displayTitle || card.title}`);
+          setWorldCupView("home");
+        }}
         onExplore={() => setWorldCupView("explore")}
         onHome={() => setWorldCupView("home")}
         onNewChat={() => setWorldCupView("home")}
@@ -732,6 +737,10 @@ function WorldCupTab({
         }}
         onSimulate={(card) => {
           onRunMarketAction("simulate", card.market);
+          onHome();
+        }}
+        onRunMarketAction={(action, card) => {
+          onRunMarketAction(action, card.market);
           onHome();
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -1265,6 +1274,7 @@ function WorldCupMarketDetailPage({
   onHome,
   onAskAgent,
   onSimulate,
+  onRunMarketAction,
   onNewChat,
   onProfile
 }: {
@@ -1278,6 +1288,7 @@ function WorldCupMarketDetailPage({
   onHome: () => void;
   onAskAgent: (card: V2WorldCupExploreMarketCard) => void;
   onSimulate: (card: V2WorldCupExploreMarketCard) => void;
+  onRunMarketAction: (action: "track" | "build_strategy", card: V2WorldCupExploreMarketCard) => void;
   onNewChat: () => void;
   onProfile: () => void;
 }) {
@@ -1397,6 +1408,34 @@ function WorldCupMarketDetailPage({
           </View>
         </View>
 
+        <View style={styles.predictionCapabilityPanel}>
+          <Text style={styles.predictionCapabilityTitle}>当前能力</Text>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>可查询</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["市场详情", "会/不会赔率", "订单簿摘要", "成交量/流动性"].map((label) => (
+                <Text key={label} style={styles.predictionCapabilityTag}>{label}</Text>
+              ))}
+            </View>
+          </View>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>可操作</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["Agent 观察", "模拟预览", "加入跟踪", "生成策略"].map((label) => (
+                <Text key={label} style={[styles.predictionCapabilityTag, styles.predictionCapabilityTagActive]}>{label}</Text>
+              ))}
+            </View>
+          </View>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>占位关闭</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["真实下单", "签名", "广播"].map((label) => (
+                <Text key={label} style={[styles.predictionCapabilityTag, styles.predictionCapabilityTagClosed]}>{label}</Text>
+              ))}
+            </View>
+          </View>
+        </View>
+
         <View style={styles.predictionOrderBookPanel}>
           <View style={styles.predictionOrderBookHeader}>
             <Text style={styles.predictionOrderBookTitle}>订单簿摘要</Text>
@@ -1443,6 +1482,14 @@ function WorldCupMarketDetailPage({
               <Text style={styles.predictionMarketActionText}>{action.label}</Text>
             </Pressable>
           ))}
+          <Pressable style={styles.predictionMarketActionButton} onPress={() => onRunMarketAction("track", card)}>
+            <Ionicons name="bookmark-outline" size={18} color="#0c2113" />
+            <Text style={styles.predictionMarketActionText}>加入跟踪</Text>
+          </Pressable>
+          <Pressable style={styles.predictionMarketActionButton} onPress={() => onRunMarketAction("build_strategy", card)}>
+            <Ionicons name="sparkles-outline" size={18} color="#0c2113" />
+            <Text style={styles.predictionMarketActionText}>生成策略</Text>
+          </Pressable>
           <View style={styles.predictionMarketDisabledAction}>
             <Ionicons name="lock-closed-outline" size={18} color="#8a8278" />
             <Text style={styles.predictionMarketDisabledActionText}>下单未开放</Text>
@@ -6264,12 +6311,58 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "800"
   },
+  predictionCapabilityPanel: {
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 14,
+    gap: 12
+  },
+  predictionCapabilityTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionCapabilityRow: {
+    gap: 7
+  },
+  predictionCapabilityLabel: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  predictionCapabilityTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7
+  },
+  predictionCapabilityTag: {
+    overflow: "hidden",
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "rgba(255, 255, 255, 0.82)",
+    fontSize: 11,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  predictionCapabilityTagActive: {
+    backgroundColor: "rgba(201, 255, 77, 0.16)",
+    color: "#d9ff73"
+  },
+  predictionCapabilityTagClosed: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    color: "rgba(255, 255, 255, 0.48)"
+  },
   predictionMarketActionRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8
   },
   predictionMarketActionButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: "46%",
     minHeight: 44,
     borderRadius: 22,
     backgroundColor: "#c9ff4d",
@@ -6284,7 +6377,8 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   predictionMarketDisabledAction: {
-    flex: 1.25,
+    flexGrow: 1,
+    flexBasis: "46%",
     minHeight: 44,
     borderRadius: 22,
     backgroundColor: "rgba(255, 255, 255, 0.12)",
