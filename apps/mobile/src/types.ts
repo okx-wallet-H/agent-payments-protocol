@@ -273,8 +273,29 @@ export interface V2WorldCupExploreOption {
   label: string;
   price?: number;
   priceLabel?: string;
-  assetId?: string;
+  assetIdLabel?: string;
   side?: "yes" | "no";
+}
+
+export interface V2WorldCupExploreMarketRef {
+  provider: V2MarketSnapshot["provider"];
+  chainId: V2MarketSnapshot["chainId"];
+  eventId?: string;
+  marketId: string;
+  question: string;
+  status?: V2MarketSnapshot["status"];
+  marketType?: V2MarketSnapshot["marketType"];
+  yesPrice?: number;
+  noPrice?: number;
+  acceptingOrders: boolean;
+  liquidity?: number;
+  volume24h?: number;
+  volume?: number;
+  startTime?: string;
+  endDate?: string;
+  providerLabel: string;
+  readOnly: true;
+  liveExecutionClosed: true;
 }
 
 export interface V2WorldCupExploreMarketCard {
@@ -293,7 +314,7 @@ export interface V2WorldCupExploreMarketCard {
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "observable" | "watch_only";
-  market: V2MarketSnapshot;
+  marketRef: V2WorldCupExploreMarketRef;
   options: V2WorldCupExploreOption[];
 }
 

@@ -85,6 +85,10 @@ check(worldCupRoute.includes("listOkxWorldCupMarkets"), "explore route can read 
 check(worldCupRoute.includes("guardPredictionReadRequest"), "explore route guards read access before provider reads");
 check(worldCupRoute.includes("createWorldCupExploreView"), "explore route returns app-facing explore view");
 check(worldCupExplore.includes("credentialsBound") && worldCupExplore.includes("providerStatus"), "explore source carries redacted provider status");
+check(worldCupExplore.includes("marketRef: createExploreMarketRef"), "explore cards use sanitized market references");
+check(worldCupExplore.includes("readOnly: true") && worldCupExplore.includes("liveExecutionClosed: true"), "explore market refs stay read-only");
+check(worldCupExplore.includes("assetIdLabel") && worldCupExplore.includes("shortenId"), "explore options redact outcome asset ids");
+check(!worldCupExplore.includes("market,\n    options"), "explore cards do not return raw market snapshots");
 
 check(predictionReadGuard.includes("resolvePhaseOneUser"), "prediction read guard reuses Privy user boundary");
 check(predictionReadGuard.includes("PREDICTION_READ_RATE_LIMIT"), "prediction read guard exposes rate-limit tuning");

@@ -9,7 +9,7 @@ placement stays closed.
 | Area | Status | Evidence |
 | --- | --- | --- |
 | OKX Outcomes market reads | Ready for read-only use | `v2/execution/okx-outcomes-client.ts` reads events, markets, ticker, candles, and order book data. |
-| Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback. |
+| Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback; list cards expose sanitized `marketRef` and redacted outcome labels only. |
 | Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, and order-book summary. |
 | Detail action model | Ready for app display | The detail response carries observe, simulate, track, strategy, and disabled order-placeholder actions so the App follows backend enabled/disabled state. |
 | Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |
@@ -60,6 +60,9 @@ observe/simulate mode and state that no real order or transaction was submitted.
 3. The detail page now consumes the server-provided action model. Keep future
    UI changes tied to that model so disabled order placement cannot drift into a
    live execution affordance.
+4. Explore cards intentionally avoid raw provider payloads and full asset ids.
+   If future UI needs venue identifiers, fetch them through the guarded detail
+   endpoint and keep labels redacted.
 
 ## Verification
 

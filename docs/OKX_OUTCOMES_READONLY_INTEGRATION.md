@@ -15,6 +15,9 @@ trading or order-submission feature.
 - Detail page: the prediction detail view may show outcome rows, best bid/ask,
   spread, order book depth, volume/liquidity labels, and an observe/simulate
   action set.
+- Explore list: the app-facing market catalog uses sanitized `marketRef` values
+  and redacted `assetIdLabel` strings. It must not expose raw provider payloads
+  or full YES/NO outcome asset ids.
 - Simulation: OKX Outcomes simulation is a local/contract-style dry-run preview
   only. It does not create, sign, submit, swap, or broadcast anything.
 - Asset id handling: full outcome asset ids are internal market references.

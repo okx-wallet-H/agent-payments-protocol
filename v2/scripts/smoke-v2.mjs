@@ -72,8 +72,11 @@ assert(Array.isArray(explore.explore?.categories), "world cup explore has catego
 assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
 assert(explore.explore?.cards?.upcoming_matches !== undefined, "world cup explore has match bucket");
 assert(explore.explore?.summary?.categoryCounts?.upcoming_matches >= 1, "world cup explore keeps upcoming matches visible");
-const selectedWorldCupMarket = explore.explore?.cards?.champion?.[0]?.market;
+const selectedWorldCupCard = explore.explore?.cards?.champion?.[0];
+const selectedWorldCupMarket = selectedWorldCupCard?.marketRef;
 assert(Boolean(selectedWorldCupMarket?.marketId), "world cup explore exposes selectable market");
+assert(selectedWorldCupMarket?.readOnly === true, "world cup explore selectable market is read-only");
+assert(!("market" in (selectedWorldCupCard || {})), "world cup explore does not expose raw market snapshot");
 
 const liveModeExplore = await getJson("/api/v2/world-cup/explore?mode=live");
 assert(liveModeExplore.explore?.type === "world_cup_explore_view", "world cup live-mode fallback returns view");

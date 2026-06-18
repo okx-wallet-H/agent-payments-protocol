@@ -46,11 +46,18 @@ assert(explore.cards.champion.some((card) => card.displayName === "西班牙"), 
 assert(explore.cards.champion.every((card) => card.displayTitle), "renders display title");
 assert(explore.cards.champion.every((card) => Boolean(card.agentNote)), "adds friendly agent notes");
 assert(explore.cards.champion.every((card) => card.status === "observable" || card.status === "watch_only"), "uses observe-first card status");
+assert(explore.cards.champion.every((card) => card.marketRef?.readOnly === true), "explore cards expose read-only market refs");
+assert(explore.cards.champion.every((card) => card.marketRef?.liveExecutionClosed === true), "explore cards keep live execution closed");
+assert(explore.cards.champion.every((card) => !("market" in card)), "explore cards do not expose raw market snapshots");
+assert(explore.cards.champion.every((card) => card.options.every((option) => !("assetId" in option))), "explore options do not expose full asset ids");
 assert(isSortedByVolume(explore.cards.champion), "sorts champion cards by market volume");
 assert(explore.cards.upcoming_matches.length >= 1, "maps match category");
-assert(explore.cards.upcoming_matches.some((card) => Boolean(card.market.startTime)), "reads match start time");
+assert(explore.cards.upcoming_matches.some((card) => Boolean(card.marketRef.startTime)), "reads match start time");
 assert(explore.cards.upcoming_matches.some((card) => Boolean(card.timing?.label)), "adds match timing label");
 assert(explore.cards.upcoming_matches.some((card) => /开赛|进行中/.test(card.subtitle || "")), "uses timing as match subtitle");
+const exploreJson = JSON.stringify(explore);
+assert(!exploreJson.includes("yesAssetId") && !exploreJson.includes("noAssetId"), "explore view omits internal asset id fields");
+assert(!exploreJson.includes("\"raw\""), "explore view omits provider raw payloads");
 
 await assertOkxReadOnlyMarketDataClient();
 
@@ -70,7 +77,7 @@ function assert(condition, label) {
 function isSortedByVolume(cards) {
   return cards.every((card, index) => {
     if (index === 0) return true;
-    return volumeScore(cards[index - 1].market) >= volumeScore(card.market);
+    return volumeScore(cards[index - 1].marketRef) >= volumeScore(card.marketRef);
   });
 }
 

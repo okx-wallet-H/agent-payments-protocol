@@ -11,6 +11,10 @@ const screen = await readFile(screenPath, "utf8");
 const api = await readFile(apiPath, "utf8");
 const hook = await readFile(hookPath, "utf8");
 const types = await readFile(typesPath, "utf8");
+const exploreTypes = types.slice(
+  types.indexOf("export interface V2WorldCupExploreOption"),
+  types.indexOf("export type V2WorldCupExploreSourceProvider")
+);
 
 const requirements = [
   {
@@ -96,6 +100,25 @@ const requirements = [
       /apiKeyBindingLabel\?: string/.test(types) &&
       /liveExecutionClosed: true/.test(types) &&
       /interface V2PredictionDetailResponse/.test(types)
+  },
+  {
+    label: "mobile prediction-market explore cards use sanitized marketRef",
+    pass: () =>
+      /interface V2WorldCupExploreMarketRef/.test(exploreTypes) &&
+      /marketRef: V2WorldCupExploreMarketRef/.test(exploreTypes) &&
+      /readOnly: true/.test(exploreTypes) &&
+      /liveExecutionClosed: true/.test(exploreTypes) &&
+      !/assetId\?: string/.test(exploreTypes) &&
+      !/market: V2MarketSnapshot/.test(exploreTypes)
+  },
+  {
+    label: "mobile prediction-market UI converts sanitized explore ref before Agent action",
+    pass: () =>
+      /function marketSnapshotFromExploreCard/.test(screen) &&
+      /const ref = card\.marketRef/.test(screen) &&
+      /marketSnapshotFromExploreCard\(card\)/.test(screen) &&
+      !/card\.market\.(provider|marketId|endDate|marketType|acceptingOrders|status)/.test(screen) &&
+      !/card\.market\)/.test(screen)
   },
   {
     label: "mobile prediction-market UI reads source mode and execution gate",
