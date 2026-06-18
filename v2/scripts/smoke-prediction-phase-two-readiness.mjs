@@ -13,6 +13,8 @@ const okxClient = read("v2/execution/okx-outcomes-client.ts");
 const detailView = read("v2/app/prediction-detail-view.ts");
 const detailRoute = read("app/api/v2/prediction/detail/route.ts");
 const worldCupRoute = read("app/api/v2/world-cup/explore/route.ts");
+const predictionReadGuard = read("v2/auth/prediction-read-guard.ts");
+const predictionReadGuardSmoke = read("v2/scripts/smoke-prediction-read-guard.mjs");
 const mobileScreen = read("apps/mobile/src/V2AgentWalletScreen.tsx");
 const mobileApi = read("apps/mobile/src/api.ts");
 const integrationDoc = read("docs/OKX_OUTCOMES_READONLY_INTEGRATION.md");
@@ -33,6 +35,7 @@ for (const scriptName of [
   "smoke:prediction-detail-view",
   "smoke:prediction-detail-route",
   "smoke:mobile-prediction-market-ui",
+  "smoke:prediction-read-guard",
   "smoke:prediction-market-archive",
   "smoke:execution-gates"
 ]) {
@@ -68,12 +71,21 @@ check(
 );
 
 check(detailRoute.includes("getOkxOutcomeMarketData"), "prediction detail route reads OKX Outcomes market data");
+check(detailRoute.includes("guardPredictionReadRequest"), "prediction detail route guards read access before provider reads");
 check(detailRoute.includes("createPredictionDetailView"), "prediction detail route returns normalized detail view");
 check(/includeOrderBook\s*:\s*true/.test(detailRoute), "prediction detail route requests order book data");
 check(!/\bexport\s+async\s+function\s+POST\b/.test(detailRoute), "prediction detail route remains GET-only");
 
 check(worldCupRoute.includes("listOkxWorldCupMarkets"), "explore route can read OKX market catalog");
+check(worldCupRoute.includes("guardPredictionReadRequest"), "explore route guards read access before provider reads");
 check(worldCupRoute.includes("createWorldCupExploreView"), "explore route returns app-facing explore view");
+
+check(predictionReadGuard.includes("resolvePhaseOneUser"), "prediction read guard reuses Privy user boundary");
+check(predictionReadGuard.includes("PREDICTION_READ_RATE_LIMIT"), "prediction read guard exposes rate-limit tuning");
+check(predictionReadGuard.includes("prediction_read_rate_limited"), "prediction read guard returns a friendly rate-limit error");
+check(predictionReadGuard.includes("x-hwallet-read-scope"), "prediction read guard marks read-only scope headers");
+check(predictionReadGuardSmoke.includes("missing Privy token is rejected"), "prediction read guard smoke checks auth rejection");
+check(predictionReadGuardSmoke.includes("third read request is rate limited"), "prediction read guard smoke checks rate-limit rejection");
 
 check(detailView.includes("readOnly: true"), "detail view marks readOnly true");
 check(detailView.includes("liveExecutionClosed: true"), "detail view marks live execution closed");

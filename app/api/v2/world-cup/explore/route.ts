@@ -5,6 +5,7 @@ import {
   inferWorldCupCategory,
   type WorldCupExploreCategory
 } from "@/v2/app/world-cup-explore";
+import { guardPredictionReadRequest } from "@/v2/auth/prediction-read-guard";
 import { hasOkxOutcomesCredentials, listOkxWorldCupMarkets } from "@/v2/execution/okx-outcomes-client";
 import { normalizeOkxOutcomes } from "@/v2/execution/okx-outcomes-output";
 import { sampleOkxWorldCupPayload } from "@/v2/execution/okx-world-cup-sample";
@@ -15,12 +16,25 @@ import type { MarketSnapshot } from "@/v2/domain/types";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+  const guard = await guardPredictionReadRequest(request, { route: "world-cup-explore" });
+  if (!guard.ok) {
+    return NextResponse.json(guard.body, {
+      status: guard.status,
+      headers: guard.headers
+    });
+  }
+
   const data = await readMarketsSafely(readDataMode(request));
   await captureMarketSnapshotsSafely(data);
 
-  return NextResponse.json({
-    explore: createWorldCupExploreView(data.markets, data.source)
-  });
+  return NextResponse.json(
+    {
+      explore: createWorldCupExploreView(data.markets, data.source)
+    },
+    {
+      headers: guard.headers
+    }
+  );
 }
 
 type ExploreData = {

@@ -11,6 +11,7 @@ placement stays closed.
 | OKX Outcomes market reads | Ready for read-only use | `v2/execution/okx-outcomes-client.ts` reads events, markets, ticker, candles, and order book data. |
 | Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback. |
 | Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, and order-book summary. |
+| Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |
 | Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, API Key placeholder, observe, simulate, and disabled order placement. |
 | Agent explanation | Ready for read-only analysis | Agent observe replies can carry friendly yes/no odds and the no-live-order boundary. |
 | API Key binding | Placeholder only | The App has a visible binding position. Secret storage and user API-key lifecycle are not enabled in this release. |
@@ -45,10 +46,10 @@ observe/simulate mode and state that no real order or transaction was submitted.
 
 ## Known Follow-Up Risks
 
-1. `GET /api/v2/world-cup/explore` and `GET /api/v2/prediction/detail` are
-   currently product read endpoints. Before production OKX credentials are
-   enabled, they should get server-side user checks or light throttling so a
-   public caller cannot drain provider or storage resources.
+1. `GET /api/v2/world-cup/explore` and `GET /api/v2/prediction/detail` now pass
+   through a lightweight read guard. Before high-volume production traffic, tune
+   `PREDICTION_READ_RATE_LIMIT` and `PREDICTION_READ_RATE_WINDOW_MS` from real
+   staging traffic.
 2. `模拟预览` should become provider-aware for OKX Outcomes. It should return a
    local/contract-style dry-run preview instead of passing through legacy
    Polymarket command wording.
