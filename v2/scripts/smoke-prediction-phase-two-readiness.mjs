@@ -19,6 +19,7 @@ const predictionReadGuardSmoke = read("v2/scripts/smoke-prediction-read-guard.mj
 const mobileScreen = read("apps/mobile/src/V2AgentWalletScreen.tsx");
 const mobileApi = read("apps/mobile/src/api.ts");
 const integrationDoc = read("docs/OKX_OUTCOMES_READONLY_INTEGRATION.md");
+const liveFieldMappingDoc = read("docs/OKX_OUTCOMES_LIVE_FIELD_MAPPING.md");
 const cleanupQueue = read("docs/PREDICTION_MARKET_CLEANUP_QUEUE.md");
 const projectPlan = read("docs/PROJECT_EXECUTION_PLAN.md");
 
@@ -33,6 +34,7 @@ for (const scriptName of [
   "smoke:outcomes-market-catalog",
   "smoke:okx-outcomes-simulation-preview",
   "smoke:okx-outcomes-readonly-boundary",
+  "smoke:okx-outcomes-live-field-mapping",
   "smoke:agent-readonly-explanation",
   "smoke:prediction-detail-view",
   "smoke:prediction-detail-route",
@@ -143,6 +145,9 @@ check(
     read("v2/execution/okx-outcomes-preview.ts").includes("moneyMoved: false"),
   "OKX Outcomes preview helper keeps dry-run and money movement boundary"
 );
+check(liveFieldMappingDoc.includes("Do not use `marketId` as the `instId`"), "live field mapping doc protects outcome instId usage");
+check(liveFieldMappingDoc.includes("Settlement And Final Result"), "live field mapping doc records settlement gap");
+check(liveFieldMappingDoc.includes("not yet consumed by the App"), "live field mapping doc keeps unproven settlement hidden");
 
 console.log(
   JSON.stringify(
