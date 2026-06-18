@@ -22,15 +22,16 @@ export function classifyGoal(userText: string): BusinessGoalType {
 }
 
 export function createPredictionResearchPlan(goal: BusinessGoal, market?: MarketSnapshot): BusinessPlan {
+  const provider = market?.provider || "polymarket-plugin";
   return {
     id: crypto.randomUUID(),
     goalId: goal.id,
     mode: "observe",
-    provider: "polymarket-plugin",
+    provider,
     market,
     summary: market
       ? `Observed market: ${market.question}.`
-      : "Observe Polymarket prediction markets through Onchain OS plugin capability.",
+      : "Observe prediction markets through the configured provider capability.",
     createdAt: new Date().toISOString()
   };
 }
@@ -48,7 +49,7 @@ export function createPredictionDryRunPlan(
     id: crypto.randomUUID(),
     goalId: goal.id,
     mode: "dry_run",
-    provider: "polymarket-plugin",
+    provider: input.market.provider,
     market: input.market,
     side: input.side,
     amountUsd: input.amountUsd,

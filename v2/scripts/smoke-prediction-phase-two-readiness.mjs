@@ -31,6 +31,7 @@ function check(condition, message) {
 for (const scriptName of [
   "smoke:outcomes",
   "smoke:outcomes-market-catalog",
+  "smoke:okx-outcomes-simulation-preview",
   "smoke:okx-outcomes-readonly-boundary",
   "smoke:agent-readonly-explanation",
   "smoke:prediction-detail-view",
@@ -117,7 +118,7 @@ check(mobileApi.includes("/api/v2/prediction/detail"), "mobile API reads predict
 
 for (const text of [
   "read-only / 只读",
-  "Simulation: simulation remains a dry-run preview only",
+  "Simulation: OKX Outcomes simulation is a local/contract-style dry-run preview",
   "Forbidden Action List",
   "live prediction order placement",
   "transaction signing",
@@ -133,6 +134,15 @@ check(projectPlan.includes("OKX Onchain OS And Prediction Integration"), "projec
 check(projectPlan.includes("read-only prediction detail view"), "project plan records read-only detail view");
 check(projectPlan.includes("limited to observe/simulate"), "project plan records observe/simulate action limit");
 check(projectPlan.includes("Real execution remains gated"), "project plan keeps live execution gated");
+check(
+  integrationDoc.includes("outcomes.order.preview") && integrationDoc.includes("moneyMoved: false"),
+  "OKX integration doc records dry-run preview safety fields"
+);
+check(
+  read("v2/execution/okx-outcomes-preview.ts").includes("outcomes.order.preview") &&
+    read("v2/execution/okx-outcomes-preview.ts").includes("moneyMoved: false"),
+  "OKX Outcomes preview helper keeps dry-run and money movement boundary"
+);
 
 console.log(
   JSON.stringify(

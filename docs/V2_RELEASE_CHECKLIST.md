@@ -10,9 +10,12 @@ This checklist is for the first mobile MVP built around the clean v2 flow.
 - Home payload is available through `GET /api/v2/mobile/home`.
 - Chat returns `mobileTurn.messages`.
 - Recharge flow returns one receive address card.
-- World Cup prediction flow reads markets through `polymarket-plugin`.
+- Prediction market flow can read OKX Outcomes markets and still keeps legacy
+  Polymarket plugin reads where needed.
 - Prediction card actions return `mobileTurn`.
-- `simulate` uses Polymarket dry-run and does not submit an order.
+- `simulate` routes by provider: OKX Outcomes uses a local
+  `outcomes.order.preview` dry-run, and Polymarket uses plugin dry-run. Neither
+  path submits an order.
 - `track`, `build_strategy`, and `simulate` write user-scoped records.
 - Records can be read through tracking, strategies, and records endpoints.
 - Mobile has v2 types, API client, session helper, and hook.
