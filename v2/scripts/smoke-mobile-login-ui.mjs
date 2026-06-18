@@ -7,16 +7,21 @@ const checks = [];
 
 assertIncludes(screen, "KeyboardAvoidingView", "real mobile login protects input from keyboard overlap");
 assertIncludes(screen, "contentContainerStyle={styles.loginScrollContent}", "real mobile login scrolls when keyboard is open");
-assertIncludes(screen, "<Text style={styles.loginTitle}>欢迎回来</Text>", "real mobile login uses user-facing welcome title");
+assertIncludes(screen, 'const appIcon = require("../assets/icon.png")', "real mobile login uses the app icon as a brand asset");
+assertIncludes(screen, "<Text style={styles.loginTitle}>海豚，开门</Text>", "real mobile login uses a short product-first title");
+assertIncludes(screen, "<Text style={styles.loginSubtitle}>你的 Agent 已就位。</Text>", "real mobile login keeps copy concise");
 assertIncludes(screen, "getLoginStatusText(state.status)", "real mobile login maps SDK status to friendly copy");
 assertNotIncludes(screen, "<Text style={styles.loginState}>{state.status}</Text>", "real mobile login does not show raw SDK status");
 assertIncludes(screen, "disabled={!canSendLoginCode}", "send-code button is disabled until email is present");
 assertIncludes(screen, "disabled={!canSubmitLoginCode}", "enter button is disabled until email and code are present");
-checks.push("real mobile login is polished, keyboard-safe, and hides SDK internals");
+checks.push("real mobile login is brand-led, keyboard-safe, and hides SDK internals");
 
 assertIncludes(preview, "contentContainerStyle={styles.previewLogin}", "web preview login uses the same scrollable shell");
-assertIncludes(preview, "<Text style={styles.previewLoginTitle}>欢迎回来</Text>", "web preview login matches the real login title");
-assertIncludes(preview, "<Text style={styles.previewLoginCardTitle}>邮箱登录</Text>", "web preview login keeps the same card structure");
+assertIncludes(preview, 'const appIcon = require("../assets/icon.png")', "web preview login uses the same app icon");
+assertIncludes(preview, "<Text style={styles.previewLoginTitle}>海豚，开门</Text>", "web preview login matches the real login title");
+assertIncludes(preview, "<Text style={styles.previewLoginCardTitle}>邮箱进入</Text>", "web preview login keeps the same card structure");
+assertIncludes(preview, 'placeholder="6 位验证码"', "web preview login shows the verification-code field");
+assertIncludes(preview, "<Text style={styles.previewLoginSecondaryButtonText}>发送验证码</Text>", "web preview login shows the send-code button");
 assertIncludes(preview, "disabled={!canEnter}", "web preview login keeps disabled state before email input");
 checks.push("web preview login mirrors the real mobile entry");
 
