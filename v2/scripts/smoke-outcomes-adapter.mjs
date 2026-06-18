@@ -52,6 +52,8 @@ assert(explore.cards.upcoming_matches.some((card) => Boolean(card.market.startTi
 assert(explore.cards.upcoming_matches.some((card) => Boolean(card.timing?.label)), "adds match timing label");
 assert(explore.cards.upcoming_matches.some((card) => /开赛|进行中/.test(card.subtitle || "")), "uses timing as match subtitle");
 
+await assertOkxReadOnlyMarketDataClient();
+
 console.log(JSON.stringify({
   ok: true,
   checks,
@@ -74,4 +76,126 @@ function isSortedByVolume(cards) {
 
 function volumeScore(market) {
   return market.volume24h || market.volume || market.liquidity || 0;
+}
+
+async function assertOkxReadOnlyMarketDataClient() {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = {
+    PREDICTIONS_API_KEY: process.env.PREDICTIONS_API_KEY,
+    PREDICTIONS_API_SECRET: process.env.PREDICTIONS_API_SECRET,
+    PREDICTIONS_API_PASSPHRASE: process.env.PREDICTIONS_API_PASSPHRASE,
+    OKX_OUTCOMES_BASE_URL: process.env.OKX_OUTCOMES_BASE_URL
+  };
+  const calls = [];
+
+  process.env.PREDICTIONS_API_KEY = "smoke-key";
+  process.env.PREDICTIONS_API_SECRET = "smoke-secret";
+  process.env.PREDICTIONS_API_PASSPHRASE = "smoke-passphrase";
+  process.env.OKX_OUTCOMES_BASE_URL = "https://okx-smoke.local";
+
+  globalThis.fetch = async (url, init = {}) => {
+    const parsed = new URL(String(url));
+    calls.push({
+      path: parsed.pathname,
+      search: parsed.search,
+      method: init.method,
+      hasKey: Boolean(init.headers?.["OK-ACCESS-KEY"]),
+      hasSignature: Boolean(init.headers?.["OK-ACCESS-SIGN"]),
+      hasTimestamp: Boolean(init.headers?.["OK-ACCESS-TIMESTAMP"]),
+      hasPassphrase: Boolean(init.headers?.["OK-ACCESS-PASSPHRASE"])
+    });
+
+    if (parsed.pathname === "/api/v5/predictions/markets/smoke-market") {
+      return jsonResponse({
+        marketId: "smoke-market",
+        question: "Will Spain win the 2026 FIFA World Cup?",
+        status: "active",
+        marketType: "binary",
+        yesOutcome: { assetId: "yes-asset", price: "64" },
+        noOutcome: { assetId: "no-asset", price: "36" }
+      });
+    }
+
+    if (parsed.pathname === "/api/v5/market/ticker") {
+      const instId = parsed.searchParams.get("instId");
+      return jsonResponse([
+        {
+          instId,
+          last: instId === "yes-asset" ? "0.64" : "0.36",
+          bidPx: "0.63",
+          askPx: "0.65",
+          vol24h: "1234",
+          ts: "1781763600000"
+        }
+      ]);
+    }
+
+    if (parsed.pathname === "/api/v5/market/candles") {
+      return jsonResponse([
+        ["1781760000000", "0.60", "0.66", "0.59", "0.64", "100"],
+        ["1781756400000", "0.58", "0.61", "0.57", "0.60", "88"]
+      ]);
+    }
+
+    if (parsed.pathname === "/api/v5/market/pm-books") {
+      return jsonResponse([
+        {
+          instId: parsed.searchParams.get("instId"),
+          bids: [["0.63", "100"]],
+          asks: [["0.65", "90"]],
+          ts: "1781763600000"
+        }
+      ]);
+    }
+
+    throw new Error(`Unexpected OKX smoke URL: ${url}`);
+  };
+
+  try {
+    const { getOkxOutcomeMarketData } = await import("../execution/okx-outcomes-client.ts");
+    const data = await getOkxOutcomeMarketData("smoke-market", {
+      includeCandles: true,
+      includeOrderBook: true,
+      candleBar: "1H",
+      candleLimit: 2,
+      bookSize: 5
+    });
+
+    assert(data.market?.marketId === "smoke-market", "reads single OKX market detail");
+    assert(data.market?.yesAssetId === "yes-asset", "market detail exposes YES asset");
+    assert(data.market?.noAssetId === "no-asset", "market detail exposes NO asset");
+    assert(data.yesTicker?.last === 0.64, "reads YES ticker");
+    assert(data.noTicker?.last === 0.36, "reads NO ticker");
+    assert(data.yesCandles?.length === 2, "reads YES candles");
+    assert(data.noCandles?.length === 2, "reads NO candles");
+    assert(data.yesOrderBook?.bids[0]?.price === 0.63, "reads YES order book");
+    assert(data.noOrderBook?.asks[0]?.size === 90, "reads NO order book");
+    assert(calls.length === 7, "market data uses detail, ticker, candles, and order book endpoints");
+    assert(calls.every((call) => call.method === "GET"), "OKX market data client stays GET-only");
+    assert(calls.every((call) => call.hasKey && call.hasSignature && call.hasTimestamp && call.hasPassphrase), "OKX read-only calls are signed");
+    assert(calls.some((call) => call.path === "/api/v5/predictions/markets/smoke-market"), "calls single market endpoint");
+    assert(calls.some((call) => call.path === "/api/v5/market/ticker" && call.search.includes("instId=yes-asset")), "calls ticker endpoint");
+    assert(calls.some((call) => call.path === "/api/v5/market/candles" && call.search.includes("bar=1H")), "calls candles endpoint");
+    assert(calls.some((call) => call.path === "/api/v5/market/pm-books" && call.search.includes("sz=5")), "calls pm-books endpoint");
+  } finally {
+    globalThis.fetch = originalFetch;
+    restoreEnv(originalEnv);
+  }
+}
+
+function jsonResponse(data) {
+  return {
+    ok: true,
+    status: 200,
+    async json() {
+      return { code: "0", data };
+    }
+  };
+}
+
+function restoreEnv(originalEnv) {
+  for (const [key, value] of Object.entries(originalEnv)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
 }
