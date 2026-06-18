@@ -7,14 +7,18 @@ const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 
 const checks = [];
 
-assertIncludes(screen, 'type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community and HWallet as separate tabs");
-assertIncludes(screen, 'onLeft={() => setActiveTab(activeTab === "community" ? "agent" : "community")}', "top-left entry toggles the community page instead of the sample market page");
-assertIncludes(screen, 'leftIcon={activeTab === "community" ? "chevron-back" : "menu"}', "community page changes the top-left entry into a back affordance");
-assertIncludes(screen, 'rightIcon={activeTab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}', "community page changes the top-right entry into a message affordance");
+assertIncludes(screen, 'type MainTab = "agent" | "community" | "notices" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community, notices, and HWallet as separate tabs");
+assertIncludes(screen, 'activeTab === "notices" ? "community" : activeTab === "community" ? "agent" : "community"', "top-left entry returns from notices to community and from community to Agent");
+assertIncludes(screen, 'leftIcon={isCommunityStack ? "chevron-back" : "menu"}', "community stack changes the top-left entry into a back affordance");
+assertIncludes(screen, 'rightIcon={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}', "community stack changes the top-right entry into a message affordance");
 assertIncludes(screen, "backgroundColor: colors.shell", "top bar background stays aligned with the page shell");
 assertIncludes(screen, 'activeTab === "community"', "mobile shell renders the community page from the top-left entry");
 assertIncludes(screen, "function CommunityTab", "community page is implemented as its own screen");
-assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community"', "community page hides the bottom menu");
+assertIncludes(screen, 'activeTab === "notices" ? <NoticeTab /> : null', "community message entry opens the platform notice page");
+assertIncludes(screen, "function NoticeTab", "platform notice page is implemented");
+assertIncludes(screen, "平台通知", "notice page labels platform notifications");
+assertIncludes(screen, "公告", "notice page exposes platform announcements");
+assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices"', "community and notice pages hide the bottom menu");
 assertIncludes(screen, "communityMemberLine", "community page shows compact member identity");
 assertIncludes(screen, "communityNicknameRow", "community page shows an edit affordance next to the nickname");
 assert(!screen.includes("communitySearchPill"), "community page removes the redundant internal search button");

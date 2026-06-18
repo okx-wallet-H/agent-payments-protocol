@@ -29,8 +29,31 @@ const communityCarouselItems = [
     text: "先把入口留好，后续接真实内容。"
   }
 ] as const;
+const platformNoticeItems = [
+  {
+    id: "wallet-beta",
+    tag: "HWallet",
+    title: "HWallet 内测已开放",
+    text: "收款地址、多账号切换和资产识别已进入真机验证。",
+    time: "刚刚"
+  },
+  {
+    id: "agent-memory",
+    tag: "Agent",
+    title: "Agent 会记住你的钱包状态",
+    text: "登录后会自动同步当前账号，不同邮箱会分开记录。",
+    time: "今天"
+  },
+  {
+    id: "community",
+    tag: "社区",
+    title: "邀请、卡库和发现入口已准备",
+    text: "后续活动、卡片和社区玩法都会从这里进入。",
+    time: "昨天"
+  }
+] as const;
 
-type Tab = "agent" | "community" | "worldcup" | "mine" | "wallet";
+type Tab = "agent" | "community" | "notices" | "worldcup" | "mine" | "wallet";
 type LoginStep = "email" | "code";
 type WorldCupView = "sentiment" | "prediction" | "explore" | "profile";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
@@ -163,7 +186,8 @@ export function V2AgentWalletPreview() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl), []);
   const insightCopy = createPreviewInsightCopy(worldCupExplore);
-  const showBottomDock = tab !== "worldcup" && tab !== "community" && !keyboardVisible;
+  const isCommunityStack = tab === "community" || tab === "notices";
+  const showBottomDock = tab !== "worldcup" && tab !== "community" && tab !== "notices" && !keyboardVisible;
   const previewUserId = useMemo(() => previewUserIdFromEmail(previewEmail), [previewEmail]);
   const receiveAddress = useMemo(() => previewAddressForEmail(previewEmail), [previewEmail]);
 
@@ -411,18 +435,21 @@ export function V2AgentWalletPreview() {
         {tab !== "worldcup" ? (
           <View style={styles.topbar}>
             <Pressable
-              style={[styles.roundButton, tab === "community" ? styles.roundButtonActive : null]}
+              style={[styles.roundButton, isCommunityStack ? styles.roundButtonActive : null]}
               onPress={() => {
-                setTab(tab === "community" ? "agent" : "community");
+                setTab(tab === "notices" ? "community" : tab === "community" ? "agent" : "community");
               }}
             >
-              <Ionicons name={tab === "community" ? "chevron-back" : "menu"} size={tab === "community" ? 25 : 24} color={colors.ink} />
+              <Ionicons name={isCommunityStack ? "chevron-back" : "menu"} size={isCommunityStack ? 25 : 24} color={colors.ink} />
             </Pressable>
             <View style={styles.topbarCenterSpacer} />
-            <Pressable style={styles.roundButton} onPress={() => setTab(tab === "community" ? "agent" : "mine")}>
+            <Pressable
+              style={[styles.roundButton, tab === "notices" ? styles.roundButtonActive : null]}
+              onPress={() => setTab(tab === "community" ? "notices" : tab === "notices" ? "notices" : "mine")}
+            >
               <Ionicons
-                name={tab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}
-                size={tab === "community" ? 22 : 21}
+                name={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}
+                size={isCommunityStack ? 22 : 21}
                 color={colors.ink}
               />
             </Pressable>
@@ -443,6 +470,8 @@ export function V2AgentWalletPreview() {
             }}
           />
         ) : null}
+
+        {tab === "notices" ? <NoticePreview /> : null}
 
         {tab === "agent" ? (
           <View style={styles.agentScreen}>
@@ -1001,6 +1030,32 @@ function CommunityActionCard({
         <Text style={styles.communityActionTitle}>{title}</Text>
       </View>
     </Pressable>
+  );
+}
+
+function NoticePreview() {
+  return (
+    <View style={styles.noticeShell}>
+      <ScrollView contentContainerStyle={styles.noticePage} showsVerticalScrollIndicator={false}>
+        <View style={styles.noticeHeader}>
+          <Text style={styles.noticeEyebrow}>平台通知</Text>
+          <Text style={styles.noticeTitle}>公告</Text>
+          <Text style={styles.noticeSubtitle}>社区更新、钱包状态和活动消息都会放在这里。</Text>
+        </View>
+        <View style={styles.noticeList}>
+          {platformNoticeItems.map((item) => (
+            <View key={item.id} style={styles.noticeCard}>
+              <View style={styles.noticeCardTop}>
+                <Text style={styles.noticeTag}>{item.tag}</Text>
+                <Text style={styles.noticeTime}>{item.time}</Text>
+              </View>
+              <Text style={styles.noticeCardTitle}>{item.title}</Text>
+              <Text style={styles.noticeCardText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -2343,6 +2398,78 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "900"
+  },
+  noticeShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  noticePage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 112,
+    gap: 26,
+    backgroundColor: "#ffffff"
+  },
+  noticeHeader: {
+    gap: 8,
+    paddingTop: 8
+  },
+  noticeEyebrow: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  noticeTitle: {
+    color: colors.ink,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "900"
+  },
+  noticeSubtitle: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  noticeList: {
+    gap: 10
+  },
+  noticeCard: {
+    minHeight: 118,
+    borderRadius: 24,
+    backgroundColor: "#fbfaf8",
+    padding: 18,
+    gap: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  noticeCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  noticeTag: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  noticeTime: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  noticeCardTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  noticeCardText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   agentScreen: {
     flex: 1

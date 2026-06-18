@@ -63,8 +63,31 @@ const communityCarouselItems = [
     text: "先把入口留好，后续接真实内容。"
   }
 ] as const;
+const platformNoticeItems = [
+  {
+    id: "wallet-beta",
+    tag: "HWallet",
+    title: "HWallet 内测已开放",
+    text: "收款地址、多账号切换和资产识别已进入真机验证。",
+    time: "刚刚"
+  },
+  {
+    id: "agent-memory",
+    tag: "Agent",
+    title: "Agent 会记住你的钱包状态",
+    text: "登录后会自动同步当前账号，不同邮箱会分开记录。",
+    time: "今天"
+  },
+  {
+    id: "community",
+    tag: "社区",
+    title: "邀请、卡库和发现入口已准备",
+    text: "后续活动、卡片和社区玩法都会从这里进入。",
+    time: "昨天"
+  }
+] as const;
 
-type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet";
+type MainTab = "agent" | "community" | "notices" | "worldcup" | "mine" | "wallet";
 type LoginStep = "email" | "code";
 type WorldCupView = "home" | "explore" | "detail";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
@@ -168,6 +191,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
   const activeUserLabel = getHWalletUserLabel(user);
+  const isCommunityStack = activeTab === "community" || activeTab === "notices";
   const agentSessionReady = isReady && Boolean(activeUserId);
   const normalizedLoginEmail = email.trim();
   const normalizedLoginCode = normalizeOtpCode(code);
@@ -489,12 +513,12 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       <View style={styles.shell}>
         {activeTab !== "worldcup" ? (
           <TopBar
-            onLeft={() => setActiveTab(activeTab === "community" ? "agent" : "community")}
-            onRight={() => setActiveTab(activeTab === "community" ? "agent" : "mine")}
-            leftActive={activeTab === "community"}
-            leftIcon={activeTab === "community" ? "chevron-back" : "menu"}
-            rightActive={activeTab === "mine"}
-            rightIcon={activeTab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}
+            onLeft={() => setActiveTab(activeTab === "notices" ? "community" : activeTab === "community" ? "agent" : "community")}
+            onRight={() => setActiveTab(activeTab === "community" ? "notices" : activeTab === "notices" ? "notices" : "mine")}
+            leftActive={isCommunityStack}
+            leftIcon={isCommunityStack ? "chevron-back" : "menu"}
+            rightActive={activeTab === "mine" || activeTab === "notices"}
+            rightIcon={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}
           />
         ) : null}
 
@@ -510,6 +534,8 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             }}
           />
         ) : null}
+
+        {activeTab === "notices" ? <NoticeTab /> : null}
 
         {activeTab === "agent" ? (
           <AgentTab
@@ -579,7 +605,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
           />
         ) : null}
 
-        {activeTab !== "worldcup" && activeTab !== "community" ? (
+        {activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices" ? (
           <BottomNav
             activeTab={activeTab}
             onChange={setActiveTab}
@@ -804,6 +830,32 @@ function CommunityActionCard({
         <Text style={styles.communityActionTitle}>{title}</Text>
       </View>
     </Pressable>
+  );
+}
+
+function NoticeTab() {
+  return (
+    <View style={styles.noticeShell}>
+      <ScrollView contentContainerStyle={styles.noticePage} showsVerticalScrollIndicator={false}>
+        <View style={styles.noticeHeader}>
+          <Text style={styles.noticeEyebrow}>平台通知</Text>
+          <Text style={styles.noticeTitle}>公告</Text>
+          <Text style={styles.noticeSubtitle}>社区更新、钱包状态和活动消息都会放在这里。</Text>
+        </View>
+        <View style={styles.noticeList}>
+          {platformNoticeItems.map((item) => (
+            <View key={item.id} style={styles.noticeCard}>
+              <View style={styles.noticeCardTop}>
+                <Text style={styles.noticeTag}>{item.tag}</Text>
+                <Text style={styles.noticeTime}>{item.time}</Text>
+              </View>
+              <Text style={styles.noticeCardTitle}>{item.title}</Text>
+              <Text style={styles.noticeCardText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -4021,6 +4073,78 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "900"
+  },
+  noticeShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  noticePage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 112,
+    gap: 26,
+    backgroundColor: "#ffffff"
+  },
+  noticeHeader: {
+    gap: 8,
+    paddingTop: 8
+  },
+  noticeEyebrow: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  noticeTitle: {
+    color: colors.ink,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "900"
+  },
+  noticeSubtitle: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  noticeList: {
+    gap: 10
+  },
+  noticeCard: {
+    minHeight: 118,
+    borderRadius: 24,
+    backgroundColor: "#fbfaf8",
+    padding: 18,
+    gap: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  noticeCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  noticeTag: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  noticeTime: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  noticeCardTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  noticeCardText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   agentScreen: {
     flex: 1
