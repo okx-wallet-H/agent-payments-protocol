@@ -15,8 +15,8 @@ trading or order-submission feature.
 - Detail page: the prediction detail view may show outcome rows, best bid/ask,
   spread, order book depth, volume/liquidity labels, and an observe/simulate
   action set.
-- Simulation: simulation remains a dry-run preview only. It does not create,
-  sign, submit, swap, or broadcast anything.
+- Simulation: OKX Outcomes simulation is a local/contract-style dry-run preview
+  only. It does not create, sign, submit, swap, or broadcast anything.
 - Asset id handling: full outcome asset ids are internal market references.
   User-facing surfaces must use redacted labels such as `abc123...7890` instead
   of full asset ids.
@@ -45,6 +45,8 @@ real order or transaction was submitted.
 - OKX Outcomes REST usage stays limited to market-data reads such as events,
   markets, ticker, candles, and order book endpoints.
 - Agent market replies carry friendly odds and the no-live-order boundary.
+- OKX simulation preview returns `outcomes.order.preview` with `dry_run_only`,
+  `liveExecutionEnabled: false`, and `moneyMoved: false`.
 - The detail view exposes only `observe` and `simulate` actions.
 - Full asset ids, raw provider payloads, secrets, private keys, and full wallet
   addresses are not shown in user-facing prediction-market UI.

@@ -291,6 +291,13 @@ assert(simulate.card?.agentNote?.includes("订单没有提交"), "simulation car
 assert(simulate.card?.moneyMoved === false, "simulation card explicitly records no money movement");
 assert(Boolean(simulate.card?.sideLabel), "simulation card includes side label");
 assert(simulate.card?.market?.marketId === predictionCard.market.marketId, "simulation card keeps market for next action");
+if (predictionCard.market.provider === "okx-outcomes") {
+  assert(simulate.result?.raw?.provider === "okx-outcomes", "OKX simulation keeps OKX provider");
+  assert(simulate.result?.raw?.route === "outcomes.order.preview", "OKX simulation uses OKX preview route");
+  assert(simulate.result?.raw?.moneyMoved === false, "OKX simulation cannot move money");
+  assert(simulate.result?.raw?.liveExecutionEnabled === false, "OKX simulation keeps live execution closed");
+  assert(simulate.card?.agentNote?.includes("OKX Outcomes 本地模拟预览"), "OKX simulation card uses OKX preview copy");
+}
 const auditAfterSimulation = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
 const simulationAudit = auditAfterSimulation.events?.find((event) => event.type === "simulation.completed");
 assert(simulationAudit?.moneyMoved === false, "audit timeline records simulation without money movement");
@@ -304,6 +311,36 @@ const trackFromSimulation = await postJson("/api/v2/phase-one/actions", {
   userId
 });
 assert(trackFromSimulation.record?.type === "tracking.saved", "simulation card can continue into tracking");
+
+const okxSimulationMarket = {
+  provider: "okx-outcomes",
+  chainId: 196,
+  eventId: "okx-smoke-event",
+  marketId: `okx-smoke-market-${userId}`,
+  question: "西班牙会赢得 2026 年世界杯冠军吗？",
+  status: "active",
+  marketType: "binary",
+  yesAssetId: "yes-asset-redacted",
+  noAssetId: "no-asset-redacted",
+  yesPrice: 0.17,
+  noPrice: 0.83,
+  acceptingOrders: true,
+  liquidity: 4210,
+  volume24h: 988
+};
+const okxSimulation = await postJson("/api/v2/phase-one/actions", {
+  action: "simulate",
+  market: okxSimulationMarket,
+  amountUsd: 3,
+  userId
+});
+assert(okxSimulation.result?.status === "dry_run_completed", "OKX simulation completes dry-run");
+assert(okxSimulation.result?.raw?.provider === "okx-outcomes", "OKX simulation keeps OKX provider");
+assert(okxSimulation.result?.raw?.route === "outcomes.order.preview", "OKX simulation uses OKX preview route");
+assert(okxSimulation.result?.raw?.moneyMoved === false, "OKX simulation cannot move money");
+assert(okxSimulation.result?.raw?.liveExecutionEnabled === false, "OKX simulation keeps live execution closed");
+assert(okxSimulation.card?.agentNote?.includes("OKX Outcomes 本地模拟预览"), "OKX simulation card uses OKX preview copy");
+assert(okxSimulation.card?.moneyMoved === false, "OKX simulation card records no money movement");
 
 const blockedSimulation = await postStatus("/api/v2/phase-one/actions", {
   action: "simulate",
