@@ -37,6 +37,7 @@ const ownerReleasePacket = await readFile("docs/HWALLET_OWNER_RELEASE_PACKET.md"
 const ownerReleasePacketSmoke = await readFile("v2/scripts/smoke-release-owner-packet.mjs", "utf8");
 const ownerReleaseStatusSmoke = await readFile("v2/scripts/smoke-owner-release-status.mjs", "utf8");
 const supabaseReadbackSmoke = await readFile("v2/scripts/smoke-supabase-readback-drill.mjs", "utf8");
+const predictionDetailViewSmoke = await readFile("v2/scripts/smoke-prediction-detail-view.mjs", "utf8");
 
 const scripts = packageJson.scripts || {};
 const mobileScripts = mobilePackage.scripts || {};
@@ -74,6 +75,7 @@ const requiredScripts = [
   "smoke:mobile-testflight-readiness",
   "smoke:mobile-hwallet-ux",
   "smoke:privy-wallet-status",
+  "smoke:prediction-detail-view",
   "verify:merge"
 ];
 
@@ -128,6 +130,10 @@ assert(
   String(scripts["verify:merge"] || "").includes("smoke:release-owner-packet"),
   "verify:merge includes owner release packet gate"
 );
+assert(
+  String(scripts["verify:merge"] || "").includes("smoke:prediction-detail-view"),
+  "verify:merge includes prediction detail view gate"
+);
 checks.push("package exposes the HWallet release candidate gate");
 
 for (const scriptName of ["update:preview", "update:production", "build:ios:preview", "build:android:preview", "build:ios", "build:android"]) {
@@ -154,6 +160,7 @@ assertIncludes(releaseChecklist, "npm run smoke:mobile-release-handoff", "releas
 assertIncludes(releaseChecklist, "HWALLET_RELEASE_HANDOFF_STRICT=true", "release checklist documents strict mobile release handoff");
 assertIncludes(releaseChecklist, "npm run smoke:mobile-store-submission", "release checklist includes mobile store submission gate");
 assertIncludes(releaseChecklist, "npm run smoke:store-review-account-plan", "release checklist includes store review account plan gate");
+assertIncludes(releaseChecklist, "npm run smoke:prediction-detail-view", "release checklist includes prediction detail view gate");
 assertIncludes(releaseChecklist, "npm run smoke:hwallet-store-console-evidence", "release checklist includes store console evidence gate");
 assertIncludes(releaseChecklist, "docs/HWALLET_STORE_SUBMISSION_PACKET.md", "release checklist links store submission packet");
 assertIncludes(releaseChecklist, "docs/HWALLET_RELEASE_TASK_LEDGER.md", "release checklist links release task ledger");
@@ -163,6 +170,13 @@ assertIncludes(releaseChecklist, "npm run smoke:release-owner-packet", "release 
 assertIncludes(releaseChecklist, "HWALLET_STAGING_HANDOFF_STRICT=true", "release checklist documents strict staging handoff");
 assertPattern(releaseCandidate, /do not submit/i, "release gate blocks submission on failed checks");
 checks.push("release checklist keeps HWallet candidate checks in safe order");
+
+assertIncludes(predictionDetailViewSmoke, "detail view is explicitly read-only", "prediction detail smoke enforces read-only detail view");
+assertIncludes(predictionDetailViewSmoke, "detail view keeps live execution closed", "prediction detail smoke keeps live execution closed");
+assertIncludes(predictionDetailViewSmoke, "detail actions are observe and simulate only", "prediction detail smoke limits actions");
+assertIncludes(predictionDetailViewSmoke, "forbidden token", "prediction detail smoke checks forbidden action tokens");
+assertIncludes(predictionDetailViewSmoke, '"broadcast"', "prediction detail smoke blocks broadcast token");
+assertIncludes(predictionDetailViewSmoke, "detail view does not expose full yes asset id", "prediction detail smoke redacts asset ids");
 
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-release-candidate", "staging deployment runs the release candidate gate");
 assertIncludes(stagingDeployment, "npm run smoke:hwallet-staging-handoff", "staging deployment runs the staging handoff gate");
@@ -410,6 +424,7 @@ assertNoRawSecrets({
   "docs/HWALLET_OWNER_RELEASE_PACKET.md": ownerReleasePacket,
   "v2/scripts/smoke-release-owner-packet.mjs": ownerReleasePacketSmoke,
   "v2/scripts/smoke-owner-release-status.mjs": ownerReleaseStatusSmoke,
+  "v2/scripts/smoke-prediction-detail-view.mjs": predictionDetailViewSmoke,
   "app/privacy/page.tsx": privacyPage,
   "app/support/page.tsx": supportPage,
   "apps/mobile/eas.json": JSON.stringify(easConfig, null, 2)
