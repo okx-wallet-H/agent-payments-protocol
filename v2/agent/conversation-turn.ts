@@ -40,6 +40,7 @@ export function handlePhaseOneUserText(input: {
     const safetySuffix = shouldExplainNoLiveExecution(input.userText)
       ? " 这一步我只做分析和模拟，不会真实下单。"
       : "";
+    const marketSnapshotText = plan.market ? createMarketSnapshotText(plan.market) : "";
 
     return {
       id: crypto.randomUUID(),
@@ -47,7 +48,7 @@ export function handlePhaseOneUserText(input: {
       progress: input.candidateMarket ? createSelectedMarketProgress(goal) : createStrategyProgress(goal),
       cards: input.candidateMarket ? [createPredictionCard(input.candidateMarket)] : [],
       finalText: plan.market
-        ? `${walletSyncPrefix}这场我先建议观察，点卡片可以继续跟踪或先模拟。${safetySuffix}`
+        ? `${walletSyncPrefix}${marketSnapshotText}这场我先建议观察，点卡片可以继续跟踪或先模拟。${safetySuffix}`
         : `${walletSyncPrefix}我先去找世界杯相关市场。${safetySuffix}`,
       createdAt: new Date().toISOString()
     };
@@ -113,4 +114,16 @@ function shouldIncludeWalletFundText(userText: string, walletFundText?: string):
 
 function shouldExplainNoLiveExecution(userText: string): boolean {
   return /执行|下单|买|卖|execute|buy|sell/i.test(userText);
+}
+
+function createMarketSnapshotText(market: MarketSnapshot): string {
+  const yesPercent = toDisplayPercent(market.yesPrice);
+  const noPercent = toDisplayPercent(market.noPrice);
+  if (yesPercent === undefined || noPercent === undefined) return "";
+  return `当前快照：会 ${yesPercent}% / 不会 ${noPercent}%。`;
+}
+
+function toDisplayPercent(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || Number.isNaN(value)) return undefined;
+  return Math.round(value * 10000) / 100;
 }
