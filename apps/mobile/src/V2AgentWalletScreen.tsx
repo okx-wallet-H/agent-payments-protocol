@@ -43,7 +43,7 @@ import type {
 const worldCupPoster = require("../assets/world-cup-agent-poster.png");
 const appIcon = require("../assets/icon.png");
 
-type MainTab = "agent" | "worldcup" | "mine" | "wallet";
+type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet";
 type LoginStep = "email" | "code";
 type WorldCupView = "home" | "explore" | "detail";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
@@ -468,9 +468,23 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       <View style={styles.shell}>
         {activeTab !== "worldcup" ? (
           <TopBar
-            onLeft={() => setActiveTab("worldcup")}
+            onLeft={() => setActiveTab("community")}
             onRight={() => setActiveTab("mine")}
+            leftActive={activeTab === "community"}
             rightActive={activeTab === "mine"}
+          />
+        ) : null}
+
+        {activeTab === "community" ? (
+          <CommunityTab
+            email={activeUserLabel}
+            onCards={() => setActiveTab("worldcup")}
+            onInvite={() => setActiveTab("mine")}
+            onNewChat={() => {
+              setInput("");
+              setActiveTab("agent");
+            }}
+            onWallet={() => setActiveTab("wallet")}
           />
         ) : null}
 
@@ -559,17 +573,19 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
 }
 
 function TopBar({
+  leftActive,
   onLeft,
   onRight,
   rightActive
 }: {
+  leftActive: boolean;
   onLeft: () => void;
   onRight: () => void;
   rightActive: boolean;
 }) {
   return (
     <View style={styles.topbar}>
-      <Pressable style={styles.roundButton} onPress={onLeft}>
+      <Pressable style={[styles.roundButton, leftActive ? styles.roundButtonActive : null]} onPress={onLeft}>
         <Ionicons name="menu" size={24} color="#1c1a17" />
       </Pressable>
       <View style={styles.topbarCenterSpacer} />
@@ -577,6 +593,117 @@ function TopBar({
         <Ionicons name="person-outline" size={21} color="#1c1a17" />
       </Pressable>
     </View>
+  );
+}
+
+function CommunityTab({
+  email,
+  onCards,
+  onInvite,
+  onNewChat,
+  onWallet
+}: {
+  email: string;
+  onCards: () => void;
+  onInvite: () => void;
+  onNewChat: () => void;
+  onWallet: () => void;
+}) {
+  const displayEmail = email || "demo@hwallet.vip";
+  const records = [
+    { id: "receive", title: "收款地址", text: "刚刚打开 HWallet 收款入口", time: "刚刚" },
+    { id: "agent", title: "Agent 对话", text: "查看可用资金和下一步机会", time: "今天" },
+    { id: "wallet", title: "钱包同步", text: "多账号地址已经分开记录", time: "昨天" }
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
+      <View style={styles.communityMemberCard}>
+        <View style={styles.communityMemberTop}>
+          <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
+          <View style={styles.communityMemberInfo}>
+            <Text style={styles.communityMemberName}>海豚会员</Text>
+            <Text style={styles.communityMemberEmail}>{displayEmail}</Text>
+          </View>
+          <View style={styles.communityLevelBadge}>
+            <Text style={styles.communityLevelText}>Lv.3</Text>
+          </View>
+        </View>
+        <View style={styles.communityVipRow}>
+          <Text style={styles.communityVipLabel}>VIP 进度</Text>
+          <Text style={styles.communityVipValue}>68%</Text>
+        </View>
+        <View style={styles.communityProgressTrack}>
+          <View style={styles.communityProgressFill} />
+        </View>
+      </View>
+
+      <View style={styles.communityEntryRow}>
+        <CommunityActionCard
+          icon="person-add-outline"
+          title="邀请好友"
+          text="一起进社区"
+          onPress={onInvite}
+        />
+        <CommunityActionCard
+          icon="albums-outline"
+          title="卡库"
+          text="收藏和策略卡"
+          onPress={onCards}
+        />
+        <CommunityActionCard
+          icon="wallet-outline"
+          title="HWallet"
+          text="收款入口"
+          onPress={onWallet}
+        />
+      </View>
+
+      <View style={styles.communityRecordsCard}>
+        <View style={styles.communityRecordsHeader}>
+          <Text style={styles.communityRecordsTitle}>对话记录</Text>
+          <Text style={styles.communityRecordsMeta}>最近</Text>
+        </View>
+        {records.map((record) => (
+          <View key={record.id} style={styles.communityRecordRow}>
+            <View style={styles.communityRecordIcon}>
+              <Ionicons name="chatbubble-ellipses" size={16} color={colors.ink} />
+            </View>
+            <View style={styles.communityRecordBody}>
+              <Text style={styles.communityRecordTitle}>{record.title}</Text>
+              <Text style={styles.communityRecordText}>{record.text}</Text>
+            </View>
+            <Text style={styles.communityRecordTime}>{record.time}</Text>
+          </View>
+        ))}
+        <Pressable style={styles.communityNewChatButton} onPress={onNewChat}>
+          <Ionicons name="add" size={20} color="#ffffff" />
+          <Text style={styles.communityNewChatText}>新会话</Text>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}
+
+function CommunityActionCard({
+  icon,
+  title,
+  text,
+  onPress
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  text: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={styles.communityActionCard} onPress={onPress}>
+      <View style={styles.communityActionIcon}>
+        <Ionicons name={icon} size={22} color={colors.ink} />
+      </View>
+      <Text style={styles.communityActionTitle}>{title}</Text>
+      <Text style={styles.communityActionText}>{text}</Text>
+    </Pressable>
   );
 }
 
@@ -3532,6 +3659,205 @@ const styles = StyleSheet.create({
   topbarCenterSpacer: {
     width: 76,
     height: 50
+  },
+  communityPage: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 142,
+    gap: 16
+  },
+  communityMemberCard: {
+    borderRadius: 32,
+    backgroundColor: "#071812",
+    padding: 22,
+    gap: 18,
+    shadowColor: "#0b160f",
+    shadowOpacity: 0.24,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 6
+  },
+  communityMemberTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  communityAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 20
+  },
+  communityMemberInfo: {
+    flex: 1,
+    gap: 4
+  },
+  communityMemberName: {
+    color: "#ffffff",
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "900"
+  },
+  communityMemberEmail: {
+    color: "#d8d2ca",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  communityLevelBadge: {
+    minWidth: 58,
+    minHeight: 34,
+    borderRadius: 17,
+    backgroundColor: "#c9ff3f",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  communityLevelText: {
+    color: "#071812",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  communityVipRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  communityVipLabel: {
+    color: "#d8d2ca",
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  communityVipValue: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  communityProgressTrack: {
+    height: 10,
+    borderRadius: 5,
+    overflow: "hidden",
+    backgroundColor: "rgba(255, 255, 255, 0.14)"
+  },
+  communityProgressFill: {
+    width: "68%",
+    height: "100%",
+    borderRadius: 5,
+    backgroundColor: "#c9ff3f"
+  },
+  communityEntryRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  communityActionCard: {
+    flex: 1,
+    minHeight: 106,
+    borderRadius: 24,
+    backgroundColor: "#fffdfa",
+    padding: 12,
+    justifyContent: "space-between",
+    shadowColor: "#d8cec4",
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 3
+  },
+  communityActionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#f1ebe5",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  communityActionTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  communityActionText: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800"
+  },
+  communityRecordsCard: {
+    borderRadius: 30,
+    backgroundColor: "#fffdfa",
+    padding: 18,
+    gap: 12,
+    shadowColor: "#d8cec4",
+    shadowOpacity: 0.38,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 3
+  },
+  communityRecordsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  communityRecordsTitle: {
+    color: colors.ink,
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: "900"
+  },
+  communityRecordsMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  communityRecordRow: {
+    minHeight: 64,
+    borderRadius: 22,
+    backgroundColor: "#f6f1ec",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  communityRecordIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#fffdfa",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  communityRecordBody: {
+    flex: 1,
+    gap: 3
+  },
+  communityRecordTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  communityRecordText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700"
+  },
+  communityRecordTime: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  communityNewChatButton: {
+    minHeight: 50,
+    borderRadius: 25,
+    backgroundColor: colors.ink,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  communityNewChatText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "900"
   },
   agentScreen: {
     flex: 1

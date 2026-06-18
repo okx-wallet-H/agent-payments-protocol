@@ -7,11 +7,21 @@ const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 
 const checks = [];
 
-assertIncludes(screen, 'type MainTab = "agent" | "worldcup" | "mine" | "wallet"', "mobile shell keeps HWallet as its own tab");
+assertIncludes(screen, 'type MainTab = "agent" | "community" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community and HWallet as separate tabs");
+assertIncludes(screen, 'onLeft={() => setActiveTab("community")}', "top-left entry opens the community page instead of the sample market page");
+assertIncludes(screen, 'activeTab === "community"', "mobile shell renders the community page from the top-left entry");
+assertIncludes(screen, "function CommunityTab", "community page is implemented as its own screen");
+assertIncludes(screen, "communityMemberCard", "community page starts with a member information card");
+assertIncludes(screen, "海豚会员", "community page shows a member nickname");
+assertIncludes(screen, "VIP 进度", "community page shows VIP progress");
+assertIncludes(screen, "邀请好友", "community page exposes invite entry");
+assertIncludes(screen, "卡库", "community page exposes card library entry");
+assertIncludes(screen, "对话记录", "community page exposes conversation records");
+assertIncludes(screen, "新会话", "community page exposes a new-chat action at the bottom of records");
 assertIncludes(screen, 'label="发现"', "bottom nav keeps discovery tab separate from HWallet");
 assertIncludes(screen, '<Text style={styles.hMarkText}>H</Text>', "bottom nav exposes HWallet through the H entry");
 assertIncludes(screen, 'onWallet={() => setActiveTab("wallet")}', "H entry opens the HWallet tab");
-checks.push("bottom navigation keeps Agent, market, discovery, and HWallet boundaries");
+checks.push("navigation keeps community, Agent, market, discovery, and HWallet boundaries");
 
 assertIncludes(screen, 'Alert.alert("切换账号"', "account switch uses a confirmation sheet");
 assertIncludes(screen, 'text: "退出"', "account switch confirmation exposes logout action");
