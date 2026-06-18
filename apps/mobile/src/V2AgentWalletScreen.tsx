@@ -86,8 +86,25 @@ const platformNoticeItems = [
     time: "昨天"
   }
 ] as const;
+const inviteRewardSteps = [
+  {
+    id: "share",
+    title: "分享你的邀请",
+    text: "把专属入口发给好友，好友进入后关系会自动记录。"
+  },
+  {
+    id: "open",
+    title: "好友开通 HWallet",
+    text: "邮箱登录、钱包绑定和后续 Agent 记录会分开沉淀。"
+  },
+  {
+    id: "reward",
+    title: "获得 20% 佣金",
+    text: "好友产生有效佣金后，系统会同步到你的社区记录。"
+  }
+] as const;
 
-type MainTab = "agent" | "community" | "notices" | "worldcup" | "mine" | "wallet";
+type MainTab = "agent" | "community" | "notices" | "invite" | "worldcup" | "mine" | "wallet";
 type LoginStep = "email" | "code";
 type WorldCupView = "home" | "explore" | "detail";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
@@ -191,7 +208,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const activeUserId = user?.id;
   const activeWalletAddress = user ? walletAddress : undefined;
   const activeUserLabel = getHWalletUserLabel(user);
-  const isCommunityStack = activeTab === "community" || activeTab === "notices";
+  const isCommunityStack = activeTab === "community" || activeTab === "notices" || activeTab === "invite";
   const agentSessionReady = isReady && Boolean(activeUserId);
   const normalizedLoginEmail = email.trim();
   const normalizedLoginCode = normalizeOtpCode(code);
@@ -513,8 +530,8 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       <View style={styles.shell}>
         {activeTab !== "worldcup" ? (
           <TopBar
-            onLeft={() => setActiveTab(activeTab === "notices" ? "community" : activeTab === "community" ? "agent" : "community")}
-            onRight={() => setActiveTab(activeTab === "community" ? "notices" : activeTab === "notices" ? "notices" : "mine")}
+            onLeft={() => setActiveTab(activeTab === "notices" || activeTab === "invite" ? "community" : activeTab === "community" ? "agent" : "community")}
+            onRight={() => setActiveTab(activeTab === "community" || activeTab === "invite" ? "notices" : activeTab === "notices" ? "notices" : "mine")}
             leftActive={isCommunityStack}
             leftIcon={isCommunityStack ? "chevron-back" : "menu"}
             rightActive={activeTab === "mine" || activeTab === "notices"}
@@ -527,7 +544,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             email={activeUserLabel}
             onCards={() => setActiveTab("worldcup")}
             onDiscover={() => setActiveTab("mine")}
-            onInvite={() => setActiveTab("mine")}
+            onInvite={() => setActiveTab("invite")}
             onNewChat={() => {
               setInput("");
               setActiveTab("agent");
@@ -536,6 +553,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
         ) : null}
 
         {activeTab === "notices" ? <NoticeTab /> : null}
+        {activeTab === "invite" ? <InviteTab /> : null}
 
         {activeTab === "agent" ? (
           <AgentTab
@@ -605,7 +623,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
           />
         ) : null}
 
-        {activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices" ? (
+        {activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices" && activeTab !== "invite" ? (
           <BottomNav
             activeTab={activeTab}
             onChange={setActiveTab}
@@ -851,6 +869,77 @@ function NoticeTab() {
               </View>
               <Text style={styles.noticeCardTitle}>{item.title}</Text>
               <Text style={styles.noticeCardText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function InviteTab() {
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const inviteCopyResetRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (inviteCopyResetRef.current) {
+        clearTimeout(inviteCopyResetRef.current);
+      }
+    };
+  }, []);
+
+  async function copyInviteLink() {
+    await Clipboard.setStringAsync("https://app.hwallet.vip/invite/HAITUN20");
+    if (inviteCopyResetRef.current) {
+      clearTimeout(inviteCopyResetRef.current);
+    }
+    setInviteCopied(true);
+    inviteCopyResetRef.current = setTimeout(() => setInviteCopied(false), 2200);
+  }
+
+  return (
+    <View style={styles.inviteShell}>
+      <ScrollView contentContainerStyle={styles.invitePage} showsVerticalScrollIndicator={false}>
+        <View style={styles.inviteHero}>
+          <Text style={styles.inviteEyebrow}>邀请好友</Text>
+          <Text style={styles.inviteTitle}>一起开通 Agent，赚 20% 佣金</Text>
+          <Text style={styles.inviteText}>分享你的专属邀请，好友进入社区并使用 HWallet 后，佣金记录会自动沉淀。</Text>
+          <View style={styles.inviteRewardRow}>
+            <View>
+              <Text style={styles.inviteRewardLabel}>佣金比例</Text>
+              <Text style={styles.inviteRewardValue}>20%</Text>
+            </View>
+            <View style={styles.inviteRewardBadge}>
+              <Text style={styles.inviteRewardBadgeText}>自动记录</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.inviteCodeCard}>
+          <Text style={styles.inviteCodeLabel}>专属邀请码</Text>
+          <Text style={styles.inviteCode}>HAITUN20</Text>
+          <Pressable
+            style={styles.inviteCopyButton}
+            onPress={copyInviteLink}
+            accessibilityRole="button"
+            accessibilityLabel="复制邀请链接"
+          >
+            <Ionicons name={inviteCopied ? "checkmark-circle-outline" : "copy-outline"} size={17} color="#ffffff" />
+            <Text style={styles.inviteCopyText}>{inviteCopied ? "已复制" : "复制邀请链接"}</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.inviteStepList}>
+          {inviteRewardSteps.map((step, index) => (
+            <View key={step.id} style={styles.inviteStepRow}>
+              <View style={styles.inviteStepIndex}>
+                <Text style={styles.inviteStepIndexText}>{index + 1}</Text>
+              </View>
+              <View style={styles.inviteStepBody}>
+                <Text style={styles.inviteStepTitle}>{step.title}</Text>
+                <Text style={styles.inviteStepText}>{step.text}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -4144,6 +4233,143 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 13,
     lineHeight: 20,
+    fontWeight: "700"
+  },
+  inviteShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  invitePage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 112,
+    gap: 18,
+    backgroundColor: "#ffffff"
+  },
+  inviteHero: {
+    borderRadius: 30,
+    backgroundColor: colors.ink,
+    padding: 22,
+    gap: 14,
+    overflow: "hidden"
+  },
+  inviteEyebrow: {
+    color: "#d9ff55",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  inviteTitle: {
+    color: "#ffffff",
+    fontSize: 29,
+    lineHeight: 36,
+    fontWeight: "900"
+  },
+  inviteText: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  inviteRewardRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14
+  },
+  inviteRewardLabel: {
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  inviteRewardValue: {
+    color: "#ffffff",
+    fontSize: 44,
+    lineHeight: 50,
+    fontWeight: "900"
+  },
+  inviteRewardBadge: {
+    borderRadius: 999,
+    backgroundColor: "#d9ff55",
+    paddingHorizontal: 14,
+    paddingVertical: 9
+  },
+  inviteRewardBadgeText: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  inviteCodeCard: {
+    borderRadius: 24,
+    backgroundColor: "#fbfaf8",
+    padding: 18,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  inviteCodeLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  inviteCode: {
+    color: colors.ink,
+    fontSize: 24,
+    fontWeight: "900"
+  },
+  inviteCopyButton: {
+    minHeight: 48,
+    borderRadius: 24,
+    backgroundColor: colors.ink,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  inviteCopyText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  inviteStepList: {
+    gap: 12
+  },
+  inviteStepRow: {
+    flexDirection: "row",
+    gap: 12,
+    borderRadius: 22,
+    backgroundColor: "#fbfaf8",
+    padding: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  inviteStepIndex: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#f1ebe5",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  inviteStepIndexText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  inviteStepBody: {
+    flex: 1,
+    gap: 4
+  },
+  inviteStepTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  inviteStepText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "700"
   },
   agentScreen: {

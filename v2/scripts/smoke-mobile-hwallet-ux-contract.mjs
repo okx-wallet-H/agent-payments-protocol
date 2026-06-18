@@ -7,8 +7,8 @@ const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
 
 const checks = [];
 
-assertIncludes(screen, 'type MainTab = "agent" | "community" | "notices" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community, notices, and HWallet as separate tabs");
-assertIncludes(screen, 'activeTab === "notices" ? "community" : activeTab === "community" ? "agent" : "community"', "top-left entry returns from notices to community and from community to Agent");
+assertIncludes(screen, 'type MainTab = "agent" | "community" | "notices" | "invite" | "worldcup" | "mine" | "wallet"', "mobile shell keeps community, notices, invite, and HWallet as separate tabs");
+assertIncludes(screen, 'activeTab === "notices" || activeTab === "invite" ? "community" : activeTab === "community" ? "agent" : "community"', "top-left entry returns from community child pages to community and from community to Agent");
 assertIncludes(screen, 'leftIcon={isCommunityStack ? "chevron-back" : "menu"}', "community stack changes the top-left entry into a back affordance");
 assertIncludes(screen, 'rightIcon={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}', "community stack changes the top-right entry into a message affordance");
 assertIncludes(screen, "backgroundColor: colors.shell", "top bar background stays aligned with the page shell");
@@ -18,7 +18,11 @@ assertIncludes(screen, 'activeTab === "notices" ? <NoticeTab /> : null', "commun
 assertIncludes(screen, "function NoticeTab", "platform notice page is implemented");
 assertIncludes(screen, "平台通知", "notice page labels platform notifications");
 assertIncludes(screen, "公告", "notice page exposes platform announcements");
-assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices"', "community and notice pages hide the bottom menu");
+assertIncludes(screen, 'activeTab === "invite" ? <InviteTab /> : null', "community invite entry opens the referral page");
+assertIncludes(screen, "function InviteTab", "invite referral page is implemented");
+assertIncludes(screen, "赚 20% 佣金", "invite page explains the commission offer");
+assertIncludes(screen, "复制邀请链接", "invite page exposes invite link copy action");
+assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community" && activeTab !== "notices" && activeTab !== "invite"', "community child pages hide the bottom menu");
 assertIncludes(screen, "communityMemberLine", "community page shows compact member identity");
 assertIncludes(screen, "communityNicknameRow", "community page shows an edit affordance next to the nickname");
 assert(!screen.includes("communitySearchPill"), "community page removes the redundant internal search button");
