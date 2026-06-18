@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   SafeAreaView,
@@ -142,6 +143,11 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const activeWalletAddress = user ? walletAddress : undefined;
   const activeUserLabel = getHWalletUserLabel(user);
   const agentSessionReady = isReady && Boolean(activeUserId);
+  const normalizedLoginEmail = email.trim();
+  const normalizedLoginCode = code.trim();
+  const canSendLoginCode = normalizedLoginEmail.length > 3;
+  const canSubmitLoginCode = canSendLoginCode && normalizedLoginCode.length >= 4;
+  const loginStatusText = getLoginStatusText(state.status);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl, getAccessToken), [apiBaseUrl, getAccessToken]);
   const agent = useV2AgentWallet({
     apiBaseUrl,
@@ -328,45 +334,73 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   if (!user) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.login}>
-          <Text style={styles.loginBrand}>海豚社区</Text>
-          <Text style={styles.loginTitle}>一句话，交给 Agent</Text>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            inputMode="email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="邮箱"
-            placeholderTextColor="#9f9992"
-            style={styles.loginInput}
-          />
-          <Pressable style={styles.loginButton} onPress={() => run(() => sendCode({ email }))}>
-            <Text style={styles.loginButtonText}>发送验证码</Text>
-          </Pressable>
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            value={code}
-            onChangeText={setCode}
-            placeholder="验证码"
-            placeholderTextColor="#9f9992"
-            style={styles.loginInput}
-          />
-          <Pressable
-            style={styles.loginButton}
-            onPress={() =>
-              run(async () => {
-                await loginWithCode({ email, code });
-                setCode("");
-              })
-            }
+        <KeyboardAvoidingView style={styles.loginKeyboardAvoid} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.loginScrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.loginButtonText}>进入海豚社区</Text>
-          </Pressable>
-          <Text style={styles.loginState}>{state.status}</Text>
-        </View>
+            <View style={styles.loginHero}>
+              <Text style={styles.loginBrand}>海豚社区</Text>
+              <Text style={styles.loginTitle}>欢迎回来</Text>
+              <Text style={styles.loginSubtitle}>邮箱进入后，Agent 和收款地址会跟随你的账号。</Text>
+            </View>
+
+            <View style={styles.loginCard}>
+              <Text style={styles.loginCardTitle}>邮箱登录</Text>
+              <View style={styles.loginFieldGroup}>
+                <Text style={styles.loginLabel}>邮箱</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  inputMode="email"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  placeholderTextColor="#aaa39b"
+                  style={styles.loginInput}
+                />
+              </View>
+
+              <Pressable
+                style={[styles.loginSecondaryButton, !canSendLoginCode ? styles.loginButtonDisabled : null]}
+                disabled={!canSendLoginCode}
+                onPress={() => run(() => sendCode({ email: normalizedLoginEmail }))}
+              >
+                <Text style={styles.loginSecondaryButtonText}>发送验证码</Text>
+              </Pressable>
+
+              <View style={styles.loginFieldGroup}>
+                <Text style={styles.loginLabel}>验证码</Text>
+                <TextInput
+                  inputMode="numeric"
+                  keyboardType="number-pad"
+                  value={code}
+                  onChangeText={setCode}
+                  placeholder="6 位验证码"
+                  placeholderTextColor="#aaa39b"
+                  style={styles.loginInput}
+                />
+              </View>
+
+              <Pressable
+                style={[styles.loginButton, !canSubmitLoginCode ? styles.loginButtonDisabled : null]}
+                disabled={!canSubmitLoginCode}
+                onPress={() =>
+                  run(async () => {
+                    await loginWithCode({ email: normalizedLoginEmail, code: normalizedLoginCode });
+                    setCode("");
+                  })
+                }
+              >
+                <Text style={styles.loginButtonText}>进入海豚社区</Text>
+              </Pressable>
+
+              {loginStatusText ? <Text style={styles.loginState}>{loginStatusText}</Text> : null}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -3161,6 +3195,18 @@ function shortAddress(address?: string): string | undefined {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function getLoginStatusText(status: unknown): string | undefined {
+  if (typeof status !== "string" || status === "initial") return undefined;
+  const normalized = status.toLowerCase();
+  if (normalized.includes("send")) return "验证码发送中...";
+  if (normalized.includes("await") || normalized.includes("sent") || normalized.includes("code")) {
+    return "验证码已发送，请查收邮箱。";
+  }
+  if (normalized.includes("submit") || normalized.includes("login")) return "正在进入海豚社区...";
+  if (normalized.includes("error") || normalized.includes("fail")) return "没有成功，再试一次。";
+  return undefined;
+}
+
 const colors = {
   ink: "#1c1a17",
   muted: "#817a72",
@@ -3184,44 +3230,118 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
+  loginKeyboardAvoid: {
+    flex: 1
+  },
+  loginScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 36,
+    gap: 22
+  },
   login: {
     flex: 1,
     justifyContent: "center",
     padding: 28,
     gap: 12
   },
+  loginHero: {
+    gap: 8
+  },
   loginBrand: {
-    fontSize: 14,
-    color: colors.muted
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    overflow: "hidden",
+    backgroundColor: "#ecf8d0",
+    color: "#17340f",
+    fontSize: 13,
+    fontWeight: "900"
   },
   loginTitle: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 36,
+    lineHeight: 43,
+    fontWeight: "900",
+    letterSpacing: 0,
     color: colors.ink,
-    marginBottom: 10
+    marginTop: 4
+  },
+  loginSubtitle: {
+    maxWidth: 300,
+    color: "#625c55",
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "700"
+  },
+  loginCard: {
+    borderRadius: 30,
+    backgroundColor: "#f7f5f2",
+    padding: 16,
+    gap: 12,
+    shadowColor: "#d9d1c8",
+    shadowOpacity: 0.42,
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 5
+  },
+  loginCardTitle: {
+    color: colors.ink,
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 2
+  },
+  loginFieldGroup: {
+    gap: 7
+  },
+  loginLabel: {
+    color: "#6f675f",
+    fontSize: 13,
+    fontWeight: "900"
   },
   loginInput: {
     minHeight: 52,
-    borderRadius: 18,
+    borderRadius: 20,
     paddingHorizontal: 18,
-    backgroundColor: colors.paper,
+    backgroundColor: "#ffffff",
     color: colors.ink,
-    fontSize: 16
+    fontSize: 16,
+    fontWeight: "800"
   },
   loginButton: {
-    minHeight: 52,
-    borderRadius: 18,
+    minHeight: 54,
+    borderRadius: 20,
     backgroundColor: colors.ink,
     alignItems: "center",
     justifyContent: "center"
   },
   loginButtonText: {
     color: "#fff",
-    fontWeight: "700"
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  loginSecondaryButton: {
+    minHeight: 52,
+    borderRadius: 20,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  loginSecondaryButtonText: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  loginButtonDisabled: {
+    opacity: 0.36
   },
   loginState: {
-    color: colors.muted,
-    fontSize: 12
+    color: "#128044",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800",
+    textAlign: "center"
   },
   topbar: {
     height: 72,

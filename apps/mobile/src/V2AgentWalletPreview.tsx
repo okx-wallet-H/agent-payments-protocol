@@ -256,39 +256,49 @@ export function V2AgentWalletPreview() {
 
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.previewLogin}>
-          <View style={styles.previewLoginTop}>
-            <Text style={styles.previewLoginBrand}>海豚社区</Text>
-            <Text style={styles.previewLoginTitle}>一句话，交给 Agent</Text>
-            <Text style={styles.previewLoginSubtitle}>登录后进入海豚社区，HWallet、市场机会和 Agent 记录都会跟随你的账户。</Text>
-          </View>
+        <KeyboardAvoidingView style={styles.keyboardAvoid} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.previewLogin}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.previewLoginTop}>
+              <Text style={styles.previewLoginBrand}>海豚社区</Text>
+              <Text style={styles.previewLoginTitle}>欢迎回来</Text>
+              <Text style={styles.previewLoginSubtitle}>邮箱进入后，Agent 和收款地址会跟随你的账号。</Text>
+            </View>
 
-          <View style={styles.previewLoginCard}>
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              inputMode="email"
-              keyboardType="email-address"
-              value={previewEmail}
-              onChangeText={setPreviewEmail}
-              placeholder="邮箱"
-              placeholderTextColor="#9f9992"
-              style={styles.previewLoginInput}
-            />
-            <Pressable
-              style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
-              disabled={!canEnter}
-              onPress={() => {
-                const normalizedEmail = previewEmail.trim().toLowerCase();
-                setPreviewEmail(normalizedEmail);
-                saveStoredPreviewEmail(normalizedEmail);
-                setPreviewAuthed(true);
-              }}
-            >
-              <Text style={styles.previewLoginButtonText}>进入海豚社区</Text>
-            </Pressable>
-          </View>
-        </View>
+            <View style={styles.previewLoginCard}>
+              <Text style={styles.previewLoginCardTitle}>邮箱登录</Text>
+              <View style={styles.previewLoginFieldGroup}>
+                <Text style={styles.previewLoginLabel}>邮箱</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  inputMode="email"
+                  keyboardType="email-address"
+                  value={previewEmail}
+                  onChangeText={setPreviewEmail}
+                  placeholder="you@example.com"
+                  placeholderTextColor="#aaa39b"
+                  style={styles.previewLoginInput}
+                />
+              </View>
+              <Pressable
+                style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
+                disabled={!canEnter}
+                onPress={() => {
+                  const normalizedEmail = previewEmail.trim().toLowerCase();
+                  setPreviewEmail(normalizedEmail);
+                  saveStoredPreviewEmail(normalizedEmail);
+                  setPreviewAuthed(true);
+                }}
+              >
+                <Text style={styles.previewLoginButtonText}>进入海豚社区</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -1560,9 +1570,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.shell
   },
   previewLogin: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 28,
+    paddingVertical: 36,
     gap: 24,
     backgroundColor: "#ffffff"
   },
@@ -1570,27 +1581,55 @@ const styles = StyleSheet.create({
     gap: 8
   },
   previewLoginBrand: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: "800"
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    overflow: "hidden",
+    backgroundColor: "#ecf8d0",
+    color: "#17340f",
+    fontSize: 13,
+    fontWeight: "900"
   },
   previewLoginTitle: {
     color: colors.ink,
-    fontSize: 30,
-    lineHeight: 38,
-    fontWeight: "900"
+    fontSize: 36,
+    lineHeight: 43,
+    fontWeight: "900",
+    letterSpacing: 0,
+    marginTop: 4
   },
   previewLoginSubtitle: {
-    color: "#68625c",
-    fontSize: 15,
-    lineHeight: 22,
+    maxWidth: 300,
+    color: "#625c55",
+    fontSize: 16,
+    lineHeight: 23,
     fontWeight: "700"
   },
   previewLoginCard: {
-    borderRadius: 28,
+    borderRadius: 30,
     backgroundColor: "#f7f5f2",
-    padding: 14,
-    gap: 10
+    padding: 16,
+    gap: 12,
+    shadowColor: "#d9d1c8",
+    shadowOpacity: 0.42,
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 5
+  },
+  previewLoginCardTitle: {
+    color: colors.ink,
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 2
+  },
+  previewLoginFieldGroup: {
+    gap: 7
+  },
+  previewLoginLabel: {
+    color: "#6f675f",
+    fontSize: 13,
+    fontWeight: "900"
   },
   previewLoginInput: {
     minHeight: 54,
