@@ -77,7 +77,13 @@ MOBILE_DEVICE_API_BASE_URL=https://app.hwallet.vip npm run smoke:mobile-device-h
 
 ```sh
 npm run smoke:mobile-store-submission
+npm run smoke:store-review-account-plan
 ```
+
+- Keep reviewer login instructions aligned with
+  `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`. Reviewer email access, temporary
+  mailbox instructions, and any one-time code handling belong only in private
+  store-console fields, never in git, chat, PRs, logs, or screenshots.
 
 - Initialize the ignored store-console evidence packet before any App Store
   Connect or Google Play Console operation:
@@ -117,6 +123,8 @@ HWALLET_STORE_CONSOLE_EVIDENCE_FILE=.tmp/hwallet-store-console-evidence.json HWA
    - Screenshots for required iPhone sizes.
    - Review notes that explain HWallet is observe/simulate only and live money
      movement is disabled in this version.
+   - Reviewer login instructions from
+     `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`.
 3. Build production only after device evidence passes:
 
 ```sh
@@ -151,6 +159,8 @@ npm run submit:ios -- --latest --non-interactive
    - Content rating questionnaire.
    - Store listing screenshots and icon.
    - Internal testing track tester list.
+   - Reviewer login instructions from
+     `docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`.
    - Service account or upload credentials kept outside git.
 3. Build production only after device evidence passes:
 

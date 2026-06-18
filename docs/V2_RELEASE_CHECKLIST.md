@@ -63,6 +63,7 @@ npm run smoke:mobile-store-readiness
 npm run smoke:mobile-distribution-readiness
 npm run smoke:store-screenshot-plan
 npm run smoke:mobile-store-submission
+npm run smoke:store-review-account-plan
 npm run smoke:hwallet-store-console-evidence
 npm run smoke:release-owner-packet
 npm run smoke:hwallet-release-candidate
@@ -96,6 +97,10 @@ the Agent home, HWallet receive, assets-ready, Agent analysis, and audit/records
 story on iOS and Android, with raw emails, full wallet addresses, full
 transaction hashes, verification codes, tokens, and local `.tmp` evidence paths
 redacted before owner approval.
+Store review login instructions must follow
+`docs/HWALLET_STORE_REVIEW_ACCOUNT_PLAN.md`: reviewers use email-code login,
+reviewer credentials stay in private store-console fields only, and static demo
+codes such as `123456` are not allowed for production review.
 
 Do not submit to TestFlight or internal Android testing if the gate fails, if
 preview/production profiles point to localhost or a LAN URL, if the installed
