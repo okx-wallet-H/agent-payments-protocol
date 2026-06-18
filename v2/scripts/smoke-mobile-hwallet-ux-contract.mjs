@@ -11,6 +11,7 @@ assertIncludes(screen, 'type MainTab = "agent" | "community" | "worldcup" | "min
 assertIncludes(screen, 'onLeft={() => setActiveTab(activeTab === "community" ? "agent" : "community")}', "top-left entry toggles the community page instead of the sample market page");
 assertIncludes(screen, 'leftIcon={activeTab === "community" ? "chevron-back" : "menu"}', "community page changes the top-left entry into a back affordance");
 assertIncludes(screen, 'rightIcon={activeTab === "community" ? "chatbubble-ellipses-outline" : "person-outline"}', "community page changes the top-right entry into a message affordance");
+assertIncludes(screen, "backgroundColor: colors.shell", "top bar background stays aligned with the page shell");
 assertIncludes(screen, 'activeTab === "community"', "mobile shell renders the community page from the top-left entry");
 assertIncludes(screen, "function CommunityTab", "community page is implemented as its own screen");
 assertIncludes(screen, 'activeTab !== "worldcup" && activeTab !== "community"', "community page hides the bottom menu");

@@ -2057,6 +2057,7 @@ const styles = StyleSheet.create({
   },
   topbar: {
     height: 72,
+    backgroundColor: colors.shell,
     paddingHorizontal: 26,
     flexDirection: "row",
     alignItems: "center",
