@@ -20,22 +20,23 @@ broadcast stay closed until a separate execution milestone is approved.
 - `v2/scripts/smoke-okx-outcomes-readonly-boundary.mjs`
   - Guardrail that keeps forbidden execution language and secrets out of the docs.
 
-## Archive Candidates
+## Archived on 2026-06-18
 
-These are not on the main app path and can move under a manual/archive folder
-after one more reference check:
+The first reference check found these files were no longer on the main app path.
+They now live under `archive/manual/prediction-market-preview/` as manual
+historical material:
 
-- `v2/scripts/preview-live-dry-run.mjs`
-- `v2/scripts/preview-live-worldcup.mjs`
-- `v2/scripts/demo-flow.mjs`
-- `v2/scripts/preview-card-actions.mjs`
-- `v2/scripts/preview-app-shell-panels.mjs`
-- `apps/mobile/assets/world-cup-poster.png`
+- `archive/manual/prediction-market-preview/v2-scripts/preview-live-dry-run.mjs`
+- `archive/manual/prediction-market-preview/v2-scripts/preview-live-worldcup.mjs`
+- `archive/manual/prediction-market-preview/v2-scripts/demo-flow.mjs`
+- `archive/manual/prediction-market-preview/v2-scripts/preview-card-actions.mjs`
+- `archive/manual/prediction-market-preview/v2-scripts/preview-app-shell-panels.mjs`
+- `archive/manual/prediction-market-preview/mobile-assets/world-cup-poster.png`
 
-Before moving any of them, run:
+The archive guard is:
 
 ```bash
-rg "preview-live-dry-run|preview-live-worldcup|world-cup-poster|demo-flow|preview-card-actions|preview-app-shell-panels" -g '!.codegraph/**'
+npm run smoke:prediction-market-archive
 ```
 
 ## Do Not Archive Yet
@@ -53,6 +54,6 @@ migration first:
 
 ## Next Cleanup Step
 
-After the mobile prediction-market console is accepted, move only the archive
-candidates that still have no references. Keep the OKX adapter, read-only detail
-view, sample fallback, and all safety smokes in the merge gate.
+Continue with the legacy migration before removing any Polymarket fallback files.
+Keep the OKX adapter, read-only detail view, sample fallback, archive guard, and
+all safety smokes in the merge gate.
