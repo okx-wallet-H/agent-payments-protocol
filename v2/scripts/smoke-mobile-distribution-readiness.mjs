@@ -142,7 +142,7 @@ assertIncludes(submissionPacket, "Product: 海豚社区", "submission packet nam
 assertIncludes(submissionPacket, "Internal wallet module: HWallet", "submission packet preserves HWallet wallet module");
 assertIncludes(submissionPacket, "Privacy policy URL: `https://app.hwallet.vip/privacy`", "submission packet records privacy URL");
 assertIncludes(submissionPacket, "Support URL: `https://app.hwallet.vip/support`", "submission packet records support URL");
-assertIncludes(submissionPacket, "Review notes must include the observe/simulate-only boundary", "submission packet records App Store review boundary");
+assertIncludes(submissionPacket, "Review notes must include the read-only/local-draft boundary", "submission packet records App Store review boundary");
 assertIncludes(submissionPacket, "Data safety answers must include", "submission packet records Play data safety boundary");
 assertIncludes(submissionPacket, "Store console evidence", "submission packet records store console evidence blocker");
 assertIncludes(submissionPacket, "Live execution remains closed", "submission packet keeps live execution closed");

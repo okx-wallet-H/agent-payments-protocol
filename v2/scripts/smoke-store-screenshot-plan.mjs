@@ -52,7 +52,7 @@ for (const productFact of [
   "Email login creates a user session",
   "one receive address",
   "tx hash is optional",
-  "observe/simulate only",
+  "read-only observation, simulation, local tracking",
   "Live signing, swaps, orders, and autonomous money movement are closed"
 ]) {
   assertIncludes(screenshotPlan, productFact, `screenshot copy preserves ${productFact}`);

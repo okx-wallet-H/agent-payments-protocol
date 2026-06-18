@@ -95,7 +95,13 @@ check(predictionReadGuardSmoke.includes("third read request is rate limited"), "
 
 check(detailView.includes("readOnly: true"), "detail view marks readOnly true");
 check(detailView.includes("liveExecutionClosed: true"), "detail view marks live execution closed");
-check(detailView.includes("observe") && detailView.includes("simulate"), "detail view exposes observe and simulate only");
+check(
+  detailView.includes("order_closed") &&
+    detailView.includes("local_record") &&
+    detailView.includes("enabled: false") &&
+    detailView.includes("disabledReason"),
+  "detail view exposes server action model with disabled order placeholder"
+);
 check(detailView.includes("shortenId") && detailView.includes("assetIdLabel"), "detail view redacts full outcome asset ids");
 check(
   !/\b(buy|sell|swap|broadcast|place_order|signature|privateKey)\b/.test(JSON.stringify(detailView)),
@@ -111,6 +117,8 @@ for (const text of [
   "绑定入口预留",
   "观察",
   "模拟预览",
+  "加入跟踪",
+  "生成策略",
   "下单未开放"
 ]) {
   check(mobileScreen.includes(text), `mobile screen contains ${text}`);
@@ -134,7 +142,7 @@ check(cleanupQueue.includes("archive/manual/prediction-market-preview"), "cleanu
 check(cleanupQueue.includes("Do Not Archive Yet"), "cleanup queue preserves migration hold list");
 check(projectPlan.includes("OKX Onchain OS And Prediction Integration"), "project plan has prediction integration phase");
 check(projectPlan.includes("read-only prediction detail view"), "project plan records read-only detail view");
-check(projectPlan.includes("limited to observe/simulate"), "project plan records observe/simulate action limit");
+check(projectPlan.includes("observe/simulate/local-record/closed-order model"), "project plan records server action model");
 check(projectPlan.includes("Real execution remains gated"), "project plan keeps live execution gated");
 check(
   integrationDoc.includes("outcomes.order.preview") && integrationDoc.includes("moneyMoved: false"),

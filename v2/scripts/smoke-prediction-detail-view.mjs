@@ -97,10 +97,17 @@ check(yesBook?.bestAskLabel === "19¢", "detail view summarizes yes order book a
 check(noBook?.spreadLabel === "2¢", "detail view summarizes no order book spread");
 check(yesBook?.depthLabel === "2 档", "detail view summarizes order book depth");
 
-check(detail.actions.map((action) => action.id).join(",") === "observe,simulate", "detail actions are observe and simulate only");
+check(
+  detail.actions.map((action) => action.id).join(",") === "observe,simulate,track,build_strategy,order_closed",
+  "detail actions expose observe, simulate, track, strategy, and closed order placeholder"
+);
 check(detail.actions.every((action) => action.disabledLiveExecution === true), "all detail actions disable live execution");
 check(detail.actions.every((action) => action.kind !== "read_only" || action.id === "observe"), "observe action is read-only");
 check(detail.actions.every((action) => action.kind !== "dry_run" || action.id === "simulate"), "simulate action is dry-run");
+check(detail.actions.some((action) => action.id === "track" && action.kind === "local_record" && action.enabled === true), "track action is local-record only");
+check(detail.actions.some((action) => action.id === "build_strategy" && action.kind === "local_record" && action.enabled === true), "strategy action is local-record only");
+check(detail.actions.some((action) => action.id === "order_closed" && action.kind === "closed" && action.enabled === false), "order placeholder is disabled");
+check(detail.actions.some((action) => action.id === "order_closed" && /不开放真实下单/.test(action.disabledReason || "")), "order placeholder explains closed execution");
 check(/不会下单、签名或广播交易/.test(detail.insight), "detail insight states no order/sign/broadcast");
 
 const serialized = JSON.stringify(detail);

@@ -139,7 +139,8 @@ installed-App checks from `docs/HWALLET_DEVICE_MULTI_USER_QA.md`:
 7. Confirm User B has a different receive address.
 8. Switch back to User A and confirm User A's original address returns.
 9. Sign out and confirm no stale receive address remains visible.
-10. Confirm Agent/HWallet actions remain observe/simulate only.
+10. Confirm Agent/HWallet actions remain read-only, simulate-only, or local
+    tracking/strategy drafts with live execution closed.
 
 Record only redacted observations in the ignored device-evidence file:
 

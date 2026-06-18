@@ -11,6 +11,7 @@ placement stays closed.
 | OKX Outcomes market reads | Ready for read-only use | `v2/execution/okx-outcomes-client.ts` reads events, markets, ticker, candles, and order book data. |
 | Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback. |
 | Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, and order-book summary. |
+| Detail action model | Ready for app display | The detail response carries observe, simulate, track, strategy, and disabled order-placeholder actions so the App follows backend enabled/disabled state. |
 | Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |
 | Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, API Key placeholder, capability tags, observe, track, strategy, simulate, and disabled order placement. |
 | Agent explanation | Ready for read-only analysis | Agent observe replies can carry friendly yes/no odds and the no-live-order boundary. |
@@ -56,9 +57,9 @@ observe/simulate mode and state that no real order or transaction was submitted.
 2. `模拟预览` is now provider-aware for OKX Outcomes. Keep testing that the
    local/contract-style dry-run preview never creates, signs, submits, or
    broadcasts an order.
-3. The detail page should eventually consume the server-provided action model
-   directly, so UI buttons follow backend disabled/enabled status instead of
-   relying on local text only.
+3. The detail page now consumes the server-provided action model. Keep future
+   UI changes tied to that model so disabled order placement cannot drift into a
+   live execution affordance.
 
 ## Verification
 

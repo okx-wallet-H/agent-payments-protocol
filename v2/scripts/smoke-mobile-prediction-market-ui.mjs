@@ -56,7 +56,18 @@ const requirements = [
   },
   {
     label: "mobile prediction-market UI wires track and strategy to safe Agent actions",
-    pass: () => /onRunMarketAction\("track", card\)/.test(screen) && /onRunMarketAction\("build_strategy", card\)/.test(screen)
+    pass: () =>
+      /action\.id === "track" \|\| action\.id === "build_strategy"/.test(screen) &&
+      /onRunMarketAction\(action\.id, card\)/.test(screen)
+  },
+  {
+    label: "mobile prediction-market UI renders disabled order placeholder from action model",
+    pass: () =>
+      /action\.enabled === false/.test(screen) &&
+      /predictionDetailActionIcon\(action\.id\)/.test(screen) &&
+      /"order_closed"/.test(types) &&
+      /kind: V2PredictionDetailActionKind/.test(types) &&
+      /enabled: boolean/.test(types)
   },
   {
     label: "mobile prediction-market UI says live order placement is closed",
@@ -92,7 +103,12 @@ const requirements = [
   },
   {
     label: "mobile prediction-market UI renders backend action model",
-    pass: () => /createPredictionDetailActions/.test(screen) && /detailActions\.map/.test(screen)
+    pass: () =>
+      /createPredictionDetailActions/.test(screen) &&
+      /detailActions\.map/.test(screen) &&
+      /id: "track"/.test(screen) &&
+      /id: "build_strategy"/.test(screen) &&
+      /id: "order_closed"/.test(screen)
   },
   {
     label: "mobile prediction-market UI avoids misleading live-execution reward copy",
