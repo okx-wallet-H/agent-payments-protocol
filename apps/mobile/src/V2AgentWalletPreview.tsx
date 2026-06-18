@@ -142,7 +142,7 @@ export function V2AgentWalletPreview() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl), []);
   const insightCopy = createPreviewInsightCopy(worldCupExplore);
-  const showBottomDock = tab !== "worldcup" && !keyboardVisible;
+  const showBottomDock = tab !== "worldcup" && tab !== "community" && !keyboardVisible;
   const previewUserId = useMemo(() => previewUserIdFromEmail(previewEmail), [previewEmail]);
   const receiveAddress = useMemo(() => previewAddressForEmail(previewEmail), [previewEmail]);
 
@@ -392,7 +392,7 @@ export function V2AgentWalletPreview() {
             <Pressable
               style={[styles.roundButton, tab === "community" ? styles.roundButtonActive : null]}
               onPress={() => {
-                setTab("community");
+                setTab(tab === "community" ? "agent" : "community");
               }}
             >
               <Ionicons name="menu" size={24} color={colors.ink} />
@@ -411,11 +411,11 @@ export function V2AgentWalletPreview() {
               setTab("worldcup");
               setWorldCupView("sentiment");
             }}
+            onDiscover={() => setTab("mine")}
             onInvite={() => setTab("mine")}
             onNewChat={() => {
               setTab("agent");
             }}
-            onWallet={() => setTab("wallet")}
           />
         ) : null}
 
@@ -814,15 +814,15 @@ function HWalletPreview({
 function CommunityPreview({
   email,
   onCards,
+  onDiscover,
   onInvite,
-  onNewChat,
-  onWallet
+  onNewChat
 }: {
   email: string;
   onCards: () => void;
+  onDiscover: () => void;
   onInvite: () => void;
   onNewChat: () => void;
-  onWallet: () => void;
 }) {
   const records = [
     { id: "receive", title: "收款地址", text: "刚刚打开 HWallet 收款入口", time: "刚刚" },
@@ -831,18 +831,27 @@ function CommunityPreview({
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
-      <View style={styles.communityMemberCard}>
-        <View style={styles.communityMemberTop}>
-          <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
-          <View style={styles.communityMemberInfo}>
-            <Text style={styles.communityMemberName}>海豚会员</Text>
-            <Text style={styles.communityMemberEmail}>{email}</Text>
-          </View>
-          <View style={styles.communityLevelBadge}>
-            <Text style={styles.communityLevelText}>Lv.3</Text>
-          </View>
+    <View style={styles.communityShell}>
+      <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
+      <View style={styles.communityHeader}>
+        <Text style={styles.communityHeaderTitle}>海豚社区</Text>
+        <Pressable style={styles.communitySearchPill}>
+          <Ionicons name="search" size={24} color={colors.ink} />
+        </Pressable>
+      </View>
+
+      <View style={styles.communityMemberLine}>
+        <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
+        <View style={styles.communityMemberInfo}>
+          <Text style={styles.communityMemberName}>海豚会员</Text>
+          <Text style={styles.communityMemberEmail}>{email}</Text>
         </View>
+        <View style={styles.communityLevelBadge}>
+          <Text style={styles.communityLevelText}>Lv.3</Text>
+        </View>
+      </View>
+
+      <View style={styles.communityVipBlock}>
         <View style={styles.communityVipRow}>
           <Text style={styles.communityVipLabel}>VIP 进度</Text>
           <Text style={styles.communityVipValue}>68%</Text>
@@ -852,13 +861,38 @@ function CommunityPreview({
         </View>
       </View>
 
-      <View style={styles.communityEntryRow}>
+      <ScrollView
+        horizontal
+        contentContainerStyle={styles.communityCarousel}
+        showsHorizontalScrollIndicator={false}
+      >
+        <View style={[styles.communityCarouselCard, styles.communityCarouselGreen]}>
+          <Text style={styles.communityCarouselKicker}>社区任务</Text>
+          <Text style={styles.communityCarouselTitle}>邀请好友一起开通 Agent</Text>
+          <Text style={styles.communityCarouselText}>好友进入后，你的卡库和等级进度都会记录。</Text>
+        </View>
+        <View style={[styles.communityCarouselCard, styles.communityCarouselPurple]}>
+          <Text style={styles.communityCarouselKicker}>卡库</Text>
+          <Text style={styles.communityCarouselTitle}>收集你的预测卡和策略卡</Text>
+          <Text style={styles.communityCarouselText}>后面会把常用卡片沉淀到这里。</Text>
+        </View>
+        <View style={[styles.communityCarouselCard, styles.communityCarouselBlue]}>
+          <Text style={styles.communityCarouselKicker}>发现</Text>
+          <Text style={styles.communityCarouselTitle}>看看社区正在玩什么</Text>
+          <Text style={styles.communityCarouselText}>先把入口留好，后续接真实内容。</Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.communitySection}>
+        <Text style={styles.communitySectionTitle}>入口</Text>
+      </View>
+      <View style={styles.communityEntryList}>
         <CommunityActionCard icon="person-add-outline" title="邀请好友" text="一起进社区" onPress={onInvite} />
         <CommunityActionCard icon="albums-outline" title="卡库" text="收藏和策略卡" onPress={onCards} />
-        <CommunityActionCard icon="wallet-outline" title="HWallet" text="收款入口" onPress={onWallet} />
+        <CommunityActionCard icon="compass-outline" title="发现" text="社区动态" onPress={onDiscover} />
       </View>
 
-      <View style={styles.communityRecordsCard}>
+      <View style={styles.communityRecordsSection}>
         <View style={styles.communityRecordsHeader}>
           <Text style={styles.communityRecordsTitle}>对话记录</Text>
           <Text style={styles.communityRecordsMeta}>最近</Text>
@@ -875,12 +909,13 @@ function CommunityPreview({
             <Text style={styles.communityRecordTime}>{record.time}</Text>
           </View>
         ))}
-        <Pressable style={styles.communityNewChatButton} onPress={onNewChat}>
-          <Ionicons name="add" size={20} color="#ffffff" />
-          <Text style={styles.communityNewChatText}>新会话</Text>
-        </Pressable>
       </View>
-    </ScrollView>
+      </ScrollView>
+      <Pressable style={styles.communityFloatingNewChat} onPress={onNewChat}>
+        <Ionicons name="create-outline" size={20} color="#ffffff" />
+        <Text style={styles.communityNewChatText}>新会话</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -896,12 +931,18 @@ function CommunityActionCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable style={styles.communityActionCard} onPress={onPress}>
+    <Pressable
+      style={styles.communityActionCard}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}，${text}`}
+    >
       <View style={styles.communityActionIcon}>
         <Ionicons name={icon} size={22} color={colors.ink} />
       </View>
-      <Text style={styles.communityActionTitle}>{title}</Text>
-      <Text style={styles.communityActionText}>{text}</Text>
+      <View style={styles.communityActionBody}>
+        <Text style={styles.communityActionTitle}>{title}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -1984,62 +2025,85 @@ const styles = StyleSheet.create({
     width: 76,
     height: 50
   },
+  communityShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
   communityPage: {
-    paddingHorizontal: 24,
+    minHeight: "100%",
+    paddingHorizontal: 32,
     paddingTop: 8,
-    paddingBottom: 142,
-    gap: 16
+    paddingBottom: 156,
+    gap: 24,
+    backgroundColor: "#ffffff"
   },
-  communityMemberCard: {
-    borderRadius: 32,
-    backgroundColor: "#071812",
-    padding: 22,
-    gap: 18,
-    shadowColor: "#0b160f",
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 6
-  },
-  communityMemberTop: {
+  communityHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12
+    justifyContent: "space-between"
+  },
+  communityHeaderTitle: {
+    color: colors.ink,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: "900"
+  },
+  communitySearchPill: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#d8cec4",
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3
+  },
+  communityMemberLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 8
   },
   communityAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 20
+    width: 48,
+    height: 48,
+    borderRadius: 16
   },
   communityMemberInfo: {
     flex: 1,
     gap: 4
   },
   communityMemberName: {
-    color: "#ffffff",
-    fontSize: 24,
-    lineHeight: 30,
+    color: colors.ink,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: "900"
   },
   communityMemberEmail: {
-    color: "#d8d2ca",
+    color: colors.muted,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "800"
   },
   communityLevelBadge: {
-    minWidth: 58,
-    minHeight: 34,
-    borderRadius: 17,
-    backgroundColor: "#c9ff3f",
+    minWidth: 54,
+    minHeight: 32,
+    borderRadius: 16,
+    backgroundColor: "#f1ebe5",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12
   },
   communityLevelText: {
-    color: "#071812",
+    color: colors.ink,
     fontSize: 14,
     fontWeight: "900"
+  },
+  communityVipBlock: {
+    gap: 8
   },
   communityVipRow: {
     flexDirection: "row",
@@ -2047,73 +2111,110 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   communityVipLabel: {
-    color: "#d8d2ca",
+    color: colors.muted,
     fontSize: 14,
     fontWeight: "800"
   },
   communityVipValue: {
-    color: "#ffffff",
+    color: colors.ink,
     fontSize: 14,
     fontWeight: "900"
   },
   communityProgressTrack: {
-    height: 10,
-    borderRadius: 5,
+    height: 8,
+    borderRadius: 4,
     overflow: "hidden",
-    backgroundColor: "rgba(255, 255, 255, 0.14)"
+    backgroundColor: "#f1ebe5"
   },
   communityProgressFill: {
     width: "68%",
     height: "100%",
-    borderRadius: 5,
-    backgroundColor: "#c9ff3f"
+    borderRadius: 4,
+    backgroundColor: colors.ink
   },
-  communityEntryRow: {
-    flexDirection: "row",
-    gap: 10
+  communityCarousel: {
+    paddingRight: 32,
+    gap: 12,
+    marginHorizontal: -2
   },
-  communityActionCard: {
-    flex: 1,
-    minHeight: 106,
-    borderRadius: 24,
-    backgroundColor: "#fffdfa",
-    padding: 12,
+  communityCarouselCard: {
+    width: 224,
+    minHeight: 96,
+    borderRadius: 22,
+    padding: 14,
     justifyContent: "space-between",
-    shadowColor: "#d8cec4",
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 3
+    overflow: "hidden"
   },
-  communityActionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#f1ebe5",
-    alignItems: "center",
-    justifyContent: "center"
+  communityCarouselGreen: {
+    backgroundColor: "#d9ff55"
   },
-  communityActionTitle: {
-    color: colors.ink,
-    fontSize: 15,
+  communityCarouselPurple: {
+    backgroundColor: "#6b38ff"
+  },
+  communityCarouselBlue: {
+    backgroundColor: "#1db6ff"
+  },
+  communityCarouselKicker: {
+    color: "rgba(7, 24, 18, 0.72)",
+    fontSize: 12,
     fontWeight: "900"
   },
-  communityActionText: {
-    color: colors.muted,
+  communityCarouselTitle: {
+    color: "#071812",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  communityCarouselText: {
+    color: "rgba(7, 24, 18, 0.72)",
     fontSize: 11,
     lineHeight: 15,
     fontWeight: "800"
   },
-  communityRecordsCard: {
-    borderRadius: 30,
-    backgroundColor: "#fffdfa",
-    padding: 18,
-    gap: 12,
-    shadowColor: "#d8cec4",
-    shadowOpacity: 0.38,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 3
+  communitySection: {
+    marginBottom: -8
+  },
+  communitySectionTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  communityEntryList: {
+    gap: 24
+  },
+  communityActionCard: {
+    minHeight: 34,
+    borderRadius: 0,
+    backgroundColor: "transparent",
+    padding: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18
+  },
+  communityActionIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  communityActionBody: {
+    flex: 1
+  },
+  communityActionTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  communityActionText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800"
+  },
+  communityRecordsSection: {
+    gap: 20
   },
   communityRecordsHeader: {
     flexDirection: "row",
@@ -2122,8 +2223,8 @@ const styles = StyleSheet.create({
   },
   communityRecordsTitle: {
     color: colors.ink,
-    fontSize: 21,
-    lineHeight: 27,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900"
   },
   communityRecordsMeta: {
@@ -2132,20 +2233,20 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   communityRecordRow: {
-    minHeight: 64,
-    borderRadius: 22,
-    backgroundColor: "#f6f1ec",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    minHeight: 48,
+    borderRadius: 0,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10
+    gap: 16
   },
   communityRecordIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#fffdfa",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center"
   },
@@ -2169,9 +2270,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800"
   },
-  communityNewChatButton: {
-    minHeight: 50,
-    borderRadius: 25,
+  communityFloatingNewChat: {
+    position: "absolute",
+    right: 32,
+    bottom: 34,
+    minHeight: 56,
+    borderRadius: 28,
+    paddingHorizontal: 24,
     backgroundColor: colors.ink,
     flexDirection: "row",
     alignItems: "center",
