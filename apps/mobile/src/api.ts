@@ -19,7 +19,7 @@ import type {
   V2MobileHomeResponse,
   V2MobileHomeView,
   V2PhaseOneRecord,
-  V2PredictionDetailView,
+  V2PredictionDetailResponse,
   V2StrategyCard,
   V2TrackingCard,
   V2WalletContext,
@@ -69,7 +69,7 @@ export interface ApiClient {
   listV2Audit(userId?: string): Promise<V2AuditTimelineEvent[]>;
   submitV2DeviceEvidence(input: V2MobileDeviceEvidenceInput): Promise<V2MobileDeviceEvidenceResponse>;
   getWorldCupExplore(): Promise<V2WorldCupExploreView>;
-  getPredictionDetail(marketId: string): Promise<V2PredictionDetailView>;
+  getPredictionDetail(marketId: string): Promise<V2PredictionDetailResponse>;
 }
 
 type GetAccessToken = () => Promise<string | null | undefined>;
@@ -328,13 +328,12 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       return data.explore;
     },
     async getPredictionDetail(marketId) {
-      const data = await request<{ detail: V2PredictionDetailView }>(
+      return request<V2PredictionDetailResponse>(
         cleanBaseUrl,
         withQuery("/api/v2/prediction/detail", { marketId }),
         undefined,
         getAccessToken
       );
-      return data.detail;
     }
   };
 }
