@@ -36,6 +36,7 @@ for (const scriptName of [
   "smoke:okx-outcomes-simulation-preview",
   "smoke:okx-outcomes-readonly-boundary",
   "smoke:okx-outcomes-live-field-mapping",
+  "smoke:okx-outcomes-live-schema",
   "smoke:agent-readonly-explanation",
   "smoke:prediction-detail-view",
   "smoke:prediction-detail-route",
@@ -164,6 +165,9 @@ check(
 check(liveFieldMappingDoc.includes("Do not use `marketId` as the `instId`"), "live field mapping doc protects outcome instId usage");
 check(liveFieldMappingDoc.includes("Settlement And Final Result"), "live field mapping doc records settlement gap");
 check(liveFieldMappingDoc.includes("not yet consumed by the App"), "live field mapping doc keeps unproven settlement hidden");
+check(liveFieldMappingDoc.includes("YES and NO candle queries using outcome asset ids as `instId`"), "live field mapping doc requires live candle sample");
+check(liveFieldMappingDoc.includes("smoke:okx-outcomes-live-schema"), "live field mapping doc exposes opt-in live schema smoke");
+check(liveFieldMappingDoc.includes("redacted schema evidence only"), "live field mapping doc keeps live schema output redacted");
 
 console.log(
   JSON.stringify(
