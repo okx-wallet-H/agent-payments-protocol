@@ -64,7 +64,8 @@ assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses 
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
 assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
 assertIncludes(webHumanPreview, "...current", "root web preview prepends each sent user message to the top of the chat thread");
-assertIncludes(webHumanPreview, "threadRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
+assertIncludes(webHumanPreview, "latestUserMessageRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
+assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
 assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
 assertNotIncludes(webHumanPreview, "readOnly value=\"\"", "root web preview composer is no longer a static read-only input");
@@ -80,6 +81,8 @@ assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does no
 assertIncludes(webStyles, "--human-keyboard-offset", "root web human preview exposes a keyboard offset CSS variable");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-composer", "root web human preview lifts the composer above the keyboard");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-nav", "root web human preview hides bottom nav while the keyboard is open");
+assertIncludes(webStyles, "scroll-margin-top: 112px", "root web human preview leaves safe top space when a new user message is focused");
+assertIncludes(webStyles, "min-width: min(68%, 260px)", "root web human preview keeps short user messages from collapsing into tiny pills");
 checks.push("root /?loginFlow=lock opens the human-facing login preview and enters Agent chat by default");
 
 console.log(JSON.stringify({ ok: true, checks }, null, 2));

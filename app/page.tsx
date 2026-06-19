@@ -195,7 +195,8 @@ function HumanAgentChatHome() {
   const [draft, setDraft] = useState("");
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
-  const threadRef = useRef<HTMLElement | null>(null);
+  const latestUserMessageRef = useRef<HTMLElement | null>(null);
+  const pendingFocusMessageId = useRef<string | null>(null);
   const agentPageStyle = { "--human-keyboard-offset": `${keyboardOffset}px` } as CSSProperties;
 
   useEffect(() => {
@@ -217,23 +218,29 @@ function HumanAgentChatHome() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!pendingFocusMessageId.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      latestUserMessageRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      pendingFocusMessageId.current = null;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages]);
+
   function sendAgentMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = draft.trim();
     if (!text) return;
 
-    setMessages((current) => [
-      {
-        id: `user-${Date.now()}`,
-        role: "user",
-        text
-      },
-      ...current
-    ]);
+    const nextMessage: HumanChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text
+    };
+
+    pendingFocusMessageId.current = nextMessage.id;
+    setMessages((current) => [nextMessage, ...current]);
     setDraft("");
-    window.requestAnimationFrame(() => {
-      threadRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-    });
   }
 
   return (
@@ -251,10 +258,11 @@ function HumanAgentChatHome() {
         </button>
       </header>
 
-      <section ref={threadRef} className="human-chat-thread" aria-label="最近对话">
+      <section className="human-chat-thread" aria-label="最近对话">
         {messages.map((message) => (
           <article
             key={message.id}
+            ref={message.id === pendingFocusMessageId.current ? latestUserMessageRef : undefined}
             className={`human-chat-message ${message.role}${message.variant ? ` ${message.variant}` : ""}`}
           >
             {message.role === "assistant" ? (
