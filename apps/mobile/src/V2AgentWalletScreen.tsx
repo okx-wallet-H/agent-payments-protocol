@@ -1506,6 +1506,28 @@ function WorldCupMarketDetailPage({
           </View>
         </View>
 
+        {detail?.trend?.length ? (
+          <View style={styles.predictionTrendPanel}>
+            <View style={styles.predictionTrendHeader}>
+              <Text style={styles.predictionTrendTitle}>走势摘要</Text>
+              <Text style={styles.predictionTrendHint}>只读 K 线派生</Text>
+            </View>
+            {detail.trend.map((row) => (
+              <View key={row.side} style={styles.predictionTrendRow}>
+                <Text style={styles.predictionTrendSide}>{row.label}</Text>
+                <View style={styles.predictionTrendCopy}>
+                  <Text style={styles.predictionTrendDirection}>
+                    {row.directionLabel} {row.changeLabel}
+                  </Text>
+                  <Text style={styles.predictionTrendText}>
+                    {row.windowLabel} · 最新 {row.latestLabel || "待同步"}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <View style={styles.predictionOrderBookPanel}>
           <View style={styles.predictionOrderBookHeader}>
             <Text style={styles.predictionOrderBookTitle}>订单簿摘要</Text>
@@ -6555,6 +6577,68 @@ const styles = StyleSheet.create({
     color: "#0c2113",
     fontSize: 12,
     fontWeight: "900"
+  },
+  predictionTrendPanel: {
+    borderRadius: 18,
+    backgroundColor: "rgba(201, 255, 77, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(201, 255, 77, 0.18)",
+    padding: 14,
+    gap: 10
+  },
+  predictionTrendHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  predictionTrendTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionTrendHint: {
+    color: "rgba(255, 255, 255, 0.58)",
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  predictionTrendRow: {
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  predictionTrendSide: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    overflow: "hidden",
+    backgroundColor: "#c9ff4d",
+    color: "#0c2113",
+    textAlign: "center",
+    paddingTop: 8,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionTrendCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  predictionTrendDirection: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionTrendText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
   },
   predictionOrderBookPanel: {
     borderRadius: 18,

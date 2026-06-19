@@ -43,6 +43,34 @@ const detail = createPredictionDetailView({
     timestamp: "2026-06-18T00:00:00.000Z",
     raw: {}
   },
+  yesCandles: [
+    {
+      instId: market.yesAssetId,
+      timestamp: "2026-06-18T00:00:00.000Z",
+      close: 0.16,
+      raw: {}
+    },
+    {
+      instId: market.yesAssetId,
+      timestamp: "2026-06-18T01:00:00.000Z",
+      close: 0.18,
+      raw: {}
+    }
+  ],
+  noCandles: [
+    {
+      instId: market.noAssetId,
+      timestamp: "2026-06-18T00:00:00.000Z",
+      close: 0.84,
+      raw: {}
+    },
+    {
+      instId: market.noAssetId,
+      timestamp: "2026-06-18T01:00:00.000Z",
+      close: 0.82,
+      raw: {}
+    }
+  ],
   yesOrderBook: {
     instId: market.yesAssetId,
     bids: [{ price: 0.17, size: 120 }],
@@ -97,6 +125,15 @@ check(yesBook?.bestAskLabel === "19¢", "detail view summarizes yes order book a
 check(noBook?.spreadLabel === "2¢", "detail view summarizes no order book spread");
 check(yesBook?.depthLabel === "2 档", "detail view summarizes order book depth");
 
+const yesTrend = detail.trend?.find((row) => row.side === "yes");
+const noTrend = detail.trend?.find((row) => row.side === "no");
+check(yesTrend?.directionLabel === "升温", "detail view summarizes yes candle trend");
+check(yesTrend?.changeLabel === "+2¢", "detail view formats yes trend change");
+check(yesTrend?.latestLabel === "18¢", "detail view formats latest yes trend price");
+check(yesTrend?.windowLabel === "近 2 根", "detail view summarizes candle window");
+check(noTrend?.directionLabel === "降温", "detail view summarizes no candle trend");
+check(noTrend?.changeLabel === "-2¢", "detail view formats no trend change");
+
 check(
   detail.actions.map((action) => action.id).join(",") === "observe,simulate,track,build_strategy,order_closed",
   "detail actions expose observe, simulate, track, strategy, and closed order placeholder"
@@ -117,6 +154,8 @@ for (const forbidden of ["buy", "sell", "swap", "broadcast", "place_order", "sig
 check(!serialized.includes(market.yesAssetId), "detail view does not expose full yes asset id");
 check(!serialized.includes(market.noAssetId), "detail view does not expose full no asset id");
 check(!serialized.includes("raw provider payload"), "detail view does not expose raw provider payload text");
+check(!serialized.includes("yesCandles"), "detail view does not expose raw yes candles array");
+check(!serialized.includes("noCandles"), "detail view does not expose raw no candles array");
 
 console.log(
   JSON.stringify(
@@ -132,6 +171,7 @@ console.log(
           priceLabel: outcome.priceLabel,
           assetIdLabel: outcome.assetIdLabel
         })),
+        trend: detail.trend,
         actions: detail.actions.map((action) => action.id),
         liveExecutionClosed: detail.liveExecutionClosed
       }

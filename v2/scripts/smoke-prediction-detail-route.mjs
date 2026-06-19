@@ -42,6 +42,10 @@ check(
   "route explicitly requests order book data"
 );
 check(
+  /includeCandles\s*:\s*true/.test(source) && /candleLimit\s*:\s*24/.test(source),
+  "route explicitly requests bounded candle data for trend summary"
+);
+check(
   source.includes("providerStatus") && source.includes("credentialsBound") && source.includes("apiKeyBindingLabel"),
   "route returns redacted provider/API key binding status"
 );
