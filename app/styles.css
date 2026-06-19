@@ -433,6 +433,243 @@ button.compact {
   background: #b7b4b1;
 }
 
+.human-app-page {
+  position: relative;
+  min-height: 100vh;
+  width: min(430px, 100vw);
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) 24px max(110px, env(safe-area-inset-bottom));
+  background: #ffffff;
+  color: #171717;
+  font-family: var(--font-geist-sans), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.human-app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 22px;
+}
+
+.human-round-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  min-height: 54px;
+  border-radius: 999px;
+  padding: 0;
+  background: #f4f0eb;
+  color: #171717;
+  font-size: 22px;
+  font-weight: 950;
+  box-shadow: 0 18px 46px rgba(17, 24, 39, 0.12);
+}
+
+.human-member-hero {
+  display: grid;
+  gap: 18px;
+  padding: 22px 0 28px;
+}
+
+.human-member-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.human-member-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  object-fit: cover;
+  box-shadow: 0 14px 34px rgba(34, 10, 62, 0.2);
+}
+
+.human-member-row p {
+  margin: 0 0 4px;
+  color: #171717;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.human-member-row span {
+  display: block;
+  max-width: 210px;
+  overflow: hidden;
+  color: #76716b;
+  font-size: 14px;
+  font-weight: 820;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.human-member-row b {
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #f4f0eb;
+  color: #171717;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.human-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #76716b;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.human-progress-row strong {
+  color: #171717;
+}
+
+.human-progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f0ece7;
+}
+
+.human-progress-track span {
+  display: block;
+  width: 68%;
+  height: 100%;
+  border-radius: inherit;
+  background: #171717;
+}
+
+.human-wallet-card {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  border-radius: 30px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(201, 255, 53, 0.42), transparent 30%),
+    linear-gradient(145deg, #071f15 0%, #0e2c22 100%);
+  color: #ffffff;
+  box-shadow: 0 24px 64px rgba(7, 31, 21, 0.2);
+}
+
+.human-wallet-card span {
+  color: #c9ff35;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.human-wallet-card h1 {
+  margin: 10px 0 8px;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.human-wallet-card p {
+  max-width: 220px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.human-wallet-card button {
+  min-height: 44px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #171717;
+  box-shadow: none;
+}
+
+.human-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.human-shortcuts button {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 92px;
+  border-radius: 24px;
+  background: #f6f3ef;
+  color: #171717;
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.human-feed {
+  display: grid;
+  gap: 16px;
+}
+
+.human-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.human-section-title h2 {
+  margin: 0;
+  color: #171717;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.human-section-title span {
+  color: #8b8580;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.human-feed article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0;
+  color: #171717;
+}
+
+.human-feed article b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.human-feed article p {
+  margin: 0;
+  color: #77716b;
+  font-size: 13px;
+  font-weight: 780;
+  line-height: 1.4;
+}
+
+.human-new-chat {
+  position: fixed;
+  right: max(24px, calc((100vw - 430px) / 2 + 24px));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  border-radius: 999px;
+  background: #171717;
+  color: #ffffff;
+  box-shadow: 0 20px 52px rgba(17, 24, 39, 0.22);
+}
+
 .dolphin-login,
 .dolphin-app {
   position: relative;
