@@ -26,15 +26,24 @@ check(
   "package exposes live field mapping smoke"
 );
 check(
+  scripts["smoke:okx-outcomes-live-schema"] ===
+    "node --no-warnings --experimental-strip-types --loader ./scripts/ts-extension-loader.mjs v2/scripts/smoke-okx-outcomes-live-schema.mjs",
+  "package exposes opt-in live schema smoke"
+);
+check(
   verifyMerge.includes("smoke:okx-outcomes-live-field-mapping"),
   "verify:merge includes live field mapping smoke"
 );
+check(verifyMerge.includes("smoke:okx-outcomes-live-schema"), "verify:merge includes opt-in live schema smoke");
 
 check(mappingDoc.includes("Do not use `marketId` as the `instId`"), "mapping doc blocks marketId-as-instId drift");
 check(mappingDoc.includes("yesAssetId") && mappingDoc.includes("noAssetId"), "mapping doc names YES/NO outcome ids");
 check(mappingDoc.includes("Settlement And Final Result"), "mapping doc records settlement/final-result gap");
 check(mappingDoc.includes("not yet consumed by the App"), "mapping doc keeps settlement hidden until live schema is proven");
 check(mappingDoc.includes("live-sample task is still read-only"), "mapping doc keeps live sample task read-only");
+check(mappingDoc.includes("YES and NO candle queries using outcome asset ids as `instId`"), "mapping doc requires live candle sample");
+check(mappingDoc.includes("smoke:okx-outcomes-live-schema"), "mapping doc explains opt-in live schema smoke");
+check(mappingDoc.includes("redacted schema evidence only"), "mapping doc keeps live schema evidence redacted");
 
 check(client.includes("getMarket(marketId") && client.includes("/api/v5/predictions/markets/"), "client uses marketId only for market detail");
 check(

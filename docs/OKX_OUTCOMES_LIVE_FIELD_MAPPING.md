@@ -73,6 +73,7 @@ sample for each path:
 - event search result with event id and embedded or linked markets
 - market detail with YES and NO outcome asset ids
 - YES and NO ticker queries using outcome asset ids as `instId`
+- YES and NO candle queries using outcome asset ids as `instId`
 - YES and NO order book queries using outcome asset ids as `instId`
 - a completed/settled market sample, if available, for settlement/final-result
   field mapping
@@ -80,3 +81,15 @@ sample for each path:
 The live-sample task is still read-only. It must not place an order, sign a
 transaction, broadcast a transaction, or collect user API credentials in the
 App.
+
+Optional live schema evidence command:
+
+```bash
+npm run smoke:okx-outcomes-live-schema
+```
+
+By default this command skips without calling OKX. Set
+`OKX_OUTCOMES_LIVE_SCHEMA_SMOKE=1` only when server-side OKX Outcomes
+credentials are present and a live read-only schema sample is needed. The output
+is redacted schema evidence only: field presence, counts, and shortened labels,
+never raw payloads, full asset ids, API credentials, or execution instructions.

@@ -19,6 +19,7 @@ const files = {
   taskWorkflow: read("docs/TASK_REVIEW_WORKFLOW.md"),
   okxClient: read("v2/execution/okx-outcomes-client.ts"),
   okxPreview: read("v2/execution/okx-outcomes-preview.ts"),
+  liveSchemaSmoke: read("v2/scripts/smoke-okx-outcomes-live-schema.mjs"),
   predictionExploreData: read("v2/app/prediction-explore-data.ts"),
   predictionExploreRoute: read("app/api/v2/prediction/explore/route.ts"),
   exploreRoute: read("app/api/v2/world-cup/explore/route.ts"),
@@ -68,6 +69,7 @@ for (const scriptName of [
   "smoke:mobile-prediction-market-ui",
   "smoke:okx-outcomes-readonly-boundary",
   "smoke:okx-outcomes-live-field-mapping",
+  "smoke:okx-outcomes-live-schema",
   "smoke:okx-outcomes-simulation-preview",
   "smoke:prediction-market-archive",
   "smoke:execution-gates",
@@ -233,7 +235,19 @@ includesAll("live field mapping doc", files.liveFieldMapping, [
   "Do not use `marketId` as the `instId`",
   "Settlement And Final Result",
   "not yet consumed by the App",
-  "live-sample task is still read-only"
+  "live-sample task is still read-only",
+  "YES and NO candle queries using outcome asset ids as `instId`",
+  "smoke:okx-outcomes-live-schema",
+  "redacted schema evidence only"
+]);
+includesAll("live schema smoke", files.liveSchemaSmoke, [
+  "OKX_OUTCOMES_LIVE_SCHEMA_SMOKE",
+  "skipped: true",
+  "readOnly: true",
+  "liveExecutionClosed: true",
+  "getOkxOutcomeMarketData",
+  "findSettlementCandidateFields",
+  "output must not expose full market or outcome ids"
 ]);
 includesAll("simulation preview", files.okxPreview, [
   "outcomes.order.preview",

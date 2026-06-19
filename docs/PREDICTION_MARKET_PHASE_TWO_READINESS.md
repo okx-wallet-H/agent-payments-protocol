@@ -16,7 +16,7 @@ placement stays closed.
 | Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, trend summary, API Key placeholder, capability tags, observe, track, strategy, simulate, and disabled order placement. |
 | Agent explanation | Ready for read-only analysis | Agent observe replies can carry friendly yes/no odds and the no-live-order boundary. |
 | OKX Outcomes simulation preview | Ready for dry-run use | `v2/execution/okx-outcomes-preview.ts` returns a local/contract-style dry-run preview for OKX markets without creating, signing, submitting, or broadcasting orders. |
-| Live field mapping | Guarded for read-only use | `docs/OKX_OUTCOMES_LIVE_FIELD_MAPPING.md` records that market detail uses `marketId`, ticker/candle/order-book reads use YES/NO outcome asset ids as `instId`, and settlement/final-result fields stay hidden until live schema is proven. |
+| Live field mapping | Guarded for read-only use | `docs/OKX_OUTCOMES_LIVE_FIELD_MAPPING.md` records that market detail uses `marketId`, ticker/candle/order-book reads use YES/NO outcome asset ids as `instId`, and settlement/final-result fields stay hidden until live schema is proven. `npm run smoke:okx-outcomes-live-schema` is an opt-in redacted live schema smoke and skips unless `OKX_OUTCOMES_LIVE_SCHEMA_SMOKE=1`. |
 | API Key binding | Placeholder only | The App has a visible binding position. Secret storage and user API-key lifecycle are not enabled in this release. |
 | Live trading | Closed | Order placement, signing, swap, and broadcast remain disabled by execution gates. |
 | Release UI guard | Ready for merge gate | Native/App Store build scripts and EAS profiles force the V2 HWallet UI so production cannot accidentally fall back to the old mobile execution screen. |
@@ -76,6 +76,7 @@ npm run smoke:prediction-phase-two-readiness
 npm run smoke:prediction-phase-two-goal-audit
 npm run smoke:okx-outcomes-simulation-preview
 npm run smoke:okx-outcomes-live-field-mapping
+npm run smoke:okx-outcomes-live-schema
 ```
 
 For merge candidates, this smoke is also part of:
