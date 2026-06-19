@@ -51,6 +51,25 @@ const requirements = [
     pass: () => !/探索世界杯/.test(screen) && !/正在更新世界杯数据/.test(screen)
   },
   {
+    label: "mobile prediction-market explore page exposes phase-two capability status",
+    pass: () =>
+      /预测市场能力状态/.test(screen) &&
+      /可查询/.test(screen) &&
+      /市场详情、会\/不会赔率、订单簿和流动性/.test(screen) &&
+      /可操作/.test(screen) &&
+      /观察、模拟预览、加入跟踪和生成策略/.test(screen) &&
+      /API Key 占位/.test(screen) &&
+      /第二阶段不在本机保存密钥/.test(screen) &&
+      /真实下单关闭/.test(screen) &&
+      /不会下单、签名或广播交易/.test(screen)
+  },
+  {
+    label: "mobile prediction-market explore nav uses market wording",
+    pass: () =>
+      /<Text style=\{styles\.campaignNavText\}>市场<\/Text>/.test(screen) &&
+      !/先展示赛事样例/.test(screen)
+  },
+  {
     label: "mobile prediction-market UI renders read-only detail sync and order book summary",
     pass: () => /只读详情已同步/.test(screen) && /订单簿摘要/.test(screen) && /买/.test(screen) && /卖/.test(screen)
   },

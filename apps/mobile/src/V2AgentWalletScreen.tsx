@@ -1017,8 +1017,8 @@ function WorldCupBottomMenu({
           <Text style={styles.campaignNavText}>预测</Text>
         </Pressable>
         <Pressable style={[styles.campaignNavItem, active === "explore" ? styles.campaignNavItemActive : null]} onPress={onExplore}>
-          <Ionicons name="calendar-outline" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>赛事</Text>
+          <Ionicons name="stats-chart-outline" size={19} color={colors.ink} />
+          <Text style={styles.campaignNavText}>市场</Text>
         </Pressable>
         <Pressable style={styles.campaignNavItem} onPress={onProfile}>
           <Ionicons name="compass-outline" size={19} color={colors.ink} />
@@ -1059,7 +1059,7 @@ function ExploreWorldCupPage({
   const activeCards = explore?.cards[activeExploreCategory] || [];
   const hasDynamicCards = activeCards.length > 0;
   const hasExploreData = Boolean(explore);
-  const sourceText = explore?.source?.label || "赛事数据";
+  const sourceText = explore?.source?.label || "预测市场数据";
   const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
   const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
   const sourceSummary = explore?.summary ? `已同步 ${explore.summary.totalMarkets} 个市场` : undefined;
@@ -1100,11 +1100,13 @@ function ExploreWorldCupPage({
       {!exploreLoading ? (
         <View style={styles.exploreSourceCard}>
           <Text style={styles.exploreSourceLabel}>{sourceText}</Text>
-          <Text style={styles.exploreSourceText}>{exploreError ? "先展示赛事样例，数据稍后自动更新。" : sourceMessage}</Text>
+          <Text style={styles.exploreSourceText}>{exploreError ? "先展示市场样例，数据稍后自动更新。" : sourceMessage}</Text>
           {sourceSummary ? <Text style={styles.exploreSourceText}>{sourceSummary}</Text> : null}
           {sourceUpdatedAt ? <Text style={styles.exploreSourceTime}>更新于 {sourceUpdatedAt}</Text> : null}
         </View>
       ) : null}
+
+      {!exploreLoading ? <PredictionMarketCapabilityCard /> : null}
 
       {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} onSelectCard={onSelectCard} /> : null}
       {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
@@ -1125,6 +1127,41 @@ function ExploreWorldCupPage({
         onPrediction={onHome}
         onProfile={onProfile}
       />
+    </View>
+  );
+}
+
+function PredictionMarketCapabilityCard() {
+  const rows = [
+    { icon: "search-outline" as const, title: "可查询", text: "市场详情、会/不会赔率、订单簿和流动性" },
+    { icon: "sparkles-outline" as const, title: "可操作", text: "观察、模拟预览、加入跟踪和生成策略" },
+    { icon: "key-outline" as const, title: "API Key 占位", text: "绑定入口已预留，第二阶段不在本机保存密钥" },
+    { icon: "lock-closed-outline" as const, title: "真实下单关闭", text: "不会下单、签名或广播交易" }
+  ];
+
+  return (
+    <View style={styles.exploreCapabilityCard}>
+      <View style={styles.exploreCapabilityHeader}>
+        <View style={styles.exploreCapabilityIcon}>
+          <Ionicons name="shield-checkmark-outline" size={20} color="#0d2118" />
+        </View>
+        <View style={styles.exploreCapabilityTitleStack}>
+          <Text style={styles.exploreCapabilityEyebrow}>第二阶段</Text>
+          <Text style={styles.exploreCapabilityTitle}>预测市场能力状态</Text>
+        </View>
+        <Text style={styles.exploreCapabilityBadge}>只读</Text>
+      </View>
+      <View style={styles.exploreCapabilityGrid}>
+        {rows.map((row) => (
+          <View key={row.title} style={styles.exploreCapabilityRow}>
+            <Ionicons name={row.icon} size={18} color="#111" />
+            <View style={styles.exploreCapabilityCopy}>
+              <Text style={styles.exploreCapabilityRowTitle}>{row.title}</Text>
+              <Text style={styles.exploreCapabilityRowText}>{row.text}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -6055,6 +6092,84 @@ const styles = StyleSheet.create({
   exploreSourceTime: {
     color: "#9a948e",
     fontSize: 11,
+    fontWeight: "700"
+  },
+  exploreCapabilityCard: {
+    borderRadius: 24,
+    backgroundColor: "#0d2118",
+    padding: 16,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3
+  },
+  exploreCapabilityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  exploreCapabilityIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  exploreCapabilityTitleStack: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  exploreCapabilityEyebrow: {
+    color: "#aaff35",
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  exploreCapabilityTitle: {
+    color: "#fff",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  exploreCapabilityBadge: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.86)",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  exploreCapabilityGrid: {
+    gap: 10
+  },
+  exploreCapabilityRow: {
+    borderRadius: 17,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  exploreCapabilityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  exploreCapabilityRowTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exploreCapabilityRowText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "700"
   },
   exploreEmptyCard: {
