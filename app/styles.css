@@ -473,59 +473,10 @@ button.compact {
   box-shadow: 0 18px 46px rgba(17, 24, 39, 0.12);
 }
 
-.human-chat-hero {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
-  padding: 18px 0 10px;
-}
-
-.human-agent-avatar {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 70% 16%, rgba(201, 255, 53, 0.34), transparent 34%),
-    #2d0b58;
-  box-shadow: 0 18px 42px rgba(45, 11, 88, 0.2);
-}
-
-.human-agent-avatar img {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  object-fit: cover;
-}
-
-.human-chat-hero span {
-  color: #76716b;
-  font-size: 13px;
-  font-weight: 860;
-}
-
-.human-chat-hero h1 {
-  margin: 7px 0 7px;
-  color: #171717;
-  font-size: 32px;
-  line-height: 1.05;
-  letter-spacing: 0;
-}
-
-.human-chat-hero p {
-  margin: 0;
-  color: #76716b;
-  font-size: 14px;
-  font-weight: 760;
-  line-height: 1.45;
-}
-
 .human-chat-thread {
   display: grid;
   gap: 12px;
-  margin-top: 6px;
+  margin-top: 12px;
 }
 
 .human-chat-message {

@@ -57,7 +57,10 @@ assertIncludes(webHumanPreview, "className=\"human-keypad\"", "root web preview 
 assertIncludes(webHumanPreview, "setUnlocked(true)", "root web preview unlock button opens the app after a full code");
 assertIncludes(webHumanPreview, "return <HumanAgentChatHome", "root web preview exits the door into the human Agent chat home");
 assertIncludes(webHumanPreview, "function HumanAgentChatHome", "root web preview has a dedicated human Agent post-login shell");
-assertIncludes(webHumanPreview, "海豚，今天看什么？", "root web preview defaults to the Agent conversation page after login");
+assertNotIncludes(webHumanPreview, "海豚，今天看什么？", "root web preview does not show an instruction-style post-login hero");
+assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、市场数据和下一步建议放在一条对话里。", "root web preview removes manual-like Agent intro copy");
+assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
+assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
 assertNotIncludes(webHumanPreview, "今天的钱包入口", "root web preview does not default to the wallet home after login");
 assertNotIncludes(webHumanPreview, "return <AgentWalletHome />", "root web preview does not fall back to the old AI operator shell");
@@ -67,6 +70,7 @@ assertIncludes(webStyles, ".human-door-card", "root web human preview renders th
 assertIncludes(webStyles, ".human-keypad", "root web human preview styles the numeric lock keypad");
 assertIncludes(webStyles, ".human-app-page", "root web human preview styles the human post-login shell");
 assertIncludes(webStyles, ".human-chat-thread", "root web human preview styles the default Agent chat thread");
+assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does not keep stale hero styles");
 checks.push("root /?loginFlow=lock opens the human-facing login preview and enters Agent chat by default");
 
 console.log(JSON.stringify({ ok: true, checks }, null, 2));

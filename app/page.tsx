@@ -9,6 +9,7 @@ import {
   Globe,
   LockKeyhole,
   Mail,
+  Settings,
   Shield,
   Sparkles,
   Trophy,
@@ -87,7 +88,7 @@ function MobileHumanLoginPreview() {
     setUnlocked(true);
   }
 
-  if (unlocked) return <HumanAgentChatHome email={normalizedEmail} />;
+  if (unlocked) return <HumanAgentChatHome />;
 
   return (
     <main className="human-lock-page" aria-label="海豚社区登录预览">
@@ -159,30 +160,17 @@ function MobileHumanLoginPreview() {
   );
 }
 
-function HumanAgentChatHome({ email }: { email: string }) {
-  const memberName = email.split("@")[0] || "海豚会员";
-
+function HumanAgentChatHome() {
   return (
     <main className="human-app-page human-agent-page" aria-label="海豚社区 Agent 对话页">
       <header className="human-app-topbar">
         <button className="human-round-button" type="button" aria-label="打开菜单">
           H
         </button>
-        <button className="human-round-button" type="button" aria-label="平台消息">
-          <Bot size={19} />
+        <button className="human-round-button" type="button" aria-label="设置">
+          <Settings size={20} />
         </button>
       </header>
-
-      <section className="human-chat-hero" aria-label="Agent 对话">
-        <div className="human-agent-avatar">
-          <img src="/images/logo.png" alt="" />
-        </div>
-        <div>
-          <span>{memberName} · HWallet 已就位</span>
-          <h1>海豚，今天看什么？</h1>
-          <p>先说目标，Agent 会把钱包状态、市场数据和下一步建议放在一条对话里。</p>
-        </div>
-      </section>
 
       <section className="human-chat-thread" aria-label="最近对话">
         <article className="human-chat-message assistant">
