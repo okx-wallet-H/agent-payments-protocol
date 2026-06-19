@@ -532,26 +532,6 @@ button.compact {
   color: rgba(255, 255, 255, 0.78);
 }
 
-.human-quick-prompts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.human-quick-prompts button {
-  display: grid;
-  place-items: center;
-  gap: 8px;
-  min-height: 92px;
-  border-radius: 24px;
-  padding: 12px 8px;
-  background: #f6f3ef;
-  color: #171717;
-  font-size: 13px;
-  line-height: 1.25;
-  box-shadow: none;
-}
-
 .human-chat-composer {
   position: fixed;
   right: max(24px, calc((100vw - 430px) / 2 + 24px));

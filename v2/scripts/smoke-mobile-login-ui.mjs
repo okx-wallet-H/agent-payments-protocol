@@ -62,11 +62,17 @@ assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、�
 assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
 assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
+assertIncludes(webHumanPreview, "const initialHumanChatMessages: HumanChatMessage[] = []", "root web preview starts with an empty human Agent chat");
+assertNotIncludes(webHumanPreview, "HWallet 已连接。我可以先帮你看资产", "root web preview does not seed default Agent copy");
+assertNotIncludes(webHumanPreview, "我想看看今天有没有机会。", "root web preview does not seed fake user copy");
+assertNotIncludes(webHumanPreview, "我会先观察预测市场和钱包资金", "root web preview does not seed default observation copy");
+assertNotIncludes(webHumanPreview, "human-quick-prompts", "root web preview does not show default quick prompt cards on the empty Agent screen");
+assertNotIncludes(webHumanPreview, "查收款地址", "root web preview does not show receive-address quick prompt on the empty Agent screen");
+assertNotIncludes(webHumanPreview, "刷新资产", "root web preview does not show refresh-assets quick prompt on the empty Agent screen");
 assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
 assertIncludes(webHumanPreview, "...current", "root web preview prepends each sent user message to the top of the chat thread");
 assertIncludes(webHumanPreview, "latestUserMessageRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
 assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
-assertIncludes(webHumanPreview, ".filter((message) => !message.seed)", "root web preview removes starter demo messages after the first real user message");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
 assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
 assertNotIncludes(webHumanPreview, "readOnly value=\"\"", "root web preview composer is no longer a static read-only input");
@@ -78,6 +84,7 @@ assertIncludes(webStyles, ".human-door-card", "root web human preview renders th
 assertIncludes(webStyles, ".human-keypad", "root web human preview styles the numeric lock keypad");
 assertIncludes(webStyles, ".human-app-page", "root web human preview styles the human post-login shell");
 assertIncludes(webStyles, ".human-chat-thread", "root web human preview styles the default Agent chat thread");
+assertNotIncludes(webStyles, ".human-quick-prompts", "root web human preview removes empty-screen quick prompt styles");
 assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does not keep stale hero styles");
 assertIncludes(webStyles, "--human-keyboard-offset", "root web human preview exposes a keyboard offset CSS variable");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-composer", "root web human preview lifts the composer above the keyboard");

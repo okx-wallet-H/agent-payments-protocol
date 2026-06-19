@@ -167,32 +167,9 @@ type HumanChatMessage = {
   variant?: "accent";
   title?: string;
   text: string;
-  seed?: boolean;
 };
 
-const initialHumanChatMessages: HumanChatMessage[] = [
-  {
-    id: "agent-ready",
-    role: "assistant",
-    title: "Agent",
-    text: "HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。",
-    seed: true
-  },
-  {
-    id: "user-example",
-    role: "user",
-    text: "我想看看今天有没有机会。",
-    seed: true
-  },
-  {
-    id: "agent-observe",
-    role: "assistant",
-    variant: "accent",
-    title: "可以",
-    text: "我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。",
-    seed: true
-  }
-];
+const initialHumanChatMessages: HumanChatMessage[] = [];
 
 function HumanAgentChatHome() {
   const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages);
@@ -243,7 +220,7 @@ function HumanAgentChatHome() {
     };
 
     pendingFocusMessageId.current = nextMessage.id;
-    setMessages((current) => [nextMessage, ...current.filter((message) => !message.seed)]);
+    setMessages((current) => [nextMessage, ...current]);
     setDraft("");
   }
 
@@ -282,21 +259,6 @@ function HumanAgentChatHome() {
             )}
           </article>
         ))}
-      </section>
-
-      <section className="human-quick-prompts" aria-label="快捷问题">
-        <button type="button">
-          <Wallet size={22} />
-          <span>查收款地址</span>
-        </button>
-        <button type="button">
-          <Sparkles size={22} />
-          <span>看预测市场</span>
-        </button>
-        <button type="button">
-          <Coins size={22} />
-          <span>刷新资产</span>
-        </button>
       </section>
 
       <form className="human-chat-composer" aria-label="发送消息" onSubmit={sendAgentMessage}>
