@@ -16,7 +16,8 @@ import {
   Wallet
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import type {
   Agent,
   AuditEvent,
@@ -160,9 +161,87 @@ function MobileHumanLoginPreview() {
   );
 }
 
+type HumanChatMessage = {
+  id: string;
+  role: "assistant" | "user";
+  variant?: "accent";
+  title?: string;
+  text: string;
+};
+
+const initialHumanChatMessages: HumanChatMessage[] = [
+  {
+    id: "agent-ready",
+    role: "assistant",
+    title: "Agent",
+    text: "HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。"
+  },
+  {
+    id: "user-example",
+    role: "user",
+    text: "我想看看今天有没有机会。"
+  },
+  {
+    id: "agent-observe",
+    role: "assistant",
+    variant: "accent",
+    title: "可以",
+    text: "我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。"
+  }
+];
+
 function HumanAgentChatHome() {
+  const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages);
+  const [draft, setDraft] = useState("");
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const threadRef = useRef<HTMLElement | null>(null);
+  const agentPageStyle = { "--human-keyboard-offset": `${keyboardOffset}px` } as CSSProperties;
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const activeViewport = viewport;
+
+    function syncKeyboardOffset() {
+      const offset = Math.max(0, window.innerHeight - activeViewport.height - activeViewport.offsetTop);
+      setKeyboardOffset(Math.round(offset));
+    }
+
+    syncKeyboardOffset();
+    activeViewport.addEventListener("resize", syncKeyboardOffset);
+    activeViewport.addEventListener("scroll", syncKeyboardOffset);
+    return () => {
+      activeViewport.removeEventListener("resize", syncKeyboardOffset);
+      activeViewport.removeEventListener("scroll", syncKeyboardOffset);
+    };
+  }, []);
+
+  function sendAgentMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text) return;
+
+    setMessages((current) => [
+      {
+        id: `user-${Date.now()}`,
+        role: "user",
+        text
+      },
+      ...current
+    ]);
+    setDraft("");
+    window.requestAnimationFrame(() => {
+      threadRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
+
   return (
-    <main className="human-app-page human-agent-page" aria-label="海豚社区 Agent 对话页">
+    <main
+      className={`human-app-page human-agent-page${keyboardOpen ? " keyboard-open" : ""}`}
+      style={agentPageStyle}
+      aria-label="海豚社区 Agent 对话页"
+    >
       <header className="human-app-topbar">
         <button className="human-round-button" type="button" aria-label="打开菜单">
           H
@@ -172,24 +251,25 @@ function HumanAgentChatHome() {
         </button>
       </header>
 
-      <section className="human-chat-thread" aria-label="最近对话">
-        <article className="human-chat-message assistant">
-          <Bot size={18} />
-          <div>
-            <b>Agent</b>
-            <p>HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。</p>
-          </div>
-        </article>
-        <article className="human-chat-message user">
-          <p>我想看看今天有没有机会。</p>
-        </article>
-        <article className="human-chat-message assistant accent">
-          <Sparkles size={18} />
-          <div>
-            <b>可以</b>
-            <p>我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。</p>
-          </div>
-        </article>
+      <section ref={threadRef} className="human-chat-thread" aria-label="最近对话">
+        {messages.map((message) => (
+          <article
+            key={message.id}
+            className={`human-chat-message ${message.role}${message.variant ? ` ${message.variant}` : ""}`}
+          >
+            {message.role === "assistant" ? (
+              <>
+                {message.variant === "accent" ? <Sparkles size={18} /> : <Bot size={18} />}
+                <div>
+                  {message.title ? <b>{message.title}</b> : null}
+                  <p>{message.text}</p>
+                </div>
+              </>
+            ) : (
+              <p>{message.text}</p>
+            )}
+          </article>
+        ))}
       </section>
 
       <section className="human-quick-prompts" aria-label="快捷问题">
@@ -207,15 +287,21 @@ function HumanAgentChatHome() {
         </button>
       </section>
 
-      <section className="human-chat-composer" aria-label="发送消息">
+      <form className="human-chat-composer" aria-label="发送消息" onSubmit={sendAgentMessage}>
         <button type="button" aria-label="添加">
           +
         </button>
-        <input readOnly value="" placeholder="向 Agent 发送消息" />
-        <button type="button" aria-label="发送">
+        <input
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onFocus={() => setKeyboardOpen(true)}
+          onBlur={() => setKeyboardOpen(false)}
+          placeholder="向 Agent 发送消息"
+        />
+        <button type="submit" aria-label="发送" disabled={!draft.trim()}>
           <ArrowRight size={18} />
         </button>
-      </section>
+      </form>
 
       <nav className="human-chat-nav" aria-label="底部导航">
         <button className="active" type="button">

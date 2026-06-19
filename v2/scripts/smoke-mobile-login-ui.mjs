@@ -62,6 +62,12 @@ assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、�
 assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
 assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
+assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
+assertIncludes(webHumanPreview, "...current", "root web preview prepends each sent user message to the top of the chat thread");
+assertIncludes(webHumanPreview, "threadRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
+assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
+assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
+assertNotIncludes(webHumanPreview, "readOnly value=\"\"", "root web preview composer is no longer a static read-only input");
 assertNotIncludes(webHumanPreview, "今天的钱包入口", "root web preview does not default to the wallet home after login");
 assertNotIncludes(webHumanPreview, "return <AgentWalletHome />", "root web preview does not fall back to the old AI operator shell");
 assertNotIncludes(webHumanPreview, "输入确认码：", "root web human preview does not expose raw execution confirmation-code copy");
@@ -71,6 +77,9 @@ assertIncludes(webStyles, ".human-keypad", "root web human preview styles the nu
 assertIncludes(webStyles, ".human-app-page", "root web human preview styles the human post-login shell");
 assertIncludes(webStyles, ".human-chat-thread", "root web human preview styles the default Agent chat thread");
 assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does not keep stale hero styles");
+assertIncludes(webStyles, "--human-keyboard-offset", "root web human preview exposes a keyboard offset CSS variable");
+assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-composer", "root web human preview lifts the composer above the keyboard");
+assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-nav", "root web human preview hides bottom nav while the keyboard is open");
 checks.push("root /?loginFlow=lock opens the human-facing login preview and enters Agent chat by default");
 
 console.log(JSON.stringify({ ok: true, checks }, null, 2));
