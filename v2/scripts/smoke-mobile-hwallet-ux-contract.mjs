@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 const screen = await readFile("apps/mobile/src/V2AgentWalletScreen.tsx", "utf8");
+const preview = await readFile("apps/mobile/src/V2AgentWalletPreview.tsx", "utf8");
 const entryState = await readFile("apps/mobile/src/hwallet-entry.ts", "utf8");
 const statusSmoke = await readFile("apps/mobile/src/privy-wallet-status.smoke.ts", "utf8");
 const deviceQa = await readFile("docs/HWALLET_DEVICE_MULTI_USER_QA.md", "utf8");
@@ -29,6 +30,10 @@ assertIncludes(screen, "startNicknameEdit", "community nickname edit affordance 
 assertIncludes(screen, "communityNicknameInput", "community nickname can be edited inline");
 assertIncludes(screen, "saveNickname", "community nickname edit has a save action");
 assertIncludes(screen, 'accessibilityLabel="保存昵称"', "community nickname save action is accessible");
+assertIncludes(preview, "startNicknameEdit", "web preview nickname edit affordance enters edit mode");
+assertIncludes(preview, "communityNicknameInput", "web preview nickname can be edited inline");
+assertIncludes(preview, "saveNickname", "web preview nickname edit has a save action");
+assertIncludes(preview, 'accessibilityLabel="保存昵称"', "web preview nickname save action is accessible");
 assert(!screen.includes("communitySearchPill"), "community page removes the redundant internal search button");
 assertIncludes(screen, "communityCarousel", "community page shows a colorful carousel below the member panel");
 assertIncludes(screen, "snapToInterval={communityCarouselSnap}", "community carousel snaps between cards while swiping");
