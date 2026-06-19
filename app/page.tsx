@@ -167,6 +167,7 @@ type HumanChatMessage = {
   variant?: "accent";
   title?: string;
   text: string;
+  seed?: boolean;
 };
 
 const initialHumanChatMessages: HumanChatMessage[] = [
@@ -174,19 +175,22 @@ const initialHumanChatMessages: HumanChatMessage[] = [
     id: "agent-ready",
     role: "assistant",
     title: "Agent",
-    text: "HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。"
+    text: "HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。",
+    seed: true
   },
   {
     id: "user-example",
     role: "user",
-    text: "我想看看今天有没有机会。"
+    text: "我想看看今天有没有机会。",
+    seed: true
   },
   {
     id: "agent-observe",
     role: "assistant",
     variant: "accent",
     title: "可以",
-    text: "我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。"
+    text: "我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。",
+    seed: true
   }
 ];
 
@@ -239,7 +243,7 @@ function HumanAgentChatHome() {
     };
 
     pendingFocusMessageId.current = nextMessage.id;
-    setMessages((current) => [nextMessage, ...current]);
+    setMessages((current) => [nextMessage, ...current.filter((message) => !message.seed)]);
     setDraft("");
   }
 
