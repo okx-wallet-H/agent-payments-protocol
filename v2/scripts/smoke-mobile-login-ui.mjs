@@ -70,7 +70,8 @@ assertNotIncludes(webHumanPreview, "human-quick-prompts", "root web preview does
 assertNotIncludes(webHumanPreview, "查收款地址", "root web preview does not show receive-address quick prompt on the empty Agent screen");
 assertNotIncludes(webHumanPreview, "刷新资产", "root web preview does not show refresh-assets quick prompt on the empty Agent screen");
 assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
-assertIncludes(webHumanPreview, "...current", "root web preview prepends each sent user message to the top of the chat thread");
+assertIncludes(webHumanPreview, "setMessages([nextMessage])", "root web preview clears the screen around each new user message");
+assertNotIncludes(webHumanPreview, "...current", "root web preview does not keep old preview messages on the active screen");
 assertIncludes(webHumanPreview, "latestUserMessageRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
 assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
