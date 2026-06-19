@@ -62,6 +62,7 @@ function MobileHumanLoginPreview() {
   const [email, setEmail] = useState("demo@hwallet.vip");
   const [step, setStep] = useState<"email" | "code">("email");
   const [code, setCode] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
   const normalizedEmail = email.trim();
   const canEnter = normalizedEmail.includes("@") && normalizedEmail.includes(".");
   const canUnlock = code.length === 6;
@@ -80,6 +81,13 @@ function MobileHumanLoginPreview() {
     setStep("email");
     setCode("");
   }
+
+  function unlockDoor() {
+    if (!canUnlock) return;
+    setUnlocked(true);
+  }
+
+  if (unlocked) return <AgentWalletHome />;
 
   return (
     <main className="human-lock-page" aria-label="海豚社区登录预览">
@@ -140,7 +148,7 @@ function MobileHumanLoginPreview() {
               <button type="button" onClick={() => appendDigit("0")}>
                 0
               </button>
-              <button type="button" className="unlock" disabled={!canUnlock}>
+              <button type="button" className="unlock" disabled={!canUnlock} onClick={unlockDoor}>
                 <Check size={22} />
               </button>
             </div>

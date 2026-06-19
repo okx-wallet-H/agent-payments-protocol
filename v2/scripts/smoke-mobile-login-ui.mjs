@@ -54,6 +54,8 @@ assertIncludes(webHumanPreview, "<span>邮箱</span>", "root web preview keeps a
 assertIncludes(webHumanPreview, "setStep(\"code\")", "root web preview sends the code before showing the lock");
 assertIncludes(webHumanPreview, "<h2>验证码开锁</h2>", "root web preview switches to a numeric lock instead of a code input row");
 assertIncludes(webHumanPreview, "className=\"human-keypad\"", "root web preview exposes the keypad lock");
+assertIncludes(webHumanPreview, "setUnlocked(true)", "root web preview unlock button opens the app after a full code");
+assertIncludes(webHumanPreview, "return <AgentWalletHome />", "root web preview exits the door into the main app");
 assertNotIncludes(webHumanPreview, "输入确认码：", "root web human preview does not expose raw execution confirmation-code copy");
 assertIncludes(webStyles, ".human-lock-page", "root web human preview has a phone-width visual shell");
 assertIncludes(webStyles, ".human-door-card", "root web human preview renders the door-like hero");
