@@ -93,3 +93,21 @@ By default this command skips without calling OKX. Set
 credentials are present and a live read-only schema sample is needed. The output
 is redacted schema evidence only: field presence, counts, and shortened labels,
 never raw payloads, full asset ids, API credentials, or execution instructions.
+
+If the opt-in command is enabled without credentials, it exits with a structured
+blocked result instead of printing stack traces. The owner action is to configure
+these server-side environment variables outside git and chat:
+
+- `PREDICTIONS_API_KEY`
+- `PREDICTIONS_API_SECRET`
+- `PREDICTIONS_API_PASSPHRASE`
+
+After those are configured, rerun:
+
+```bash
+OKX_OUTCOMES_LIVE_SCHEMA_SMOKE=1 npm run smoke:okx-outcomes-live-schema
+```
+
+This remains a read-only schema check. It must not collect user API keys in the
+App, place orders, sign payloads, broadcast transactions, or print full market
+or outcome identifiers.
