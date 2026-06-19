@@ -55,15 +55,19 @@ assertIncludes(webHumanPreview, "setStep(\"code\")", "root web preview sends the
 assertIncludes(webHumanPreview, "<h2>验证码开锁</h2>", "root web preview switches to a numeric lock instead of a code input row");
 assertIncludes(webHumanPreview, "className=\"human-keypad\"", "root web preview exposes the keypad lock");
 assertIncludes(webHumanPreview, "setUnlocked(true)", "root web preview unlock button opens the app after a full code");
-assertIncludes(webHumanPreview, "return <HumanAppHome", "root web preview exits the door into the human mobile home");
-assertIncludes(webHumanPreview, "function HumanAppHome", "root web preview has a dedicated human post-login shell");
+assertIncludes(webHumanPreview, "return <HumanAgentChatHome", "root web preview exits the door into the human Agent chat home");
+assertIncludes(webHumanPreview, "function HumanAgentChatHome", "root web preview has a dedicated human Agent post-login shell");
+assertIncludes(webHumanPreview, "海豚，今天看什么？", "root web preview defaults to the Agent conversation page after login");
+assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
+assertNotIncludes(webHumanPreview, "今天的钱包入口", "root web preview does not default to the wallet home after login");
 assertNotIncludes(webHumanPreview, "return <AgentWalletHome />", "root web preview does not fall back to the old AI operator shell");
 assertNotIncludes(webHumanPreview, "输入确认码：", "root web human preview does not expose raw execution confirmation-code copy");
 assertIncludes(webStyles, ".human-lock-page", "root web human preview has a phone-width visual shell");
 assertIncludes(webStyles, ".human-door-card", "root web human preview renders the door-like hero");
 assertIncludes(webStyles, ".human-keypad", "root web human preview styles the numeric lock keypad");
 assertIncludes(webStyles, ".human-app-page", "root web human preview styles the human post-login shell");
-checks.push("root /?loginFlow=lock opens the human-facing mobile login preview and enters a human mobile home");
+assertIncludes(webStyles, ".human-chat-thread", "root web human preview styles the default Agent chat thread");
+checks.push("root /?loginFlow=lock opens the human-facing login preview and enters Agent chat by default");
 
 console.log(JSON.stringify({ ok: true, checks }, null, 2));
 
