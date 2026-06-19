@@ -428,6 +428,37 @@ export interface V2PredictionDetailResponse {
   source: V2PredictionDetailSource;
 }
 
+export interface V2PredictionStatusResponse {
+  status: {
+    type: "prediction_market_status";
+    provider: "okx-outcomes";
+    providerLabel: "OKX Outcomes";
+    providerStatus: "connected" | "not_configured";
+    credentialsBound: boolean;
+    readOnly: true;
+    liveExecutionClosed: true;
+    apiKeyBinding: {
+      label: string;
+      enabled: false;
+      appCollectionEnabled: false;
+      storage: "server-side-only";
+      note: string;
+    };
+    queryCapabilities: string[];
+    operationCapabilities: Array<{
+      id: "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+      label: string;
+      enabled: boolean;
+      mode: "read" | "dry_run" | "local" | "closed";
+    }>;
+    endpoints: {
+      explore: "/api/v2/prediction/explore";
+      detail: "/api/v2/prediction/detail";
+    };
+    updatedAt: string;
+  };
+}
+
 export interface V2ReceiveAddress {
   id: string;
   label: string;

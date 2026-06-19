@@ -13,6 +13,7 @@ const okxClient = read("v2/execution/okx-outcomes-client.ts");
 const detailView = read("v2/app/prediction-detail-view.ts");
 const worldCupExplore = read("v2/app/world-cup-explore.ts");
 const detailRoute = read("app/api/v2/prediction/detail/route.ts");
+const predictionStatusRoute = read("app/api/v2/prediction/status/route.ts");
 const predictionExploreRoute = read("app/api/v2/prediction/explore/route.ts");
 const worldCupRoute = read("app/api/v2/world-cup/explore/route.ts");
 const predictionReadGuard = read("v2/auth/prediction-read-guard.ts");
@@ -40,6 +41,7 @@ for (const scriptName of [
   "smoke:agent-readonly-explanation",
   "smoke:prediction-detail-view",
   "smoke:prediction-detail-route",
+  "smoke:prediction-status-route",
   "smoke:mobile-prediction-market-ui",
   "smoke:prediction-read-guard",
   "smoke:prediction-market-archive",
@@ -84,6 +86,15 @@ check(/includeCandles\s*:\s*true/.test(detailRoute), "prediction detail route re
 check(detailRoute.includes("providerStatus") && detailRoute.includes("credentialsBound"), "prediction detail route returns redacted provider status");
 check(!/\bexport\s+async\s+function\s+POST\b/.test(detailRoute), "prediction detail route remains GET-only");
 
+check(predictionStatusRoute.includes('route: "prediction-status"'), "prediction status route uses its own read guard scope");
+check(predictionStatusRoute.includes("prediction_market_status"), "prediction status route returns app-facing status type");
+check(predictionStatusRoute.includes("apiKeyBinding"), "prediction status route returns API key binding placeholder");
+check(predictionStatusRoute.includes("appCollectionEnabled: false"), "prediction status route prevents App-side API key collection");
+check(predictionStatusRoute.includes('storage: "server-side-only"'), "prediction status route keeps credential storage server-side only");
+check(predictionStatusRoute.includes("liveExecutionClosed: true"), "prediction status route keeps live execution closed");
+check(predictionStatusRoute.includes("order_closed"), "prediction status route exposes disabled order operation");
+check(!/\bexport\s+async\s+function\s+POST\b/.test(predictionStatusRoute), "prediction status route remains GET-only");
+
 check(predictionExploreRoute.includes("readPredictionExploreData"), "generic prediction explore route reads shared market data");
 check(predictionExploreRoute.includes('route: "prediction-explore"'), "generic prediction explore route uses its own read guard scope");
 check(predictionExploreRoute.includes("createWorldCupExploreView"), "generic prediction explore route returns app-facing explore view");
@@ -123,7 +134,9 @@ for (const text of [
   "只读查询",
   "订单簿摘要",
   "API Key ·",
+  "API 状态",
   "绑定入口预留",
+  "第二阶段不在 App 内收集或保存用户 API Key",
   "观察",
   "模拟预览",
   "加入跟踪",
@@ -134,6 +147,7 @@ for (const text of [
 }
 check(mobileApi.includes("/api/v2/prediction/explore"), "mobile API reads generic prediction market explore endpoint");
 check(mobileApi.includes("/api/v2/prediction/detail"), "mobile API reads prediction detail endpoint");
+check(mobileApi.includes("/api/v2/prediction/status"), "mobile API reads prediction status endpoint");
 
 for (const text of [
   "read-only / 只读",

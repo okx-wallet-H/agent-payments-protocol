@@ -1,7 +1,7 @@
 import { resolvePhaseOneUser } from "./request-user";
 
 type PredictionReadGuardOptions = {
-  route: "world-cup-explore" | "prediction-explore" | "prediction-detail";
+  route: "world-cup-explore" | "prediction-explore" | "prediction-detail" | "prediction-status";
   limit?: number;
   windowMs?: number;
 };
