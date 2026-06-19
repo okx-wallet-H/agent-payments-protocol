@@ -86,7 +86,6 @@ function MobileHumanLoginPreview() {
       <section className="human-door-card" aria-label="海豚社区开门">
         <div className="human-door-panel left">
           <img src="/images/logo.png" alt="" className="human-door-logo" />
-          <span>海豚社区</span>
           <h1>海豚，开门</h1>
           <p>你的 Agent 已就位。</p>
         </div>
@@ -99,10 +98,6 @@ function MobileHumanLoginPreview() {
       <section className="human-lock-card">
         {step === "email" ? (
           <>
-            <div className="human-lock-copy">
-              <h2>邮箱进入</h2>
-              <p>输入邮箱，点进入后直接发送验证码。</p>
-            </div>
             <label className="human-field">
               <span>邮箱</span>
               <input
