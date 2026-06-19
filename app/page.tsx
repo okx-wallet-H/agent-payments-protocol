@@ -87,7 +87,7 @@ function MobileHumanLoginPreview() {
     setUnlocked(true);
   }
 
-  if (unlocked) return <AgentWalletHome />;
+  if (unlocked) return <HumanAppHome email={normalizedEmail} />;
 
   return (
     <main className="human-lock-page" aria-label="海豚社区登录预览">
@@ -155,6 +155,90 @@ function MobileHumanLoginPreview() {
           </>
         )}
       </section>
+    </main>
+  );
+}
+
+function HumanAppHome({ email }: { email: string }) {
+  const memberName = email.split("@")[0] || "海豚会员";
+
+  return (
+    <main className="human-app-page" aria-label="海豚社区移动首页">
+      <header className="human-app-topbar">
+        <button className="human-round-button" type="button" aria-label="打开菜单">
+          H
+        </button>
+        <button className="human-round-button" type="button" aria-label="平台消息">
+          <Bot size={19} />
+        </button>
+      </header>
+
+      <section className="human-member-hero" aria-label="会员信息">
+        <div className="human-member-row">
+          <img src="/images/logo.png" alt="" className="human-member-avatar" />
+          <div>
+            <p>{memberName}</p>
+            <span>{email}</span>
+          </div>
+          <b>Lv.3</b>
+        </div>
+        <div className="human-progress-row">
+          <span>VIP 进度</span>
+          <strong>68%</strong>
+        </div>
+        <div className="human-progress-track" aria-hidden="true">
+          <span />
+        </div>
+      </section>
+
+      <section className="human-wallet-card" aria-label="HWallet 入口">
+        <div>
+          <span>HWallet</span>
+          <h1>今天的钱包入口</h1>
+          <p>收款、同步资产和 Agent 分析都从这里开始。</p>
+        </div>
+        <button type="button">进入</button>
+      </section>
+
+      <section className="human-shortcuts" aria-label="常用入口">
+        <button type="button">
+          <Wallet size={22} />
+          <span>HWallet</span>
+        </button>
+        <button type="button">
+          <Sparkles size={22} />
+          <span>Agent</span>
+        </button>
+        <button type="button">
+          <Coins size={22} />
+          <span>市场</span>
+        </button>
+      </section>
+
+      <section className="human-feed" aria-label="最近记录">
+        <div className="human-section-title">
+          <h2>最近</h2>
+          <span>已同步</span>
+        </div>
+        {[
+          ["收款地址", "HWallet 已经准备好，可以复制地址充值。"],
+          ["Agent 对话", "查看可用资金和下一步机会。"],
+          ["市场观察", "预测市场只读数据已经接入。"]
+        ].map(([title, description]) => (
+          <article key={title}>
+            <Bot size={18} />
+            <div>
+              <b>{title}</b>
+              <p>{description}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <button className="human-new-chat" type="button">
+        <Sparkles size={20} />
+        新会话
+      </button>
     </main>
   );
 }
