@@ -68,6 +68,7 @@ export interface ApiClient {
   listV2Records(userId?: string): Promise<V2PhaseOneRecord[]>;
   listV2Audit(userId?: string): Promise<V2AuditTimelineEvent[]>;
   submitV2DeviceEvidence(input: V2MobileDeviceEvidenceInput): Promise<V2MobileDeviceEvidenceResponse>;
+  getPredictionExplore(): Promise<V2WorldCupExploreView>;
   getWorldCupExplore(): Promise<V2WorldCupExploreView>;
   getPredictionDetail(marketId: string): Promise<V2PredictionDetailResponse>;
 }
@@ -318,10 +319,19 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         body: JSON.stringify(input)
       }, getAccessToken);
     },
+    async getPredictionExplore() {
+      const data = await request<{ explore: V2WorldCupExploreView }>(
+        cleanBaseUrl,
+        "/api/v2/prediction/explore",
+        undefined,
+        getAccessToken
+      );
+      return data.explore;
+    },
     async getWorldCupExplore() {
       const data = await request<{ explore: V2WorldCupExploreView }>(
         cleanBaseUrl,
-        "/api/v2/world-cup/explore",
+        "/api/v2/prediction/explore",
         undefined,
         getAccessToken
       );

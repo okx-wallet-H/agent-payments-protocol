@@ -15,8 +15,8 @@ try {
   process.env.PREDICTION_READ_RATE_WINDOW_MS = "60000";
 
   const unauthorized = await guardPredictionReadRequest(
-    new Request("http://localhost/api/v2/world-cup/explore"),
-    { route: "world-cup-explore" }
+    new Request("http://localhost/api/v2/prediction/explore"),
+    { route: "prediction-explore" }
   );
   check(unauthorized.ok === false, "missing Privy token is rejected when token mode is enabled");
   if (!unauthorized.ok) {

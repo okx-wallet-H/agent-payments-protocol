@@ -21,7 +21,7 @@ await expectUnauthorized("GET phase-one shell", `/api/v2/phase-one?${params({ us
 await expectUnauthorized("GET phase-one records", `/api/v2/phase-one/records?${params({ userId })}`);
 await expectUnauthorized("GET phase-one tracking", `/api/v2/phase-one/tracking?${params({ userId })}`);
 await expectUnauthorized("GET phase-one strategies", `/api/v2/phase-one/strategies?${params({ userId })}`);
-await expectUnauthorized("GET prediction market explore", "/api/v2/world-cup/explore");
+await expectUnauthorized("GET prediction market explore", "/api/v2/prediction/explore");
 await expectUnauthorized("GET prediction market detail", `/api/v2/prediction/detail?${params({ marketId: "staging-auth-market" })}`);
 await expectUnauthorized("POST phase-one chat", "/api/v2/phase-one", {
   method: "POST",

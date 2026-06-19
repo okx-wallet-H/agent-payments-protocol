@@ -170,7 +170,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     setWorldCupExploreError(undefined);
 
     worldCupApi
-      .getWorldCupExplore()
+      .getPredictionExplore()
       .then((explore) => {
         if (!cancelled) setWorldCupExplore(explore);
       })

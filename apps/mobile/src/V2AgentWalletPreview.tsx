@@ -208,7 +208,7 @@ export function V2AgentWalletPreview() {
     setWorldCupExploreError(undefined);
 
     worldCupApi
-      .getWorldCupExplore()
+      .getPredictionExplore()
       .then((explore) => {
         if (!cancelled) setWorldCupExplore(explore);
       })

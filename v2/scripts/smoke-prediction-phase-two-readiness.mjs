@@ -13,6 +13,7 @@ const okxClient = read("v2/execution/okx-outcomes-client.ts");
 const detailView = read("v2/app/prediction-detail-view.ts");
 const worldCupExplore = read("v2/app/world-cup-explore.ts");
 const detailRoute = read("app/api/v2/prediction/detail/route.ts");
+const predictionExploreRoute = read("app/api/v2/prediction/explore/route.ts");
 const worldCupRoute = read("app/api/v2/world-cup/explore/route.ts");
 const predictionReadGuard = read("v2/auth/prediction-read-guard.ts");
 const predictionReadGuardSmoke = read("v2/scripts/smoke-prediction-read-guard.mjs");
@@ -82,9 +83,11 @@ check(/includeCandles\s*:\s*true/.test(detailRoute), "prediction detail route re
 check(detailRoute.includes("providerStatus") && detailRoute.includes("credentialsBound"), "prediction detail route returns redacted provider status");
 check(!/\bexport\s+async\s+function\s+POST\b/.test(detailRoute), "prediction detail route remains GET-only");
 
-check(worldCupRoute.includes("listOkxWorldCupMarkets"), "explore route can read OKX market catalog");
-check(worldCupRoute.includes("guardPredictionReadRequest"), "explore route guards read access before provider reads");
-check(worldCupRoute.includes("createWorldCupExploreView"), "explore route returns app-facing explore view");
+check(predictionExploreRoute.includes("readPredictionExploreData"), "generic prediction explore route reads shared market data");
+check(predictionExploreRoute.includes('route: "prediction-explore"'), "generic prediction explore route uses its own read guard scope");
+check(predictionExploreRoute.includes("createWorldCupExploreView"), "generic prediction explore route returns app-facing explore view");
+check(worldCupRoute.includes("readPredictionExploreData"), "legacy world-cup explore route delegates to shared market data");
+check(worldCupRoute.includes('route: "world-cup-explore"'), "legacy world-cup explore route keeps compatibility guard scope");
 check(worldCupExplore.includes("credentialsBound") && worldCupExplore.includes("providerStatus"), "explore source carries redacted provider status");
 check(worldCupExplore.includes("marketRef: createExploreMarketRef"), "explore cards use sanitized market references");
 check(worldCupExplore.includes("readOnly: true") && worldCupExplore.includes("liveExecutionClosed: true"), "explore market refs stay read-only");
@@ -128,7 +131,7 @@ for (const text of [
 ]) {
   check(mobileScreen.includes(text), `mobile screen contains ${text}`);
 }
-check(mobileApi.includes("/api/v2/world-cup/explore"), "mobile API reads market explore endpoint");
+check(mobileApi.includes("/api/v2/prediction/explore"), "mobile API reads generic prediction market explore endpoint");
 check(mobileApi.includes("/api/v2/prediction/detail"), "mobile API reads prediction detail endpoint");
 
 for (const text of [
