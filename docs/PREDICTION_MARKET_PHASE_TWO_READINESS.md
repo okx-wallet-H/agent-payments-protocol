@@ -19,6 +19,7 @@ placement stays closed.
 | Live field mapping | Guarded for read-only use | `docs/OKX_OUTCOMES_LIVE_FIELD_MAPPING.md` records that market detail uses `marketId`, ticker/candle/order-book reads use YES/NO outcome asset ids as `instId`, and settlement/final-result fields stay hidden until live schema is proven. |
 | API Key binding | Placeholder only | The App has a visible binding position. Secret storage and user API-key lifecycle are not enabled in this release. |
 | Live trading | Closed | Order placement, signing, swap, and broadcast remain disabled by execution gates. |
+| Release UI guard | Ready for merge gate | Native/App Store build scripts and EAS profiles force the V2 HWallet UI so production cannot accidentally fall back to the old mobile execution screen. |
 | Legacy preview cleanup | In progress | Old preview/demo scripts are archived; migration hold files remain documented in the cleanup queue. |
 
 ## User-Facing Capability
@@ -97,4 +98,6 @@ gate for this phase. It checks the phase-two goal directly:
 - The controller/subtask/review workflow is documented and protected by merge
   smokes.
 - Archived prediction-market preview files stay out of the active app path.
+- Mobile release scripts and EAS build profiles keep V2 enabled and keep the
+  visual-only preview UI out of preview/production channels.
 - Live order placement, signing, swap, and broadcast stay closed.
