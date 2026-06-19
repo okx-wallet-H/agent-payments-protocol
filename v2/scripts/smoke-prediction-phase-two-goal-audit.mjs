@@ -24,6 +24,7 @@ const files = {
   predictionExploreRoute: read("app/api/v2/prediction/explore/route.ts"),
   exploreRoute: read("app/api/v2/world-cup/explore/route.ts"),
   detailRoute: read("app/api/v2/prediction/detail/route.ts"),
+  statusRoute: read("app/api/v2/prediction/status/route.ts"),
   exploreView: read("v2/app/world-cup-explore.ts"),
   detailView: read("v2/app/prediction-detail-view.ts"),
   mobileApp: read("apps/mobile/App.tsx"),
@@ -66,6 +67,7 @@ for (const scriptName of [
   "smoke:outcomes-market-catalog",
   "smoke:prediction-detail-view",
   "smoke:prediction-detail-route",
+  "smoke:prediction-status-route",
   "smoke:mobile-prediction-market-ui",
   "smoke:okx-outcomes-readonly-boundary",
   "smoke:okx-outcomes-live-field-mapping",
@@ -129,6 +131,22 @@ includesAll("detail route", files.detailRoute, [
   "liveExecutionClosed: true"
 ]);
 check(!/\bexport\s+async\s+function\s+POST\b/.test(files.detailRoute), "prediction detail route remains GET-only");
+includesAll("prediction status route", files.statusRoute, [
+  "guardPredictionReadRequest",
+  "hasOkxOutcomesCredentials",
+  "prediction-status",
+  "prediction_market_status",
+  "providerStatus",
+  "credentialsBound",
+  "apiKeyBinding",
+  "appCollectionEnabled: false",
+  'storage: "server-side-only"',
+  "queryCapabilities",
+  "operationCapabilities",
+  "order_closed",
+  "liveExecutionClosed: true"
+]);
+check(!/\bexport\s+async\s+function\s+POST\b/.test(files.statusRoute), "prediction status route remains GET-only");
 
 includesAll("explore DTO", files.exploreView, [
   "marketRef: createExploreMarketRef",
@@ -162,7 +180,9 @@ includesAll("mobile prediction market UI", files.mobileScreen, [
   "当前能力",
   "走势摘要",
   "API Key ·",
+  "API 状态",
   "绑定入口预留",
+  "第二阶段不在 App 内收集或保存用户 API Key",
   "不在本机保存密钥",
   "观察",
   "模拟预览",
@@ -200,7 +220,8 @@ includesAll("mobile prediction actions", files.mobileTypes, [
 ]);
 includesAll("mobile prediction APIs", files.mobileApi, [
   "/api/v2/prediction/explore",
-  "/api/v2/prediction/detail"
+  "/api/v2/prediction/detail",
+  "/api/v2/prediction/status"
 ]);
 includesAll("mobile prediction smoke", files.mobilePredictionSmoke, [
   "sanitized marketRef",

@@ -32,6 +32,7 @@ import type {
   V2PredictionDetailActionId,
   V2PredictionDetailResponse,
   V2PredictionDetailView,
+  V2PredictionStatusResponse,
   V2SimulationCard,
   V2StrategyCard,
   V2TrackingCard,
@@ -137,6 +138,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [worldCupExplore, setWorldCupExplore] = useState<V2WorldCupExploreView | undefined>();
   const [worldCupExploreLoading, setWorldCupExploreLoading] = useState(false);
   const [worldCupExploreError, setWorldCupExploreError] = useState<string | undefined>();
+  const [predictionStatus, setPredictionStatus] = useState<V2PredictionStatusResponse | undefined>();
+  const [predictionStatusLoading, setPredictionStatusLoading] = useState(false);
+  const [predictionStatusError, setPredictionStatusError] = useState<string | undefined>();
   const walletProvisionAttemptRef = useRef<string | undefined>(undefined);
   const walletAutoSyncKeyRef = useRef<string | undefined>(undefined);
   const deviceEvidenceKeyRef = useRef<string | undefined>(undefined);
@@ -179,6 +183,30 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       })
       .finally(() => {
         if (!cancelled) setWorldCupExploreLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isReady, user, worldCupApi]);
+
+  useEffect(() => {
+    if (!isReady || !user || activeTab !== "worldcup") return;
+
+    let cancelled = false;
+    setPredictionStatusLoading(true);
+    setPredictionStatusError(undefined);
+
+    worldCupApi
+      .getPredictionStatus()
+      .then((status) => {
+        if (!cancelled) setPredictionStatus(status);
+      })
+      .catch((error) => {
+        if (!cancelled) setPredictionStatusError(error instanceof Error ? error.message : "预测市场状态暂时不可用");
+      })
+      .finally(() => {
+        if (!cancelled) setPredictionStatusLoading(false);
       });
 
     return () => {
@@ -405,6 +433,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             exploreError={worldCupExploreError}
             exploreLoading={worldCupExploreLoading}
             items={agent.session.home?.panels.topLeft.items || []}
+            predictionStatus={predictionStatus}
+            predictionStatusError={predictionStatusError}
+            predictionStatusLoading={predictionStatusLoading}
             onAsk={(text) => run(() => send(text))}
             onAnalyzeMarket={(text, market) => run(() => agent.analyzeMarket(text, market))}
             onLoadPredictionDetail={agent.loadPredictionDetail}
@@ -644,6 +675,9 @@ function WorldCupTab({
   exploreError,
   exploreLoading,
   items,
+  predictionStatus,
+  predictionStatusError,
+  predictionStatusLoading,
   onAsk,
   onAnalyzeMarket,
   onLoadPredictionDetail,
@@ -655,6 +689,9 @@ function WorldCupTab({
   exploreError?: string;
   exploreLoading: boolean;
   items: { id: string; title: string; subtitle?: string; value?: string }[];
+  predictionStatus?: V2PredictionStatusResponse;
+  predictionStatusError?: string;
+  predictionStatusLoading: boolean;
   onAsk: (text: string) => void;
   onAnalyzeMarket: (text: string, market: V2MarketSnapshot) => void;
   onLoadPredictionDetail: (marketId: string) => Promise<V2PredictionDetailResponse>;
@@ -671,6 +708,17 @@ function WorldCupTab({
   const insight = createWorldCupInsightCopy(explore);
   const previewCards = createWorldCupPreviewCards(explore);
   const selectedMarketId = selectedMarket?.marketRef.marketId;
+  const predictionStatusData = predictionStatus?.status;
+  const predictionStatusLabel = predictionStatusLoading
+    ? "同步中"
+    : predictionStatusData?.providerStatus === "connected"
+      ? "后端已接入"
+      : predictionStatusError
+        ? "待重试"
+        : "绑定入口预留";
+  const predictionApiKeyLabel = predictionStatusData?.apiKeyBinding.label || "绑定入口预留";
+  const predictionApiKeyNote = predictionStatusData?.apiKeyBinding.note || "第二阶段不在 App 内收集或保存用户 API Key。";
+  const predictionClosedLabel = predictionStatusData?.liveExecutionClosed ? "真实下单关闭" : "只读占位";
 
   useEffect(() => {
     if (worldCupView !== "detail" || !selectedMarketId) {
@@ -817,6 +865,21 @@ function WorldCupTab({
           <Text style={styles.predictionStageText}>
             已接入 OKX Outcomes 市场查询。先看事件、会/不会赔率、订单簿和流动性；真实下单先占位关闭。
           </Text>
+          <View style={styles.predictionStageStatusRow}>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>API 状态</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionStatusLabel}</Text>
+            </View>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>API Key</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionApiKeyLabel}</Text>
+            </View>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>执行</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionClosedLabel}</Text>
+            </View>
+          </View>
+          <Text style={styles.predictionStageStatusNote}>{predictionApiKeyNote}</Text>
           <View style={styles.predictionStageGrid}>
             {["查市场", "看订单簿", "模拟预览", "API Key 占位"].map((label) => (
               <Text key={label} style={styles.predictionStageChip}>{label}</Text>
@@ -5620,6 +5683,37 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.76)",
     fontSize: 13,
     lineHeight: 20,
+    fontWeight: "700"
+  },
+  predictionStageStatusRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  predictionStageStatusCell: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 9,
+    paddingVertical: 9,
+    justifyContent: "center"
+  },
+  predictionStageStatusLabel: {
+    color: "rgba(255, 255, 255, 0.54)",
+    fontSize: 10,
+    fontWeight: "900"
+  },
+  predictionStageStatusValue: {
+    color: "#fff",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+    marginTop: 4
+  },
+  predictionStageStatusNote: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: "700"
   },
   predictionStageGrid: {
