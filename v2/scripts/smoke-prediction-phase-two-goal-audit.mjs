@@ -25,13 +25,20 @@ const files = {
   detailRoute: read("app/api/v2/prediction/detail/route.ts"),
   exploreView: read("v2/app/world-cup-explore.ts"),
   detailView: read("v2/app/prediction-detail-view.ts"),
+  mobileApp: read("apps/mobile/App.tsx"),
   mobileScreen: read("apps/mobile/src/V2AgentWalletScreen.tsx"),
   mobileTypes: read("apps/mobile/src/types.ts"),
   mobileApi: read("apps/mobile/src/api.ts"),
+  mobilePackageJson: read("apps/mobile/package.json"),
+  mobileEasJson: read("apps/mobile/eas.json"),
+  mobileBuildEnvSmoke: read("v2/scripts/smoke-mobile-build-env.mjs"),
   executionGateSmoke: read("v2/scripts/smoke-execution-gates.mjs"),
   archiveSmoke: read("v2/scripts/smoke-prediction-market-archive.mjs"),
   mobilePredictionSmoke: read("v2/scripts/smoke-mobile-prediction-market-ui.mjs")
 };
+
+const mobilePackageJson = JSON.parse(files.mobilePackageJson);
+const mobileEasJson = JSON.parse(files.mobileEasJson);
 
 const checks = [];
 function check(condition, message) {
@@ -161,6 +168,26 @@ includesAll("mobile prediction market UI", files.mobileScreen, [
   "生成策略",
   "下单未开放",
   "真实下单关闭"
+]);
+includesAll("mobile app shell", files.mobileApp, [
+  'const useV2Ui = process.env.EXPO_PUBLIC_AGENT_WALLET_V2_UI !== "false";',
+  'return <V2AgentWalletScreen apiBaseUrl={defaultApiBaseUrl} />;'
+]);
+for (const scriptName of ["update:development-staging", "update:preview", "update:production"]) {
+  const script = String(mobilePackageJson.scripts?.[scriptName] || "");
+  check(script.includes("EXPO_PUBLIC_AGENT_WALLET_V2_UI=true"), `mobile script ${scriptName} forces V2 UI`);
+  check(script.includes("EXPO_PUBLIC_API_BASE_URL=https://app.hwallet.vip"), `mobile script ${scriptName} uses public HWallet API`);
+  check(!script.includes("EXPO_PUBLIC_AGENT_WALLET_PREVIEW=true"), `mobile script ${scriptName} does not ship visual-only preview`);
+}
+for (const profileName of ["development-staging", "preview", "production"]) {
+  const profile = mobileEasJson.build?.[profileName];
+  check(profile?.env?.EXPO_PUBLIC_AGENT_WALLET_V2_UI === "true", `EAS ${profileName} profile forces V2 UI`);
+  check(profile?.env?.EXPO_PUBLIC_AGENT_WALLET_PREVIEW !== "true", `EAS ${profileName} profile does not ship preview UI`);
+}
+includesAll("mobile build env smoke", files.mobileBuildEnvSmoke, [
+  "native app defaults to V2 HWallet UI",
+  "EAS production uses V2 mobile UI",
+  "EAS preview uses real HWallet login"
 ]);
 includesAll("mobile prediction actions", files.mobileTypes, [
   '"observe"',
