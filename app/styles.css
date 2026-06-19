@@ -249,10 +249,13 @@ button.compact {
 }
 
 .human-door-panel p {
+  align-self: center;
   margin: 0;
   color: rgba(255, 255, 255, 0.76);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 850;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .human-door-line {
@@ -280,6 +283,7 @@ button.compact {
 .human-lock-card {
   display: grid;
   gap: 18px;
+  margin-top: 12px;
   border-radius: 32px;
   padding: 26px 22px;
   background: #ffffff;
