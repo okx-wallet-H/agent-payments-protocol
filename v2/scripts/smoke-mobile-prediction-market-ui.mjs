@@ -34,6 +34,23 @@ const requirements = [
     pass: () => /只读查询/.test(screen)
   },
   {
+    label: "mobile prediction-market home exposes a phase-two market console entry",
+    pass: () =>
+      /第二阶段能力/.test(screen) &&
+      /预测市场控制台/.test(screen) &&
+      /OKX Outcomes 市场查询/.test(screen) &&
+      /查市场/.test(screen) &&
+      /看订单簿/.test(screen) &&
+      /模拟预览/.test(screen) &&
+      /API Key 占位/.test(screen) &&
+      /下单未开放/.test(screen) &&
+      /进入市场/.test(screen)
+  },
+  {
+    label: "mobile prediction-market visible entry is not named as only World Cup",
+    pass: () => !/探索世界杯/.test(screen) && !/正在更新世界杯数据/.test(screen)
+  },
+  {
     label: "mobile prediction-market UI renders read-only detail sync and order book summary",
     pass: () => /只读详情已同步/.test(screen) && /订单簿摘要/.test(screen) && /买/.test(screen) && /卖/.test(screen)
   },
