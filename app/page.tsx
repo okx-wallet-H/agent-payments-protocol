@@ -220,7 +220,7 @@ function HumanAgentChatHome() {
     };
 
     pendingFocusMessageId.current = nextMessage.id;
-    setMessages((current) => [nextMessage, ...current]);
+    setMessages([nextMessage]);
     setDraft("");
   }
 
