@@ -26,7 +26,29 @@ const { hasOkxOutcomesCredentials, listOkxWorldCupMarkets, getOkxOutcomeMarketDa
   "../execution/okx-outcomes-client.ts"
 );
 
-assert(hasOkxOutcomesCredentials(), "OKX Outcomes credentials are required for live schema smoke");
+if (!hasOkxOutcomesCredentials()) {
+  console.log(
+    JSON.stringify(
+      {
+        ok: false,
+        blocked: true,
+        reason: "OKX Outcomes credentials are required for live schema smoke",
+        missingEnv: [
+          "PREDICTIONS_API_KEY",
+          "PREDICTIONS_API_SECRET",
+          "PREDICTIONS_API_PASSPHRASE"
+        ],
+        readOnly: true,
+        liveExecutionClosed: true,
+        ownerAction: "Configure server-side OKX Outcomes read credentials, then rerun with OKX_OUTCOMES_LIVE_SCHEMA_SMOKE=1.",
+        checks
+      },
+      null,
+      2
+    )
+  );
+  process.exit(1);
+}
 pass("OKX Outcomes credentials are present");
 
 const markets = await listOkxWorldCupMarkets();

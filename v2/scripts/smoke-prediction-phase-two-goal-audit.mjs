@@ -243,6 +243,9 @@ includesAll("live field mapping doc", files.liveFieldMapping, [
 includesAll("live schema smoke", files.liveSchemaSmoke, [
   "OKX_OUTCOMES_LIVE_SCHEMA_SMOKE",
   "skipped: true",
+  "blocked: true",
+  "missingEnv",
+  "ownerAction",
   "readOnly: true",
   "liveExecutionClosed: true",
   "getOkxOutcomeMarketData",
