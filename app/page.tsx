@@ -14,6 +14,7 @@ import {
   Trophy,
   Wallet
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type {
   Agent,
@@ -52,6 +53,110 @@ async function api<T>(url: string, init?: RequestInit, getAccessToken?: GetAcces
 }
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("loginFlow") === "lock") return <MobileHumanLoginPreview />;
+  return <AgentWalletHome />;
+}
+
+function MobileHumanLoginPreview() {
+  const [email, setEmail] = useState("demo@hwallet.vip");
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [code, setCode] = useState("");
+  const normalizedEmail = email.trim();
+  const canEnter = normalizedEmail.includes("@") && normalizedEmail.includes(".");
+  const canUnlock = code.length === 6;
+
+  function sendCode() {
+    if (!canEnter) return;
+    setCode("");
+    setStep("code");
+  }
+
+  function appendDigit(digit: string) {
+    setCode((current) => `${current}${digit}`.replace(/\D/g, "").slice(0, 6));
+  }
+
+  function resetEmail() {
+    setStep("email");
+    setCode("");
+  }
+
+  return (
+    <main className="human-lock-page" aria-label="海豚社区登录预览">
+      <section className="human-door-card" aria-label="海豚社区开门">
+        <div className="human-door-panel left">
+          <img src="/images/logo.png" alt="" className="human-door-logo" />
+          <span>海豚社区</span>
+          <h1>海豚，开门</h1>
+          <p>你的 Agent 已就位。</p>
+        </div>
+        <div className="human-door-panel right" aria-hidden="true">
+          <div className="human-door-line" />
+          <div className="human-door-glow" />
+        </div>
+      </section>
+
+      <section className="human-lock-card">
+        {step === "email" ? (
+          <>
+            <div className="human-lock-copy">
+              <h2>邮箱进入</h2>
+              <p>输入邮箱，点进入后直接发送验证码。</p>
+            </div>
+            <label className="human-field">
+              <span>邮箱</span>
+              <input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+              />
+            </label>
+            <button className="human-primary-button" type="button" disabled={!canEnter} onClick={sendCode}>
+              进入
+              <ArrowRight size={20} />
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="human-lock-copy compact">
+              <button className="human-text-button" type="button" onClick={resetEmail}>
+                换邮箱
+              </button>
+              <h2>验证码开锁</h2>
+              <p>输入邮箱收到的 6 位验证码。</p>
+            </div>
+            <div className="human-code-dots" aria-label={`已输入 ${code.length} 位验证码`}>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <span key={index} className={index < code.length ? "filled" : ""} />
+              ))}
+            </div>
+            <div className="human-keypad" aria-label="数字密码锁">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                <button key={digit} type="button" onClick={() => appendDigit(digit)}>
+                  {digit}
+                </button>
+              ))}
+              <button type="button" className="muted" onClick={() => setCode((current) => current.slice(0, -1))}>
+                删除
+              </button>
+              <button type="button" onClick={() => appendDigit("0")}>
+                0
+              </button>
+              <button type="button" className="unlock" disabled={!canUnlock}>
+                <Check size={22} />
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+    </main>
+  );
+}
+
+function AgentWalletHome() {
   const { authenticated, getAccessToken, login, logout, ready, user } = usePrivy();
   const { wallets } = useWallets();
   const [state, setState] = useState<ApiState>({

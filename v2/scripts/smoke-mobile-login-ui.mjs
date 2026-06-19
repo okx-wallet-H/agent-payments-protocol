@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 const screen = await readFile("apps/mobile/src/V2AgentWalletScreen.tsx", "utf8");
 const preview = await readFile("apps/mobile/src/V2AgentWalletPreview.tsx", "utf8");
 const app = await readFile("apps/mobile/App.tsx", "utf8");
+const webPage = await readFile("app/page.tsx", "utf8");
+const webStyles = await readFile("app/styles.css", "utf8");
+const webHumanPreview = sliceBetween(webPage, "function MobileHumanLoginPreview", "function AgentWalletHome");
 
 const checks = [];
 
@@ -41,6 +44,19 @@ assertIncludes(app, 'if (Platform.OS !== "web") return <>{children}</>;', "mobil
 assertIncludes(app, "maxWidth: 430", "web preview is capped to a phone-sized canvas");
 checks.push("web preview stays responsive and phone-sized on desktop browsers");
 
+assertIncludes(webPage, 'searchParams.get("loginFlow") === "lock"', "root web entry switches loginFlow=lock to the human mobile preview");
+assertIncludes(webHumanPreview, "function MobileHumanLoginPreview", "root web entry has a dedicated human-facing mobile login preview");
+assertIncludes(webHumanPreview, "<h1>海豚，开门</h1>", "root web preview uses the human-facing door title");
+assertIncludes(webHumanPreview, "<h2>邮箱进入</h2>", "root web preview starts with one email entry step");
+assertIncludes(webHumanPreview, "setStep(\"code\")", "root web preview sends the code before showing the lock");
+assertIncludes(webHumanPreview, "<h2>验证码开锁</h2>", "root web preview switches to a numeric lock instead of a code input row");
+assertIncludes(webHumanPreview, "className=\"human-keypad\"", "root web preview exposes the keypad lock");
+assertNotIncludes(webHumanPreview, "输入确认码：", "root web human preview does not expose raw execution confirmation-code copy");
+assertIncludes(webStyles, ".human-lock-page", "root web human preview has a phone-width visual shell");
+assertIncludes(webStyles, ".human-door-card", "root web human preview renders the door-like hero");
+assertIncludes(webStyles, ".human-keypad", "root web human preview styles the numeric lock keypad");
+checks.push("root /?loginFlow=lock opens the human-facing mobile login preview, not the old AI operator shell");
+
 console.log(JSON.stringify({ ok: true, checks }, null, 2));
 
 function assertIncludes(source, needle, label) {
@@ -53,4 +69,12 @@ function assertNotIncludes(source, needle, label) {
 
 function assert(condition, label) {
   if (!condition) throw new Error(`Mobile login UI smoke failed: ${label}`);
+}
+
+function sliceBetween(source, start, end) {
+  const startIndex = source.indexOf(start);
+  assert(startIndex >= 0, `${start} exists`);
+  const endIndex = source.indexOf(end, startIndex + start.length);
+  assert(endIndex > startIndex, `${end} follows ${start}`);
+  return source.slice(startIndex, endIndex);
 }
