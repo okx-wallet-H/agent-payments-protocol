@@ -125,6 +125,8 @@ includesAll("detail view", files.detailView, [
   "disabledReason",
   "shortenId",
   "assetIdLabel",
+  "PredictionDetailTrendSummary",
+  "createTrendSummary",
   "不会下单、签名或广播交易"
 ]);
 for (const forbidden of ["privateKey", "seed phrase", "API_SECRET", "OKX_SECRET", "submitOrder"]) {
@@ -136,6 +138,7 @@ includesAll("mobile prediction market UI", files.mobileScreen, [
   "OKX Outcomes 只读查询",
   "订单簿摘要",
   "当前能力",
+  "走势摘要",
   "API Key ·",
   "绑定入口预留",
   "不在本机保存密钥",
@@ -159,6 +162,7 @@ includesAll("mobile prediction APIs", files.mobileApi, [
 ]);
 includesAll("mobile prediction smoke", files.mobilePredictionSmoke, [
   "sanitized marketRef",
+  "read-only trend summary",
   "order_closed",
   "predictionApiKeySlot} disabled",
   "不在本机保存密钥"

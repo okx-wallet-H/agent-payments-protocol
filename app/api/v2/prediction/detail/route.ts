@@ -4,6 +4,7 @@ import { guardPredictionReadRequest } from "@/v2/auth/prediction-read-guard";
 import {
   getOkxOutcomeMarketData,
   hasOkxOutcomesCredentials,
+  type OkxOutcomeCandle,
   type OkxOutcomeMarketData,
   type OkxOutcomeOrderBook
 } from "@/v2/execution/okx-outcomes-client";
@@ -65,7 +66,9 @@ async function readPredictionDetailSafely(marketId: string, mode: DetailMode): P
   if (mode !== "sample" && hasOkxOutcomesCredentials()) {
     try {
       const data = await getOkxOutcomeMarketData(marketId, {
+        includeCandles: true,
         includeOrderBook: true,
+        candleLimit: 24,
         bookSize: 20
       });
       if (data.market) return data;
@@ -93,9 +96,30 @@ function sampleDetailData(marketId: string): OkxOutcomeMarketData {
   return {
     marketId: market.marketId,
     market,
+    yesCandles: createSampleCandles(market.yesAssetId || `${market.marketId}-yes`, yesPrice, 1),
+    noCandles: createSampleCandles(market.noAssetId || `${market.marketId}-no`, noPrice, -1),
     yesOrderBook: createSampleBook(market.yesAssetId || `${market.marketId}-yes`, yesPrice),
     noOrderBook: createSampleBook(market.noAssetId || `${market.marketId}-no`, noPrice)
   };
+}
+
+function createSampleCandles(instId: string, centerPrice: number, bias: 1 | -1): OkxOutcomeCandle[] {
+  const normalized = Number.isFinite(centerPrice) ? Math.max(0.01, Math.min(0.99, centerPrice)) : 0.5;
+  const now = Date.now();
+  return Array.from({ length: 6 }, (_, index) => {
+    const drift = (index - 5) * 0.004 * bias;
+    const close = Math.max(0.01, Math.min(0.99, normalized + drift));
+    return {
+      instId,
+      timestamp: new Date(now - (5 - index) * 15 * 60_000).toISOString(),
+      open: Math.max(0.01, Math.min(0.99, close - 0.003 * bias)),
+      high: Math.min(0.99, close + 0.006),
+      low: Math.max(0.01, close - 0.006),
+      close,
+      volume: 100 + index * 18,
+      raw: { source: "local-sample", readOnly: true }
+    };
+  });
 }
 
 function createSampleBook(instId: string, centerPrice: number): OkxOutcomeOrderBook {

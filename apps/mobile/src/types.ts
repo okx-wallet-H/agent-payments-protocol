@@ -369,6 +369,16 @@ export interface V2PredictionDetailOrderBookSide {
   depthLabel?: string;
 }
 
+export interface V2PredictionDetailTrendSummary {
+  side: V2PredictionDetailOutcomeSide;
+  label: "会" | "不会";
+  direction: "up" | "down" | "flat";
+  directionLabel: string;
+  changeLabel: string;
+  latestLabel?: string;
+  windowLabel: string;
+}
+
 export interface V2PredictionDetailView {
   type: "prediction_detail_view";
   title: string;
@@ -391,6 +401,7 @@ export interface V2PredictionDetailView {
     statusLabel: string;
   };
   orderBook?: V2PredictionDetailOrderBookSide[];
+  trend?: V2PredictionDetailTrendSummary[];
   insight: string;
   actions: Array<{
     id: V2PredictionDetailActionId;

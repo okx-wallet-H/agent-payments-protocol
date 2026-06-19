@@ -74,6 +74,14 @@ const requirements = [
     pass: () => /只读详情已同步/.test(screen) && /订单簿摘要/.test(screen) && /买/.test(screen) && /卖/.test(screen)
   },
   {
+    label: "mobile prediction-market UI renders read-only trend summary",
+    pass: () =>
+      /走势摘要/.test(screen) &&
+      /只读 K 线派生/.test(screen) &&
+      /directionLabel/.test(types) &&
+      /windowLabel/.test(types)
+  },
+  {
     label: "mobile prediction-market UI offers 观察/模拟",
     pass: () => /观察/.test(screen) && /模拟/.test(screen)
   },

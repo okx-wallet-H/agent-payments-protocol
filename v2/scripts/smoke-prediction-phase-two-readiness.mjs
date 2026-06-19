@@ -78,6 +78,7 @@ check(detailRoute.includes("getOkxOutcomeMarketData"), "prediction detail route 
 check(detailRoute.includes("guardPredictionReadRequest"), "prediction detail route guards read access before provider reads");
 check(detailRoute.includes("createPredictionDetailView"), "prediction detail route returns normalized detail view");
 check(/includeOrderBook\s*:\s*true/.test(detailRoute), "prediction detail route requests order book data");
+check(/includeCandles\s*:\s*true/.test(detailRoute), "prediction detail route requests candle data for trend summary");
 check(detailRoute.includes("providerStatus") && detailRoute.includes("credentialsBound"), "prediction detail route returns redacted provider status");
 check(!/\bexport\s+async\s+function\s+POST\b/.test(detailRoute), "prediction detail route remains GET-only");
 

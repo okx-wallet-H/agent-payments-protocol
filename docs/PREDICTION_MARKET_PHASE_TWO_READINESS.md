@@ -10,10 +10,10 @@ placement stays closed.
 | --- | --- | --- |
 | OKX Outcomes market reads | Ready for read-only use | `v2/execution/okx-outcomes-client.ts` reads events, markets, ticker, candles, and order book data. |
 | Explore surface | Ready for app display | `app/api/v2/world-cup/explore/route.ts` builds app-facing market cards from OKX data with fallback; list cards expose sanitized `marketRef` and redacted outcome labels only. |
-| Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, and order-book summary. |
+| Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, order-book summary, and bounded candle-derived trend summary. |
 | Detail action model | Ready for app display | The detail response carries observe, simulate, track, strategy, and disabled order-placeholder actions so the App follows backend enabled/disabled state. |
 | Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |
-| Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, API Key placeholder, capability tags, observe, track, strategy, simulate, and disabled order placement. |
+| Mobile display | Ready for UI review | `apps/mobile/src/V2AgentWalletScreen.tsx` shows OKX Outcomes, read-only status, order book summary, trend summary, API Key placeholder, capability tags, observe, track, strategy, simulate, and disabled order placement. |
 | Agent explanation | Ready for read-only analysis | Agent observe replies can carry friendly yes/no odds and the no-live-order boundary. |
 | OKX Outcomes simulation preview | Ready for dry-run use | `v2/execution/okx-outcomes-preview.ts` returns a local/contract-style dry-run preview for OKX markets without creating, signing, submitting, or broadcasting orders. |
 | Live field mapping | Guarded for read-only use | `docs/OKX_OUTCOMES_LIVE_FIELD_MAPPING.md` records that market detail uses `marketId`, ticker/candle/order-book reads use YES/NO outcome asset ids as `instId`, and settlement/final-result fields stay hidden until live schema is proven. |
@@ -28,6 +28,7 @@ The App can show a prediction market as a read-only console:
 - market title and provider label
 - yes/no prices using friendly labels
 - 24h volume, liquidity, market status, and order-book summary
+- candle-derived `走势摘要` without exposing raw candle arrays
 - `观察` entry for Agent explanation
 - `模拟预览` entry for provider-aware dry-run planning
 - `API Key · 绑定入口预留` as a future binding slot
