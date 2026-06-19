@@ -87,7 +87,7 @@ function MobileHumanLoginPreview() {
     setUnlocked(true);
   }
 
-  if (unlocked) return <HumanAppHome email={normalizedEmail} />;
+  if (unlocked) return <HumanAgentChatHome email={normalizedEmail} />;
 
   return (
     <main className="human-lock-page" aria-label="海豚社区登录预览">
@@ -159,11 +159,11 @@ function MobileHumanLoginPreview() {
   );
 }
 
-function HumanAppHome({ email }: { email: string }) {
+function HumanAgentChatHome({ email }: { email: string }) {
   const memberName = email.split("@")[0] || "海豚会员";
 
   return (
-    <main className="human-app-page" aria-label="海豚社区移动首页">
+    <main className="human-app-page human-agent-page" aria-label="海豚社区 Agent 对话页">
       <header className="human-app-topbar">
         <button className="human-round-button" type="button" aria-label="打开菜单">
           H
@@ -173,72 +173,79 @@ function HumanAppHome({ email }: { email: string }) {
         </button>
       </header>
 
-      <section className="human-member-hero" aria-label="会员信息">
-        <div className="human-member-row">
-          <img src="/images/logo.png" alt="" className="human-member-avatar" />
-          <div>
-            <p>{memberName}</p>
-            <span>{email}</span>
-          </div>
-          <b>Lv.3</b>
+      <section className="human-chat-hero" aria-label="Agent 对话">
+        <div className="human-agent-avatar">
+          <img src="/images/logo.png" alt="" />
         </div>
-        <div className="human-progress-row">
-          <span>VIP 进度</span>
-          <strong>68%</strong>
-        </div>
-        <div className="human-progress-track" aria-hidden="true">
-          <span />
-        </div>
-      </section>
-
-      <section className="human-wallet-card" aria-label="HWallet 入口">
         <div>
-          <span>HWallet</span>
-          <h1>今天的钱包入口</h1>
-          <p>收款、同步资产和 Agent 分析都从这里开始。</p>
+          <span>{memberName} · HWallet 已就位</span>
+          <h1>海豚，今天看什么？</h1>
+          <p>先说目标，Agent 会把钱包状态、市场数据和下一步建议放在一条对话里。</p>
         </div>
-        <button type="button">进入</button>
       </section>
 
-      <section className="human-shortcuts" aria-label="常用入口">
+      <section className="human-chat-thread" aria-label="最近对话">
+        <article className="human-chat-message assistant">
+          <Bot size={18} />
+          <div>
+            <b>Agent</b>
+            <p>HWallet 已连接。我可以先帮你看资产、市场和风险，不会直接替你执行。</p>
+          </div>
+        </article>
+        <article className="human-chat-message user">
+          <p>我想看看今天有没有机会。</p>
+        </article>
+        <article className="human-chat-message assistant accent">
+          <Sparkles size={18} />
+          <div>
+            <b>可以</b>
+            <p>我会先观察预测市场和钱包资金，只给你分析卡片和模拟建议。</p>
+          </div>
+        </article>
+      </section>
+
+      <section className="human-quick-prompts" aria-label="快捷问题">
         <button type="button">
           <Wallet size={22} />
-          <span>HWallet</span>
+          <span>查收款地址</span>
         </button>
         <button type="button">
           <Sparkles size={22} />
-          <span>Agent</span>
+          <span>看预测市场</span>
         </button>
         <button type="button">
           <Coins size={22} />
-          <span>市场</span>
+          <span>刷新资产</span>
         </button>
       </section>
 
-      <section className="human-feed" aria-label="最近记录">
-        <div className="human-section-title">
-          <h2>最近</h2>
-          <span>已同步</span>
-        </div>
-        {[
-          ["收款地址", "HWallet 已经准备好，可以复制地址充值。"],
-          ["Agent 对话", "查看可用资金和下一步机会。"],
-          ["市场观察", "预测市场只读数据已经接入。"]
-        ].map(([title, description]) => (
-          <article key={title}>
-            <Bot size={18} />
-            <div>
-              <b>{title}</b>
-              <p>{description}</p>
-            </div>
-          </article>
-        ))}
+      <section className="human-chat-composer" aria-label="发送消息">
+        <button type="button" aria-label="添加">
+          +
+        </button>
+        <input readOnly value="" placeholder="向 Agent 发送消息" />
+        <button type="button" aria-label="发送">
+          <ArrowRight size={18} />
+        </button>
       </section>
 
-      <button className="human-new-chat" type="button">
-        <Sparkles size={20} />
-        新会话
-      </button>
+      <nav className="human-chat-nav" aria-label="底部导航">
+        <button className="active" type="button">
+          <Bot size={20} />
+          Agent
+        </button>
+        <button type="button">
+          <Coins size={20} />
+          市场
+        </button>
+        <button type="button">
+          <Sparkles size={20} />
+          发现
+        </button>
+        <button className="hmark" type="button">
+          H
+        </button>
+      </nav>
     </main>
   );
 }
