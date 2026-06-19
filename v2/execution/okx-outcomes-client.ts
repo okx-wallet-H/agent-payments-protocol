@@ -80,6 +80,34 @@ export interface OkxOutcomeMarketDataOptions {
   bookSize?: number;
 }
 
+export interface OkxOutcomeCatalogSide {
+  side: "yes" | "no";
+  label: "YES" | "NO";
+  assetIdLabel?: string;
+  price?: number;
+  priceLabel: string;
+}
+
+export interface OkxOutcomeMarketSummary {
+  eventId?: string;
+  marketId: string;
+  title: string;
+  outcomes: {
+    yes: OkxOutcomeCatalogSide;
+    no: OkxOutcomeCatalogSide;
+  };
+  priceLabels: {
+    yes: string;
+    no: string;
+  };
+  volumeLabel: string;
+  liquidityLabel: string;
+  providerLabel: "OKX Outcomes";
+  readOnly: true;
+  liveExecutionClosed: true;
+  safeModes: ["observe", "simulate-only"];
+}
+
 const defaultBaseUrl = "https://www.okx.com";
 const worldCupKeywords = ["World Cup", "2026 World Cup", "FIFA World Cup", "世界杯"];
 
@@ -167,6 +195,16 @@ export async function getOkxOutcomeMarketData(
   ]);
 
   return output;
+}
+
+export function normalizeOkxOutcomeMarketCatalog(input: unknown): OkxOutcomeMarketSummary[] {
+  return collectOkxOutcomeMarkets(input).map(toOkxOutcomeMarketSummary);
+}
+
+export function normalizeOkxOutcomeMarketSummary(input: unknown): OkxOutcomeMarketSummary | undefined {
+  const direct = normalizeOkxOutcomeMarketCandidate(input);
+  const market = direct || collectOkxOutcomeMarkets(input)[0];
+  return market ? toOkxOutcomeMarketSummary(market) : undefined;
 }
 
 function createOkxOutcomesClient() {
@@ -387,6 +425,158 @@ function readString(input: unknown, paths: string[]): string | undefined {
 function readNumber(input: unknown, paths: string[]): number {
   const next = Number(readUnknown(input, paths));
   return Number.isFinite(next) ? next : 0;
+}
+
+function collectOkxOutcomeMarkets(input: unknown): MarketSnapshot[] {
+  const byId = new Map<string, MarketSnapshot>();
+  const addMarket = (market: MarketSnapshot | undefined) => {
+    if (!market?.marketId) return;
+    byId.set(market.marketId, market);
+  };
+
+  for (const market of normalizeOkxOutcomes(input).markets) addMarket(market);
+  addMarket(normalizeOkxOutcomeMarketCandidate(input));
+
+  const payloadItems = readArray(input, ["data", "result", "items", "data.items", "result.items"]);
+  for (const item of payloadItems) addMarket(normalizeOkxOutcomeMarketCandidate(item));
+
+  return [...byId.values()];
+}
+
+function normalizeOkxOutcomeMarketCandidate(input: unknown): MarketSnapshot | undefined {
+  if (!isRecord(input)) return undefined;
+
+  const normalized = normalizeOkxOutcomeMarket(input);
+  if (normalized) return withCatalogFallbacks(normalized, input);
+
+  if (readString(input, ["provider"]) !== "okx-outcomes") return undefined;
+
+  const marketId = readString(input, ["marketId", "market_id", "id"]);
+  const question = readString(input, ["question", "marketTitle", "market_title", "title", "name"]);
+  if (!marketId || !question) return undefined;
+
+  return {
+    provider: "okx-outcomes",
+    chainId: 196,
+    eventId: readString(input, ["eventId", "event_id"]),
+    marketId,
+    question,
+    status: readString(input, ["status", "state", "marketStatus", "market_status"]),
+    marketType: readString(input, ["marketType", "market_type", "type"]),
+    yesAssetId: readString(input, ["yesAssetId", "yes_asset_id"]),
+    noAssetId: readString(input, ["noAssetId", "no_asset_id"]),
+    yesPrice: normalizeOutcomePrice(readOptionalNumber(input, ["yesPrice", "yes_price"])),
+    noPrice: normalizeOutcomePrice(readOptionalNumber(input, ["noPrice", "no_price"])),
+    acceptingOrders: false,
+    liquidity: readOptionalNumber(input, ["liquidity", "liquidityUsd", "liquidity_usd"]),
+    volume24h: readOptionalNumber(input, ["volume24h", "volume_24h", "volume24Hr", "volume_24hr"]),
+    volume: readOptionalNumber(input, ["volume", "totalVolume", "total_volume"]),
+    startTime: readString(input, ["startTime", "start_time", "matchTime", "match_time"]),
+    endDate: readString(input, ["endDate", "end_date", "closeTime", "close_time", "endTime", "end_time"]),
+    raw: input
+  };
+}
+
+function withCatalogFallbacks(market: MarketSnapshot, input: LooseRecord): MarketSnapshot {
+  return {
+    ...market,
+    yesAssetId: market.yesAssetId || readString(input, ["yesAssetId", "yes_asset_id"]),
+    noAssetId: market.noAssetId || readString(input, ["noAssetId", "no_asset_id"]),
+    yesPrice: market.yesPrice ?? normalizeOutcomePrice(readOptionalNumber(input, ["yesPrice", "yes_price"])),
+    noPrice: market.noPrice ?? normalizeOutcomePrice(readOptionalNumber(input, ["noPrice", "no_price"])),
+    liquidity: market.liquidity ?? readOptionalNumber(input, ["liquidity", "liquidityUsd", "liquidity_usd"]),
+    volume24h: market.volume24h ?? readOptionalNumber(input, ["volume24h", "volume_24h", "volume24Hr", "volume_24hr"]),
+    volume: market.volume ?? readOptionalNumber(input, ["volume", "totalVolume", "total_volume"])
+  };
+}
+
+function toOkxOutcomeMarketSummary(market: MarketSnapshot): OkxOutcomeMarketSummary {
+  const yesPriceLabel = formatPriceLabel(market.yesPrice);
+  const noPriceLabel = formatPriceLabel(market.noPrice);
+
+  return {
+    eventId: market.eventId,
+    marketId: market.marketId,
+    title: market.question,
+    outcomes: {
+      yes: {
+        side: "yes",
+        label: "YES",
+        assetIdLabel: redactAssetId(market.yesAssetId),
+        price: market.yesPrice,
+        priceLabel: yesPriceLabel
+      },
+      no: {
+        side: "no",
+        label: "NO",
+        assetIdLabel: redactAssetId(market.noAssetId),
+        price: market.noPrice,
+        priceLabel: noPriceLabel
+      }
+    },
+    priceLabels: {
+      yes: yesPriceLabel,
+      no: noPriceLabel
+    },
+    volumeLabel: formatVolumeLabel(market),
+    liquidityLabel: formatLiquidityLabel(market),
+    providerLabel: "OKX Outcomes",
+    readOnly: true,
+    liveExecutionClosed: true,
+    safeModes: ["observe", "simulate-only"]
+  };
+}
+
+function formatPriceLabel(price: number | undefined): string {
+  if (price === undefined) return "Price unavailable";
+  return `${trimTrailingZeros((price * 100).toFixed(1))}%`;
+}
+
+function redactAssetId(assetId: string | undefined): string | undefined {
+  if (!assetId) return undefined;
+  if (assetId.length <= 10) return `${assetId.slice(0, 3)}...${assetId.slice(-2)}`;
+  return `${assetId.slice(0, 6)}...${assetId.slice(-4)}`;
+}
+
+function formatVolumeLabel(market: MarketSnapshot): string {
+  if (market.volume24h !== undefined) return `24h volume ${formatUsdCompact(market.volume24h)}`;
+  if (market.volume !== undefined) return `Volume ${formatUsdCompact(market.volume)}`;
+  return "Volume unavailable";
+}
+
+function formatLiquidityLabel(market: MarketSnapshot): string {
+  if (market.liquidity !== undefined) return `Liquidity ${formatUsdCompact(market.liquidity)}`;
+  return "Liquidity unavailable";
+}
+
+function formatUsdCompact(value: number): string {
+  const sign = value < 0 ? "-" : "";
+  const absolute = Math.abs(value);
+  const units: Array<[number, string]> = [
+    [1_000_000_000, "B"],
+    [1_000_000, "M"],
+    [1_000, "K"]
+  ];
+
+  for (const [size, suffix] of units) {
+    if (absolute >= size) {
+      const scaled = absolute / size;
+      const decimals = scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2;
+      return `${sign}$${trimTrailingZeros(scaled.toFixed(decimals))}${suffix}`;
+    }
+  }
+
+  return `${sign}$${trimTrailingZeros(absolute.toFixed(Number.isInteger(absolute) ? 0 : 2))}`;
+}
+
+function normalizeOutcomePrice(value: number | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  if (value > 1 && value <= 100) return value / 100;
+  return value;
+}
+
+function trimTrailingZeros(value: string): string {
+  return value.replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1");
 }
 
 function readUnknown(input: unknown, paths: string[]): unknown {

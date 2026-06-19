@@ -126,7 +126,9 @@ Returns:
 
 Action behavior:
 
-- `simulate`: calls `polymarket-plugin buy --dry-run`; no order is submitted.
+- `simulate`: routes by provider. OKX Outcomes returns a local
+  `outcomes.order.preview` dry-run; Polymarket markets keep
+  `polymarket-plugin buy --dry-run`. No order is submitted.
 - `track`: saves a tracking card.
 - `build_strategy`: saves a strategy card.
 - `idempotencyKey`: optional duplicate-click/retry guard. If the same resolved user submits the same key again, the API returns the existing record and does not write another one.

@@ -31,6 +31,10 @@ import type {
   V2MobileChatMessage,
   V2MobileHomeView,
   V2PredictionCard,
+  V2PredictionDetailActionId,
+  V2PredictionDetailResponse,
+  V2PredictionDetailView,
+  V2PredictionStatusResponse,
   V2SimulationCard,
   V2StrategyCard,
   V2TrackingCard,
@@ -201,6 +205,9 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [worldCupExplore, setWorldCupExplore] = useState<V2WorldCupExploreView | undefined>();
   const [worldCupExploreLoading, setWorldCupExploreLoading] = useState(false);
   const [worldCupExploreError, setWorldCupExploreError] = useState<string | undefined>();
+  const [predictionStatus, setPredictionStatus] = useState<V2PredictionStatusResponse | undefined>();
+  const [predictionStatusLoading, setPredictionStatusLoading] = useState(false);
+  const [predictionStatusError, setPredictionStatusError] = useState<string | undefined>();
   const walletProvisionAttemptRef = useRef<string | undefined>(undefined);
   const walletAutoSyncKeyRef = useRef<string | undefined>(undefined);
   const deviceEvidenceKeyRef = useRef<string | undefined>(undefined);
@@ -247,7 +254,7 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
     setWorldCupExploreError(undefined);
 
     worldCupApi
-      .getWorldCupExplore()
+      .getPredictionExplore()
       .then((explore) => {
         if (!cancelled) setWorldCupExplore(explore);
       })
@@ -256,6 +263,30 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
       })
       .finally(() => {
         if (!cancelled) setWorldCupExploreLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isReady, user, worldCupApi]);
+
+  useEffect(() => {
+    if (!isReady || !user || activeTab !== "worldcup") return;
+
+    let cancelled = false;
+    setPredictionStatusLoading(true);
+    setPredictionStatusError(undefined);
+
+    worldCupApi
+      .getPredictionStatus()
+      .then((status) => {
+        if (!cancelled) setPredictionStatus(status);
+      })
+      .catch((error) => {
+        if (!cancelled) setPredictionStatusError(error instanceof Error ? error.message : "预测市场状态暂时不可用");
+      })
+      .finally(() => {
+        if (!cancelled) setPredictionStatusLoading(false);
       });
 
     return () => {
@@ -575,8 +606,13 @@ export function V2AgentWalletScreen({ apiBaseUrl }: { apiBaseUrl: string }) {
             exploreError={worldCupExploreError}
             exploreLoading={worldCupExploreLoading}
             items={agent.session.home?.panels.topLeft.items || []}
+            predictionStatus={predictionStatus}
+            predictionStatusError={predictionStatusError}
+            predictionStatusLoading={predictionStatusLoading}
             onAsk={(text) => run(() => send(text))}
             onAnalyzeMarket={(text, market) => run(() => agent.analyzeMarket(text, market))}
+            onLoadPredictionDetail={agent.loadPredictionDetail}
+            onRunMarketAction={(action, market) => run(() => agent.runMarketAction({ action, market }))}
             onHome={() => setActiveTab("agent")}
             onProfile={() => setActiveTab("mine")}
           />
@@ -1054,9 +1090,19 @@ function AgentTab({
     return (
       <WorldCupMarketDetailPage
         card={selectedMarket}
+        detailLoading={false}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
           onSend(`帮我继续分析：${card.displayTitle || card.title}`);
+          setWorldCupView("home");
+        }}
+        onSimulate={(card) => {
+          onSend(`帮我做一次模拟预览：${card.displayTitle || card.title}`);
+          setWorldCupView("home");
+        }}
+        onRunMarketAction={(action, card) => {
+          const actionText = action === "track" ? "加入跟踪" : "生成策略";
+          onSend(`${actionText}：${card.displayTitle || card.title}`);
           setWorldCupView("home");
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -1129,8 +1175,13 @@ function WorldCupTab({
   exploreError,
   exploreLoading,
   items,
+  predictionStatus,
+  predictionStatusError,
+  predictionStatusLoading,
   onAsk,
   onAnalyzeMarket,
+  onLoadPredictionDetail,
+  onRunMarketAction,
   onHome,
   onProfile
 }: {
@@ -1138,16 +1189,67 @@ function WorldCupTab({
   exploreError?: string;
   exploreLoading: boolean;
   items: { id: string; title: string; subtitle?: string; value?: string }[];
+  predictionStatus?: V2PredictionStatusResponse;
+  predictionStatusError?: string;
+  predictionStatusLoading: boolean;
   onAsk: (text: string) => void;
   onAnalyzeMarket: (text: string, market: V2MarketSnapshot) => void;
+  onLoadPredictionDetail: (marketId: string) => Promise<V2PredictionDetailResponse>;
+  onRunMarketAction: (action: "simulate" | "track" | "build_strategy", market: V2MarketSnapshot) => void;
   onHome: () => void;
   onProfile: () => void;
 }) {
   const [worldCupView, setWorldCupView] = useState<WorldCupView>("home");
   const [category, setCategory] = useState<MarketCategory>("冠军");
   const [selectedMarket, setSelectedMarket] = useState<V2WorldCupExploreMarketCard | undefined>();
+  const [selectedMarketDetail, setSelectedMarketDetail] = useState<V2PredictionDetailResponse | undefined>();
+  const [selectedMarketDetailLoading, setSelectedMarketDetailLoading] = useState(false);
+  const [selectedMarketDetailError, setSelectedMarketDetailError] = useState<string | undefined>();
   const insight = createWorldCupInsightCopy(explore);
   const previewCards = createWorldCupPreviewCards(explore);
+  const selectedMarketId = selectedMarket?.marketRef.marketId;
+  const predictionStatusData = predictionStatus?.status;
+  const predictionStatusLabel = predictionStatusLoading
+    ? "同步中"
+    : predictionStatusData?.providerStatus === "connected"
+      ? "后端已接入"
+      : predictionStatusError
+        ? "待重试"
+        : "绑定入口预留";
+  const predictionApiKeyLabel = predictionStatusData?.apiKeyBinding.label || "绑定入口预留";
+  const predictionApiKeyNote = predictionStatusData?.apiKeyBinding.note || "第二阶段不在 App 内收集或保存用户 API Key。";
+  const predictionClosedLabel = predictionStatusData?.liveExecutionClosed ? "真实下单关闭" : "只读占位";
+
+  useEffect(() => {
+    if (worldCupView !== "detail" || !selectedMarketId) {
+      setSelectedMarketDetail(undefined);
+      setSelectedMarketDetailError(undefined);
+      setSelectedMarketDetailLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedMarketDetailLoading(true);
+    setSelectedMarketDetail(undefined);
+    setSelectedMarketDetailError(undefined);
+    onLoadPredictionDetail(selectedMarketId)
+      .then((response) => {
+        if (!cancelled) setSelectedMarketDetail(response);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSelectedMarketDetail(undefined);
+          setSelectedMarketDetailError(error instanceof Error ? error.message : "预测详情暂时不可用");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSelectedMarketDetailLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onLoadPredictionDetail, selectedMarketId, worldCupView]);
 
   if (worldCupView === "explore") {
     return (
@@ -1173,9 +1275,21 @@ function WorldCupTab({
     return (
       <WorldCupMarketDetailPage
         card={selectedMarket}
+        detail={selectedMarketDetail?.detail}
+        detailSource={selectedMarketDetail?.source}
+        detailError={selectedMarketDetailError}
+        detailLoading={selectedMarketDetailLoading}
         onBack={() => setWorldCupView("explore")}
         onAskAgent={(card) => {
-          onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+          onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, marketSnapshotFromExploreCard(card));
+          onHome();
+        }}
+        onSimulate={(card) => {
+          onRunMarketAction("simulate", marketSnapshotFromExploreCard(card));
+          onHome();
+        }}
+        onRunMarketAction={(action, card) => {
+          onRunMarketAction(action, marketSnapshotFromExploreCard(card));
           onHome();
         }}
         onExplore={() => setWorldCupView("explore")}
@@ -1195,9 +1309,9 @@ function WorldCupTab({
           style={styles.eventHero}
           imageStyle={styles.eventHeroImage}
         >
-          <Text style={styles.worldCupLabel}>世界杯狂欢季</Text>
-          <Text style={styles.worldCupTitle}>跟着 Agent 看世界杯，瓜分 USDT 奖池</Text>
-          <Text style={styles.worldCupNote}>距离结束 42天 03时 46分 08秒</Text>
+          <Text style={styles.worldCupLabel}>预测市场 · OKX Outcomes</Text>
+          <Text style={styles.worldCupTitle}>让 Agent 先看市场，再给你机会卡</Text>
+          <Text style={styles.worldCupNote}>世界杯只是第一个样例。当前支持只读查询、模拟预览和本地跟踪。</Text>
         </ImageBackground>
 
         <View style={styles.rewardCard}>
@@ -1237,11 +1351,54 @@ function WorldCupTab({
           </View>
         </View>
 
+        <Pressable style={styles.predictionStageCard} onPress={() => setWorldCupView("explore")}>
+          <View style={styles.predictionStageHeader}>
+            <View style={styles.predictionStageIcon}>
+              <Ionicons name="analytics-outline" size={22} color="#0d2118" />
+            </View>
+            <View style={styles.predictionStageTitleStack}>
+              <Text style={styles.predictionStageEyebrow}>第二阶段能力</Text>
+              <Text style={styles.predictionStageTitle}>预测市场控制台</Text>
+            </View>
+            <Text style={styles.predictionStageBadge}>只读</Text>
+          </View>
+          <Text style={styles.predictionStageText}>
+            已接入 OKX Outcomes 市场查询。先看事件、会/不会赔率、订单簿和流动性；真实下单先占位关闭。
+          </Text>
+          <View style={styles.predictionStageStatusRow}>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>API 状态</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionStatusLabel}</Text>
+            </View>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>API Key</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionApiKeyLabel}</Text>
+            </View>
+            <View style={styles.predictionStageStatusCell}>
+              <Text style={styles.predictionStageStatusLabel}>执行</Text>
+              <Text style={styles.predictionStageStatusValue}>{predictionClosedLabel}</Text>
+            </View>
+          </View>
+          <Text style={styles.predictionStageStatusNote}>{predictionApiKeyNote}</Text>
+          <View style={styles.predictionStageGrid}>
+            {["查市场", "看订单簿", "模拟预览", "API Key 占位"].map((label) => (
+              <Text key={label} style={styles.predictionStageChip}>{label}</Text>
+            ))}
+          </View>
+          <View style={styles.predictionStageFooter}>
+            <Text style={styles.predictionStageClosed}>下单未开放</Text>
+            <View style={styles.predictionStageCta}>
+              <Text style={styles.predictionStageCtaText}>进入市场</Text>
+              <Ionicons name="arrow-forward" size={16} color="#0d2118" />
+            </View>
+          </View>
+        </Pressable>
+
         <View style={styles.scoreSection}>
           <View style={styles.sectionTitleRow}>
             <View>
               <Text style={styles.bigSectionTitle}>我的 Agent 战绩</Text>
-              <Text style={styles.sectionSub}>Agent 预测、跟踪和执行都会累计积分</Text>
+              <Text style={styles.sectionSub}>Agent 预测、跟踪和模拟都会累计积分</Text>
             </View>
             <Pressable style={styles.helpPill}>
               <Ionicons name="help-circle-outline" size={15} color={colors.ink} />
@@ -1270,11 +1427,14 @@ function WorldCupTab({
           style={styles.agentInsightCard}
           onPress={() => {
             if (insight.marketCard) {
-              onAnalyzeMarket(`帮我继续分析：${insight.marketCard.displayTitle || insight.marketCard.title}`, insight.marketCard.market);
+              onAnalyzeMarket(
+                `帮我继续分析：${insight.marketCard.displayTitle || insight.marketCard.title}`,
+                marketSnapshotFromExploreCard(insight.marketCard)
+              );
               onHome();
               return;
             }
-            onAsk("继续分析今天的世界杯机会");
+            onAsk("继续分析今天的预测市场机会");
           }}
         >
           <View style={styles.agentInsightTop}>
@@ -1299,7 +1459,7 @@ function WorldCupTab({
           </View>
           <View style={styles.taskCard}>
             <Text style={styles.taskTitle}>让 Agent 看一场</Text>
-            <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；执行或分享会额外加成</Text>
+            <Text style={styles.taskDesc}>每天完成一次赛事分析，可获得积分；跟踪或分享会额外加成</Text>
             <View style={styles.checkRow}>
               {["周一", "周二", "周三", "周四", "周五", "周六", "周日"].map((day, index) => (
                 <View key={day} style={styles.checkDay}>
@@ -1349,7 +1509,7 @@ function WorldCupTab({
         </View>
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>探索赛事</Text>
+          <Text style={styles.sectionTitle}>预测市场</Text>
           <Text style={styles.sectionHint}>Agent 实时看</Text>
         </View>
 
@@ -1358,7 +1518,7 @@ function WorldCupTab({
             key={card.id}
             style={styles.watchCard}
             onPress={() => {
-              onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, card.market);
+              onAnalyzeMarket(`帮我继续分析：${card.displayTitle || card.title}`, marketSnapshotFromExploreCard(card));
               onHome();
             }}
           >
@@ -1420,8 +1580,8 @@ function WorldCupBottomMenu({
           <Text style={styles.campaignNavText}>预测</Text>
         </Pressable>
         <Pressable style={[styles.campaignNavItem, active === "explore" ? styles.campaignNavItemActive : null]} onPress={onExplore}>
-          <Ionicons name="calendar-outline" size={19} color={colors.ink} />
-          <Text style={styles.campaignNavText}>赛事</Text>
+          <Ionicons name="stats-chart-outline" size={19} color={colors.ink} />
+          <Text style={styles.campaignNavText}>市场</Text>
         </Pressable>
         <Pressable style={styles.campaignNavItem} onPress={onProfile}>
           <Ionicons name="compass-outline" size={19} color={colors.ink} />
@@ -1462,7 +1622,7 @@ function ExploreWorldCupPage({
   const activeCards = explore?.cards[activeExploreCategory] || [];
   const hasDynamicCards = activeCards.length > 0;
   const hasExploreData = Boolean(explore);
-  const sourceText = explore?.source?.label || "赛事数据";
+  const sourceText = explore?.source?.label || "预测市场数据";
   const sourceMessage = explore?.source?.warning || explore?.source?.message || "Agent 会先整理热度、价格和资金变化。";
   const sourceUpdatedAt = formatExploreUpdatedAt(explore?.source?.updatedAt || explore?.updatedAt);
   const sourceSummary = explore?.summary ? `已同步 ${explore.summary.totalMarkets} 个市场` : undefined;
@@ -1475,7 +1635,7 @@ function ExploreWorldCupPage({
           <Pressable style={styles.exploreBackButton} onPress={onBack}>
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
-          <Text style={styles.exploreTitle}>探索世界杯</Text>
+          <Text style={styles.exploreTitle}>预测市场</Text>
           <View style={styles.exploreHeaderGhost} />
         </View>
 
@@ -1496,18 +1656,20 @@ function ExploreWorldCupPage({
       {exploreLoading ? (
         <View style={styles.exploreStatusRow}>
           <ActivityIndicator size="small" />
-          <Text style={styles.exploreStatusText}>正在更新世界杯数据</Text>
+          <Text style={styles.exploreStatusText}>正在更新预测市场数据</Text>
         </View>
       ) : null}
 
       {!exploreLoading ? (
         <View style={styles.exploreSourceCard}>
           <Text style={styles.exploreSourceLabel}>{sourceText}</Text>
-          <Text style={styles.exploreSourceText}>{exploreError ? "先展示赛事样例，数据稍后自动更新。" : sourceMessage}</Text>
+          <Text style={styles.exploreSourceText}>{exploreError ? "先展示市场样例，数据稍后自动更新。" : sourceMessage}</Text>
           {sourceSummary ? <Text style={styles.exploreSourceText}>{sourceSummary}</Text> : null}
           {sourceUpdatedAt ? <Text style={styles.exploreSourceTime}>更新于 {sourceUpdatedAt}</Text> : null}
         </View>
       ) : null}
+
+      {!exploreLoading ? <PredictionMarketCapabilityCard /> : null}
 
       {hasDynamicCards && activeCategory === "冠军" ? <DynamicChampionMarketGrid cards={activeCards} onSelectCard={onSelectCard} /> : null}
       {hasDynamicCards && activeCategory === "金靴奖得主" ? <DynamicGoldenBootMarketList cards={activeCards} onSelectCard={onSelectCard} /> : null}
@@ -1528,6 +1690,41 @@ function ExploreWorldCupPage({
         onPrediction={onHome}
         onProfile={onProfile}
       />
+    </View>
+  );
+}
+
+function PredictionMarketCapabilityCard() {
+  const rows = [
+    { icon: "search-outline" as const, title: "可查询", text: "市场详情、会/不会赔率、订单簿和流动性" },
+    { icon: "sparkles-outline" as const, title: "可操作", text: "观察、模拟预览、加入跟踪和生成策略" },
+    { icon: "key-outline" as const, title: "API Key 占位", text: "绑定入口已预留，第二阶段不在本机保存密钥" },
+    { icon: "lock-closed-outline" as const, title: "真实下单关闭", text: "不会下单、签名或广播交易" }
+  ];
+
+  return (
+    <View style={styles.exploreCapabilityCard}>
+      <View style={styles.exploreCapabilityHeader}>
+        <View style={styles.exploreCapabilityIcon}>
+          <Ionicons name="shield-checkmark-outline" size={20} color="#0d2118" />
+        </View>
+        <View style={styles.exploreCapabilityTitleStack}>
+          <Text style={styles.exploreCapabilityEyebrow}>第二阶段</Text>
+          <Text style={styles.exploreCapabilityTitle}>预测市场能力状态</Text>
+        </View>
+        <Text style={styles.exploreCapabilityBadge}>只读</Text>
+      </View>
+      <View style={styles.exploreCapabilityGrid}>
+        {rows.map((row) => (
+          <View key={row.title} style={styles.exploreCapabilityRow}>
+            <Ionicons name={row.icon} size={18} color="#111" />
+            <View style={styles.exploreCapabilityCopy}>
+              <Text style={styles.exploreCapabilityRowTitle}>{row.title}</Text>
+              <Text style={styles.exploreCapabilityRowText}>{row.text}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -1569,7 +1766,7 @@ function DynamicChampionMarketGrid({
         <View style={styles.marketIconBadge}>
           <Text style={styles.marketIconText}>⚽</Text>
         </View>
-        <Text style={styles.marketSectionTitle}>2026 年世界杯冠军</Text>
+        <Text style={styles.marketSectionTitle}>冠军预测市场</Text>
         <Ionicons name="chevron-forward" size={22} color={colors.ink} />
       </View>
       <View style={styles.championGrid}>
@@ -1616,7 +1813,7 @@ function DynamicGoldenBootMarketList({
             <Text style={styles.noPill}>{card.options[1]?.priceLabel ? `No ${card.options[1].priceLabel}` : "No"}</Text>
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
-          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1645,7 +1842,7 @@ function DynamicGroupMarketList({
               <Text style={styles.groupPrice}>{optionPriceLabel(card) || card.probabilityLabel || "观察"}</Text>
             </View>
           </View>
-          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1691,7 +1888,7 @@ function DynamicMatchMarketList({
             ) : null}
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
-          <Text style={styles.marketVolume}>{card.volumeLabel || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1700,23 +1897,50 @@ function DynamicMatchMarketList({
 
 function WorldCupMarketDetailPage({
   card,
+  detail,
+  detailSource,
+  detailError,
+  detailLoading,
   onBack,
   onExplore,
   onHome,
   onAskAgent,
+  onSimulate,
+  onRunMarketAction,
   onNewChat,
   onProfile
 }: {
   card: V2WorldCupExploreMarketCard;
+  detail?: V2PredictionDetailView;
+  detailSource?: V2PredictionDetailResponse["source"];
+  detailError?: string;
+  detailLoading: boolean;
   onBack: () => void;
   onExplore: () => void;
   onHome: () => void;
   onAskAgent: (card: V2WorldCupExploreMarketCard) => void;
+  onSimulate: (card: V2WorldCupExploreMarketCard) => void;
+  onRunMarketAction: (action: "track" | "build_strategy", card: V2WorldCupExploreMarketCard) => void;
   onNewChat: () => void;
   onProfile: () => void;
 }) {
   const yesOption = card.options.find((option) => option.side === "yes") || card.options[0];
   const noOption = card.options.find((option) => option.side === "no") || card.options[1];
+  const yesDetail = detail?.outcomes.find((outcome) => outcome.side === "yes");
+  const noDetail = detail?.outcomes.find((outcome) => outcome.side === "no");
+  const yesLabel = yesDetail?.priceLabel || card.probabilityLabel || yesOption?.priceLabel || "观察";
+  const noLabel = noDetail?.priceLabel || noOption?.priceLabel || "观察";
+  const volumeLabel = detail?.metrics.volume24hLabel || detail?.metrics.volumeLabel || card.volumeLabel || "待同步";
+  const liquidityLabel = detail?.metrics.liquidityLabel || "待同步";
+  const orderBookSummary = createPredictionOrderBookSummary(detail);
+  const sourceModeLabel = predictionSourceModeLabel(detailSource);
+  const executionLabel = predictionExecutionLabel(detailSource, detail);
+  const apiKeyBindingTitle = detailSource?.apiKeyBindingLabel || "绑定入口预留";
+  const apiKeyBadge = predictionApiKeyBadgeLabel(detailSource);
+  const detailStatus = detailLoading ? "同步中" : detail ? predictionSourceStatusLabel(detailSource, detail) : detailError ? "样例显示" : "已接入";
+  const detailActions = createPredictionDetailActions(detail);
+  const provider = marketProviderLabel(card.marketRef.provider);
+  const marketIdLabel = shortenMarketReference(card.marketRef.marketId);
 
   return (
     <View style={styles.worldCupShell}>
@@ -1725,7 +1949,7 @@ function WorldCupMarketDetailPage({
           <Pressable style={styles.exploreBackButton} onPress={onBack}>
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
-          <Text style={styles.exploreTitle}>市场详情</Text>
+          <Text style={styles.exploreTitle}>预测详情</Text>
           <View style={styles.exploreHeaderGhost} />
         </View>
 
@@ -1743,11 +1967,11 @@ function WorldCupMarketDetailPage({
       <View style={styles.marketDetailOddsRow}>
         <View style={styles.marketDetailOddCard}>
           <Text style={styles.marketDetailOddLabel}>会</Text>
-          <Text style={styles.marketDetailOddValue}>{card.probabilityLabel || yesOption?.priceLabel || "观察"}</Text>
+          <Text style={styles.marketDetailOddValue}>{yesLabel}</Text>
         </View>
         <View style={styles.marketDetailOddCard}>
           <Text style={styles.marketDetailOddLabel}>不会</Text>
-          <Text style={styles.marketDetailOddValue}>{noOption?.priceLabel || "观察"}</Text>
+          <Text style={styles.marketDetailOddValue}>{noLabel}</Text>
         </View>
       </View>
 
@@ -1756,24 +1980,187 @@ function WorldCupMarketDetailPage({
         <Text style={styles.marketDetailNote}>{card.agentNote || "数据已经同步，先观察热度和资金变化。"}</Text>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>数据来源</Text>
-          <Text style={styles.marketDetailMetaValue}>{marketProviderLabel(card.market.provider)}</Text>
+          <Text style={styles.marketDetailMetaValue}>{provider}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>交易额</Text>
-          <Text style={styles.marketDetailMetaValue}>{card.volumeLabel || "实时更新"}</Text>
+          <Text style={styles.marketDetailMetaValue}>{volumeLabel}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>结束时间</Text>
-          <Text style={styles.marketDetailMetaValue}>{formatMarketEndTime(card.market.endDate) || "待同步"}</Text>
+          <Text style={styles.marketDetailMetaValue}>{formatMarketEndTime(card.marketRef.endDate) || "待同步"}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>市场类型</Text>
-          <Text style={styles.marketDetailMetaValue}>{marketTypeLabel(card.market.marketType)}</Text>
+          <Text style={styles.marketDetailMetaValue}>{marketTypeLabel(card.marketRef.marketType)}</Text>
         </View>
         <View style={styles.marketDetailMetaRow}>
           <Text style={styles.marketDetailMeta}>状态</Text>
           <Text style={styles.marketDetailMetaValue}>{marketStatusLabel(card)}</Text>
         </View>
+      </View>
+
+      <View style={styles.predictionMarketConsoleCard}>
+        <View style={styles.predictionMarketConsoleHeader}>
+          <View style={styles.predictionMarketConsoleIcon}>
+            <Ionicons name="analytics-outline" size={20} color="#0c2113" />
+          </View>
+          <View style={styles.predictionMarketConsoleTitleStack}>
+            <Text style={styles.predictionMarketConsoleEyebrow}>预测市场</Text>
+            <Text style={styles.predictionMarketConsoleTitle}>OKX Outcomes 只读查询</Text>
+          </View>
+          <Text style={styles.predictionMarketConsoleStatus}>{detailStatus}</Text>
+        </View>
+
+        <View style={styles.predictionMarketQueryGrid}>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>市场</Text>
+            <Text style={styles.predictionMarketQueryValue}>{marketIdLabel}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>会 / 不会</Text>
+            <Text style={styles.predictionMarketQueryValue}>
+              {yesLabel} / {noLabel}
+            </Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>订单簿</Text>
+            <Text style={styles.predictionMarketQueryValue}>{orderBookSummary || "等待同步"}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>成交 / 流动性</Text>
+            <Text style={styles.predictionMarketQueryValue}>{volumeLabel} / {liquidityLabel}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>同步模式</Text>
+            <Text style={styles.predictionMarketQueryValue}>{sourceModeLabel}</Text>
+          </View>
+          <View style={styles.predictionMarketQueryCell}>
+            <Text style={styles.predictionMarketQueryLabel}>执行</Text>
+            <Text style={styles.predictionMarketQueryValue}>{executionLabel}</Text>
+          </View>
+        </View>
+
+        <View style={styles.predictionCapabilityPanel}>
+          <Text style={styles.predictionCapabilityTitle}>当前能力</Text>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>可查询</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["市场详情", "会/不会赔率", "订单簿摘要", "成交量/流动性"].map((label) => (
+                <Text key={label} style={styles.predictionCapabilityTag}>{label}</Text>
+              ))}
+            </View>
+          </View>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>可操作</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["Agent 观察", "模拟预览", "加入跟踪", "生成策略"].map((label) => (
+                <Text key={label} style={[styles.predictionCapabilityTag, styles.predictionCapabilityTagActive]}>{label}</Text>
+              ))}
+            </View>
+          </View>
+          <View style={styles.predictionCapabilityRow}>
+            <Text style={styles.predictionCapabilityLabel}>占位关闭</Text>
+            <View style={styles.predictionCapabilityTags}>
+              {["真实下单", "签名", "广播"].map((label) => (
+                <Text key={label} style={[styles.predictionCapabilityTag, styles.predictionCapabilityTagClosed]}>{label}</Text>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {detail?.trend?.length ? (
+          <View style={styles.predictionTrendPanel}>
+            <View style={styles.predictionTrendHeader}>
+              <Text style={styles.predictionTrendTitle}>走势摘要</Text>
+              <Text style={styles.predictionTrendHint}>只读 K 线派生</Text>
+            </View>
+            {detail.trend.map((row) => (
+              <View key={row.side} style={styles.predictionTrendRow}>
+                <Text style={styles.predictionTrendSide}>{row.label}</Text>
+                <View style={styles.predictionTrendCopy}>
+                  <Text style={styles.predictionTrendDirection}>
+                    {row.directionLabel} {row.changeLabel}
+                  </Text>
+                  <Text style={styles.predictionTrendText}>
+                    {row.windowLabel} · 最新 {row.latestLabel || "待同步"}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <View style={styles.predictionOrderBookPanel}>
+          <View style={styles.predictionOrderBookHeader}>
+            <Text style={styles.predictionOrderBookTitle}>订单簿摘要</Text>
+            {detailLoading ? <ActivityIndicator size="small" color="#c9ff4d" /> : null}
+          </View>
+          {detail?.orderBook?.length ? (
+            detail.orderBook.map((row) => (
+              <View key={row.side} style={styles.predictionOrderBookRow}>
+                <Text style={styles.predictionOrderBookSide}>{row.side === "yes" ? "会" : "不会"}</Text>
+                <Text style={styles.predictionOrderBookText}>
+                  买 {row.bestBidLabel || "-"} · 卖 {row.bestAskLabel || "-"} · 差 {row.spreadLabel || "-"} · {row.depthLabel || "0 档"}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.predictionOrderBookEmpty}>
+              {detailError ? "实时订单簿暂时不可用，先展示市场基础数据。" : "正在等待订单簿同步。"}
+            </Text>
+          )}
+          <Text style={styles.predictionDetailInsight}>
+            {detail?.insight || "Agent 目前只读取赔率、流动性和订单簿摘要，再给出观察或模拟建议。"}
+          </Text>
+        </View>
+
+        <Pressable style={styles.predictionApiKeySlot} disabled accessibilityRole="button" accessibilityState={{ disabled: true }}>
+          <View style={styles.predictionApiKeyCopy}>
+            <Text style={styles.predictionApiKeyTitle}>API Key · {apiKeyBindingTitle}</Text>
+            <Text style={styles.predictionApiKeyText}>{predictionApiKeyStatusText(detailSource)}</Text>
+          </View>
+          <View style={styles.predictionApiKeyBadge}>
+            <Ionicons name="lock-closed-outline" size={13} color="#0c2113" />
+            <Text style={styles.predictionApiKeyBadgeText}>{apiKeyBadge}</Text>
+          </View>
+        </Pressable>
+
+        <View style={styles.predictionMarketActionRow}>
+          {detailActions.map((action) => (
+            <Pressable
+              key={action.id}
+              disabled={action.enabled === false}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: action.enabled === false }}
+              style={action.enabled === false ? styles.predictionMarketDisabledAction : styles.predictionMarketActionButton}
+              onPress={() => {
+                if (action.id === "simulate") {
+                  onSimulate(card);
+                  return;
+                }
+                if (action.id === "track" || action.id === "build_strategy") {
+                  onRunMarketAction(action.id, card);
+                  return;
+                }
+                onAskAgent(card);
+              }}
+            >
+              <Ionicons
+                name={predictionDetailActionIcon(action.id)}
+                size={18}
+                color={action.enabled === false ? "#8a8278" : "#0c2113"}
+              />
+              <Text style={action.enabled === false ? styles.predictionMarketDisabledActionText : styles.predictionMarketActionText}>
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.predictionMarketSafetyText}>
+          真实下单关闭：当前只允许只读查询、Agent 观察、模拟、本地跟踪和策略草稿，不会签名或广播交易。
+        </Text>
       </View>
 
         <Pressable style={styles.marketDetailPrimaryButton} onPress={() => onAskAgent(card)}>
@@ -3576,6 +3963,27 @@ function groupTitleFromCard(card: V2WorldCupExploreMarketCard): string {
   return "2026 年世界杯小组赛";
 }
 
+function marketSnapshotFromExploreCard(card: V2WorldCupExploreMarketCard): V2MarketSnapshot {
+  const ref = card.marketRef;
+  return {
+    provider: ref.provider,
+    chainId: ref.chainId,
+    eventId: ref.eventId,
+    marketId: ref.marketId,
+    question: ref.question,
+    status: ref.status,
+    marketType: ref.marketType,
+    yesPrice: ref.yesPrice,
+    noPrice: ref.noPrice,
+    acceptingOrders: ref.acceptingOrders,
+    liquidity: ref.liquidity,
+    volume24h: ref.volume24h,
+    volume: ref.volume,
+    startTime: ref.startTime,
+    endDate: ref.endDate
+  };
+}
+
 function predictionProgressWidth(card: V2PredictionCard): `${number}%` {
   const price = card.market.yesPrice || 0.1;
   const percent = Math.max(3, Math.min(100, Math.round(price * 100)));
@@ -3624,9 +4032,76 @@ function timingBadgeStyle(status: NonNullable<V2WorldCupExploreMarketCard["timin
   return { backgroundColor: "#ececec", color: "#4f4a45" };
 }
 
-function marketProviderLabel(provider: V2WorldCupExploreMarketCard["market"]["provider"]): string {
+function marketProviderLabel(provider: V2WorldCupExploreMarketCard["marketRef"]["provider"]): string {
   if (provider === "okx-outcomes") return "OKX Outcomes";
   return "插件数据";
+}
+
+function shortenMarketReference(value?: string): string {
+  if (!value) return "待同步";
+  if (value.length <= 14) return value;
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function createPredictionOrderBookSummary(detail?: V2PredictionDetailView): string | undefined {
+  const row = detail?.orderBook?.find((item) => item.bestBidLabel || item.bestAskLabel);
+  if (!row) return undefined;
+  return `买 ${row.bestBidLabel || "-"} / 卖 ${row.bestAskLabel || "-"}`;
+}
+
+function predictionSourceStatusLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
+  if (!detail) return "等待同步";
+  if (source?.mode === "sample") return "样例数据";
+  return "只读详情已同步";
+}
+
+function predictionSourceModeLabel(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.mode === "sample") return "样例数据";
+  if (source?.mode === "live_or_fallback") return "实时/回退";
+  return "等待同步";
+}
+
+function predictionExecutionLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
+  if (source?.liveExecutionClosed || detail?.liveExecutionClosed) return "真实执行关闭";
+  return "只读占位";
+}
+
+function predictionApiKeyBadgeLabel(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.credentialsBound) return "已接入";
+  return "待开放";
+}
+
+function predictionApiKeyStatusText(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.credentialsBound) {
+    return "后端已接入 OKX 只读凭据，App 只显示连接状态，不在本机保存密钥。";
+  }
+  return "暂未开放绑定。后端接入后，App 只显示连接状态，不在本机保存密钥。";
+}
+
+function createPredictionDetailActions(detail?: V2PredictionDetailView): V2PredictionDetailView["actions"] {
+  if (detail?.actions?.length) return detail.actions;
+  return [
+    { id: "observe", label: "观察", kind: "read_only", enabled: true, disabledLiveExecution: true },
+    { id: "simulate", label: "模拟预览", kind: "dry_run", enabled: true, disabledLiveExecution: true },
+    { id: "track", label: "加入跟踪", kind: "local_record", enabled: true, disabledLiveExecution: true },
+    { id: "build_strategy", label: "生成策略", kind: "local_record", enabled: true, disabledLiveExecution: true },
+    {
+      id: "order_closed",
+      label: "下单未开放",
+      kind: "closed",
+      enabled: false,
+      disabledLiveExecution: true,
+      disabledReason: "第二阶段不开放真实下单。"
+    }
+  ];
+}
+
+function predictionDetailActionIcon(actionId: V2PredictionDetailActionId): keyof typeof Ionicons.glyphMap {
+  if (actionId === "simulate") return "flask-outline";
+  if (actionId === "track") return "bookmark-outline";
+  if (actionId === "build_strategy") return "sparkles-outline";
+  if (actionId === "order_closed") return "lock-closed-outline";
+  return "eye-outline";
 }
 
 function marketTypeLabel(type?: string): string {
@@ -3636,9 +4111,9 @@ function marketTypeLabel(type?: string): string {
 }
 
 function marketStatusLabel(card: V2WorldCupExploreMarketCard): string {
-  if (card.status === "observable" && card.market.acceptingOrders) return "可观察";
-  if (card.market.status === "resolved") return "已结算";
-  if (card.market.status === "settling") return "结算中";
+  if (card.status === "observable" && card.marketRef.acceptingOrders) return "可观察";
+  if (card.marketRef.status === "resolved") return "已结算";
+  if (card.marketRef.status === "settling") return "结算中";
   return "观察中";
 }
 
@@ -6342,6 +6817,134 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
     backgroundColor: "rgba(0, 0, 0, 0.44)"
   },
+  predictionStageCard: {
+    borderRadius: 26,
+    backgroundColor: "#101f1b",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  predictionStageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionStageIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionStageTitleStack: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0
+  },
+  predictionStageEyebrow: {
+    color: "#aaff35",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageTitle: {
+    color: "#fff",
+    fontSize: 21,
+    lineHeight: 26,
+    fontWeight: "900"
+  },
+  predictionStageBadge: {
+    overflow: "hidden",
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.82)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageText: {
+    color: "rgba(255, 255, 255, 0.76)",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
+  },
+  predictionStageStatusRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  predictionStageStatusCell: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 9,
+    paddingVertical: 9,
+    justifyContent: "center"
+  },
+  predictionStageStatusLabel: {
+    color: "rgba(255, 255, 255, 0.54)",
+    fontSize: 10,
+    fontWeight: "900"
+  },
+  predictionStageStatusValue: {
+    color: "#fff",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+    marginTop: 4
+  },
+  predictionStageStatusNote: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700"
+  },
+  predictionStageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  predictionStageChip: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "#fff",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  predictionStageClosed: {
+    color: "rgba(255, 255, 255, 0.56)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageCta: {
+    minHeight: 40,
+    borderRadius: 20,
+    backgroundColor: "#c9ff4d",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionStageCtaText: {
+    color: "#0d2118",
+    fontSize: 13,
+    fontWeight: "900"
+  },
   scoreSection: {
     marginHorizontal: -22,
     borderTopLeftRadius: 28,
@@ -6795,6 +7398,84 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700"
   },
+  exploreCapabilityCard: {
+    borderRadius: 24,
+    backgroundColor: "#0d2118",
+    padding: 16,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3
+  },
+  exploreCapabilityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  exploreCapabilityIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  exploreCapabilityTitleStack: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  exploreCapabilityEyebrow: {
+    color: "#aaff35",
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  exploreCapabilityTitle: {
+    color: "#fff",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  exploreCapabilityBadge: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.86)",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  exploreCapabilityGrid: {
+    gap: 10
+  },
+  exploreCapabilityRow: {
+    borderRadius: 17,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  exploreCapabilityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  exploreCapabilityRowTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exploreCapabilityRowText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
+  },
   exploreEmptyCard: {
     minHeight: 142,
     borderRadius: 24,
@@ -7065,6 +7746,316 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "900"
+  },
+  predictionMarketConsoleCard: {
+    borderRadius: 24,
+    backgroundColor: "#0f2118",
+    padding: 18,
+    gap: 16,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 3
+  },
+  predictionMarketConsoleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionMarketConsoleIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionMarketConsoleTitleStack: {
+    flex: 1,
+    gap: 3
+  },
+  predictionMarketConsoleEyebrow: {
+    color: "#aaff35",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketConsoleTitle: {
+    color: "#fff",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  predictionMarketConsoleStatus: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.8)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketQueryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  predictionMarketQueryCell: {
+    width: "48%",
+    minHeight: 72,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 12,
+    gap: 7,
+    justifyContent: "center"
+  },
+  predictionMarketQueryLabel: {
+    color: "rgba(255, 255, 255, 0.58)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionMarketQueryValue: {
+    color: "#fff",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  predictionApiKeySlot: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    padding: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionApiKeyCopy: {
+    flex: 1,
+    gap: 4
+  },
+  predictionApiKeyTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionApiKeyText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
+  },
+  predictionApiKeyBadge: {
+    borderRadius: 13,
+    backgroundColor: "#c9ff4d",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4
+  },
+  predictionApiKeyBadgeText: {
+    color: "#0c2113",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionTrendPanel: {
+    borderRadius: 18,
+    backgroundColor: "rgba(201, 255, 77, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(201, 255, 77, 0.18)",
+    padding: 14,
+    gap: 10
+  },
+  predictionTrendHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  predictionTrendTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionTrendHint: {
+    color: "rgba(255, 255, 255, 0.58)",
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  predictionTrendRow: {
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  predictionTrendSide: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    overflow: "hidden",
+    backgroundColor: "#c9ff4d",
+    color: "#0c2113",
+    textAlign: "center",
+    paddingTop: 8,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionTrendCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2
+  },
+  predictionTrendDirection: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionTrendText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
+  },
+  predictionOrderBookPanel: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    padding: 14,
+    gap: 10
+  },
+  predictionOrderBookHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  predictionOrderBookTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionOrderBookRow: {
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 3
+  },
+  predictionOrderBookSide: {
+    color: "#c9ff4d",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionOrderBookText: {
+    color: "rgba(255, 255, 255, 0.84)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800"
+  },
+  predictionOrderBookEmpty: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  predictionDetailInsight: {
+    color: "rgba(255, 255, 255, 0.78)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  predictionCapabilityPanel: {
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 14,
+    gap: 12
+  },
+  predictionCapabilityTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  predictionCapabilityRow: {
+    gap: 7
+  },
+  predictionCapabilityLabel: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  predictionCapabilityTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7
+  },
+  predictionCapabilityTag: {
+    overflow: "hidden",
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "rgba(255, 255, 255, 0.82)",
+    fontSize: 11,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  predictionCapabilityTagActive: {
+    backgroundColor: "rgba(201, 255, 77, 0.16)",
+    color: "#d9ff73"
+  },
+  predictionCapabilityTagClosed: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    color: "rgba(255, 255, 255, 0.48)"
+  },
+  predictionMarketActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  predictionMarketActionButton: {
+    flexGrow: 1,
+    flexBasis: "46%",
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "#c9ff4d",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionMarketActionText: {
+    color: "#0c2113",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionMarketDisabledAction: {
+    flexGrow: 1,
+    flexBasis: "46%",
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionMarketDisabledActionText: {
+    color: "rgba(255, 255, 255, 0.62)",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  predictionMarketSafetyText: {
+    color: "rgba(255, 255, 255, 0.68)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "800"
   },
   detailButton: {
     minHeight: 48,

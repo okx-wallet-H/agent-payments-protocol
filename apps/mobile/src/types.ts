@@ -273,8 +273,29 @@ export interface V2WorldCupExploreOption {
   label: string;
   price?: number;
   priceLabel?: string;
-  assetId?: string;
+  assetIdLabel?: string;
   side?: "yes" | "no";
+}
+
+export interface V2WorldCupExploreMarketRef {
+  provider: V2MarketSnapshot["provider"];
+  chainId: V2MarketSnapshot["chainId"];
+  eventId?: string;
+  marketId: string;
+  question: string;
+  status?: V2MarketSnapshot["status"];
+  marketType?: V2MarketSnapshot["marketType"];
+  yesPrice?: number;
+  noPrice?: number;
+  acceptingOrders: boolean;
+  liquidity?: number;
+  volume24h?: number;
+  volume?: number;
+  startTime?: string;
+  endDate?: string;
+  providerLabel: string;
+  readOnly: true;
+  liveExecutionClosed: true;
 }
 
 export interface V2WorldCupExploreMarketCard {
@@ -293,7 +314,7 @@ export interface V2WorldCupExploreMarketCard {
   probabilityLabel?: string;
   volumeLabel?: string;
   status: "observable" | "watch_only";
-  market: V2MarketSnapshot;
+  marketRef: V2WorldCupExploreMarketRef;
   options: V2WorldCupExploreOption[];
 }
 
@@ -304,6 +325,8 @@ export interface V2WorldCupExploreSource {
   mode: "live" | "fallback" | "sample";
   label: string;
   message: string;
+  providerStatus?: "connected" | "not_configured" | "sample";
+  credentialsBound?: boolean;
   updatedAt: string;
   warning?: string;
 }
@@ -321,6 +344,119 @@ export interface V2WorldCupExploreView {
   };
   source: V2WorldCupExploreSource;
   updatedAt: string;
+}
+
+export type V2PredictionDetailActionId = "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+export type V2PredictionDetailActionKind = "read_only" | "dry_run" | "local_record" | "closed";
+export type V2PredictionDetailOutcomeSide = "yes" | "no";
+
+export interface V2PredictionDetailOutcomeRow {
+  side: V2PredictionDetailOutcomeSide;
+  label: "会" | "不会";
+  price?: number;
+  priceLabel?: string;
+  bidLabel?: string;
+  askLabel?: string;
+  volume24hLabel?: string;
+  assetIdLabel?: string;
+}
+
+export interface V2PredictionDetailOrderBookSide {
+  side: V2PredictionDetailOutcomeSide;
+  bestBidLabel?: string;
+  bestAskLabel?: string;
+  spreadLabel?: string;
+  depthLabel?: string;
+}
+
+export interface V2PredictionDetailTrendSummary {
+  side: V2PredictionDetailOutcomeSide;
+  label: "会" | "不会";
+  direction: "up" | "down" | "flat";
+  directionLabel: string;
+  changeLabel: string;
+  latestLabel?: string;
+  windowLabel: string;
+}
+
+export interface V2PredictionDetailView {
+  type: "prediction_detail_view";
+  title: string;
+  providerLabel: string;
+  readOnly: true;
+  liveExecutionClosed: true;
+  marketRef: {
+    provider: V2MarketSnapshot["provider"];
+    chainId: V2MarketSnapshot["chainId"];
+    marketId: string;
+    eventId?: string;
+    status?: string;
+    acceptingOrders: boolean;
+  };
+  outcomes: V2PredictionDetailOutcomeRow[];
+  metrics: {
+    liquidityLabel?: string;
+    volume24hLabel?: string;
+    volumeLabel?: string;
+    statusLabel: string;
+  };
+  orderBook?: V2PredictionDetailOrderBookSide[];
+  trend?: V2PredictionDetailTrendSummary[];
+  insight: string;
+  actions: Array<{
+    id: V2PredictionDetailActionId;
+    label: string;
+    kind: V2PredictionDetailActionKind;
+    enabled: boolean;
+    disabledLiveExecution: true;
+    disabledReason?: string;
+  }>;
+  updatedAt: string;
+}
+
+export interface V2PredictionDetailSource {
+  mode: "live_or_fallback" | "sample";
+  providerStatus?: "connected" | "not_configured" | "sample";
+  credentialsBound?: boolean;
+  apiKeyBindingLabel?: string;
+  readOnly: true;
+  liveExecutionClosed: true;
+}
+
+export interface V2PredictionDetailResponse {
+  detail: V2PredictionDetailView;
+  source: V2PredictionDetailSource;
+}
+
+export interface V2PredictionStatusResponse {
+  status: {
+    type: "prediction_market_status";
+    provider: "okx-outcomes";
+    providerLabel: "OKX Outcomes";
+    providerStatus: "connected" | "not_configured";
+    credentialsBound: boolean;
+    readOnly: true;
+    liveExecutionClosed: true;
+    apiKeyBinding: {
+      label: string;
+      enabled: false;
+      appCollectionEnabled: false;
+      storage: "server-side-only";
+      note: string;
+    };
+    queryCapabilities: string[];
+    operationCapabilities: Array<{
+      id: "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+      label: string;
+      enabled: boolean;
+      mode: "read" | "dry_run" | "local" | "closed";
+    }>;
+    endpoints: {
+      explore: "/api/v2/prediction/explore";
+      detail: "/api/v2/prediction/detail";
+    };
+    updatedAt: string;
+  };
 }
 
 export interface V2ReceiveAddress {

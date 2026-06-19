@@ -19,6 +19,8 @@ import type {
   V2MobileHomeResponse,
   V2MobileHomeView,
   V2PhaseOneRecord,
+  V2PredictionDetailResponse,
+  V2PredictionStatusResponse,
   V2StrategyCard,
   V2TrackingCard,
   V2WalletContext,
@@ -67,7 +69,10 @@ export interface ApiClient {
   listV2Records(userId?: string): Promise<V2PhaseOneRecord[]>;
   listV2Audit(userId?: string): Promise<V2AuditTimelineEvent[]>;
   submitV2DeviceEvidence(input: V2MobileDeviceEvidenceInput): Promise<V2MobileDeviceEvidenceResponse>;
+  getPredictionExplore(): Promise<V2WorldCupExploreView>;
   getWorldCupExplore(): Promise<V2WorldCupExploreView>;
+  getPredictionStatus(): Promise<V2PredictionStatusResponse>;
+  getPredictionDetail(marketId: string): Promise<V2PredictionDetailResponse>;
 }
 
 type GetAccessToken = () => Promise<string | null | undefined>;
@@ -316,14 +321,39 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         body: JSON.stringify(input)
       }, getAccessToken);
     },
-    async getWorldCupExplore() {
+    async getPredictionExplore() {
       const data = await request<{ explore: V2WorldCupExploreView }>(
         cleanBaseUrl,
-        "/api/v2/world-cup/explore",
+        "/api/v2/prediction/explore",
         undefined,
         getAccessToken
       );
       return data.explore;
+    },
+    async getWorldCupExplore() {
+      const data = await request<{ explore: V2WorldCupExploreView }>(
+        cleanBaseUrl,
+        "/api/v2/prediction/explore",
+        undefined,
+        getAccessToken
+      );
+      return data.explore;
+    },
+    async getPredictionStatus() {
+      return request<V2PredictionStatusResponse>(
+        cleanBaseUrl,
+        "/api/v2/prediction/status",
+        undefined,
+        getAccessToken
+      );
+    },
+    async getPredictionDetail(marketId) {
+      return request<V2PredictionDetailResponse>(
+        cleanBaseUrl,
+        withQuery("/api/v2/prediction/detail", { marketId }),
+        undefined,
+        getAccessToken
+      );
     }
   };
 }

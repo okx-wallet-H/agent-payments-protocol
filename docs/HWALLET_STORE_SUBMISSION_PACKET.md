@@ -44,10 +44,11 @@ Long description:
 
 Reviewer note:
 
-> This first release is observe/simulate only. The Agent can display a receive
-> address, recognize wallet funds, analyze opportunities, create simulations,
-> and show audit records. It cannot submit live orders or move money
-> autonomously. Private keys and seed phrases are not collected by HWallet.
+> This first release supports read-only observation, simulation, local tracking,
+> and strategy drafts only. The Agent can display a receive address, recognize
+> wallet funds, analyze opportunities, create simulations, and show audit
+> records. It cannot submit live orders or move money autonomously. Private keys
+> and seed phrases are not collected by HWallet.
 
 Review account plan:
 
@@ -66,7 +67,8 @@ Review account plan:
 - Support URL: `https://app.hwallet.vip/support`
 - Export compliance: current Expo config sets
   `ITSAppUsesNonExemptEncryption=false`.
-- Review notes must include the observe/simulate-only boundary.
+- Review notes must include the read-only/local-draft boundary and state that
+  live execution remains closed.
 - Screenshots follow `docs/HWALLET_STORE_SCREENSHOT_PLAN.md` and still need
   final owner-approved visual pass before public release.
 

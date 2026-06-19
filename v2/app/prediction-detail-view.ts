@@ -1,11 +1,13 @@
 import type { MarketSnapshot } from "../domain/types";
 import type {
+  OkxOutcomeCandle,
   OkxOutcomeMarketData,
   OkxOutcomeOrderBook,
   OkxOutcomeTicker
 } from "../execution/okx-outcomes-client";
 
-export type PredictionDetailActionId = "observe" | "simulate";
+export type PredictionDetailActionId = "observe" | "simulate" | "track" | "build_strategy" | "order_closed";
+export type PredictionDetailActionKind = "read_only" | "dry_run" | "local_record" | "closed";
 export type PredictionDetailOutcomeSide = "yes" | "no";
 
 export interface PredictionDetailOutcomeRow {
@@ -25,6 +27,16 @@ export interface PredictionDetailOrderBookSide {
   bestAskLabel?: string;
   spreadLabel?: string;
   depthLabel?: string;
+}
+
+export interface PredictionDetailTrendSummary {
+  side: PredictionDetailOutcomeSide;
+  label: "会" | "不会";
+  direction: "up" | "down" | "flat";
+  directionLabel: string;
+  changeLabel: string;
+  latestLabel?: string;
+  windowLabel: string;
 }
 
 export interface PredictionDetailView {
@@ -49,12 +61,15 @@ export interface PredictionDetailView {
     statusLabel: string;
   };
   orderBook?: PredictionDetailOrderBookSide[];
+  trend?: PredictionDetailTrendSummary[];
   insight: string;
   actions: Array<{
     id: PredictionDetailActionId;
     label: string;
-    kind: "read_only" | "dry_run";
+    kind: PredictionDetailActionKind;
+    enabled: boolean;
     disabledLiveExecution: true;
+    disabledReason?: string;
   }>;
   updatedAt: string;
 }
@@ -68,6 +83,7 @@ export function createPredictionDetailView(input: MarketSnapshot | OkxOutcomeMar
     createOutcomeRow("no", market, marketData?.noTicker)
   ];
   const orderBook = createOrderBookSummary(marketData);
+  const trend = createTrendSummary(marketData);
 
   return {
     type: "prediction_detail_view",
@@ -91,23 +107,106 @@ export function createPredictionDetailView(input: MarketSnapshot | OkxOutcomeMar
       statusLabel: market.acceptingOrders ? "可观察" : "仅观察"
     },
     orderBook,
+    trend,
     insight: createReadOnlyInsight(market, outcomes),
-    actions: [
-      {
-        id: "observe",
-        label: "让 Agent 观察",
-        kind: "read_only",
-        disabledLiveExecution: true
-      },
-      {
-        id: "simulate",
-        label: "模拟看看",
-        kind: "dry_run",
-        disabledLiveExecution: true
-      }
-    ],
+    actions: createDetailActions(),
     updatedAt: new Date().toISOString()
   };
+}
+
+function createTrendSummary(marketData?: OkxOutcomeMarketData): PredictionDetailTrendSummary[] | undefined {
+  if (!marketData) return undefined;
+  const rows = [
+    summarizeTrendSide("yes", marketData.yesCandles),
+    summarizeTrendSide("no", marketData.noCandles)
+  ].filter(isDefined);
+
+  return rows.length > 0 ? rows : undefined;
+}
+
+function summarizeTrendSide(
+  side: PredictionDetailOutcomeSide,
+  candles?: OkxOutcomeCandle[]
+): PredictionDetailTrendSummary | undefined {
+  const points = normalizeTrendPoints(candles);
+  if (points.length < 2) return undefined;
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  const change = last.close - first.close;
+  const direction = change > 0.002 ? "up" : change < -0.002 ? "down" : "flat";
+  const directionLabel = direction === "up" ? "升温" : direction === "down" ? "降温" : "横盘";
+
+  return {
+    side,
+    label: side === "yes" ? "会" : "不会",
+    direction,
+    directionLabel,
+    changeLabel: formatPriceChange(change),
+    latestLabel: formatPrice(last.close),
+    windowLabel: `近 ${points.length} 根`
+  };
+}
+
+function normalizeTrendPoints(candles?: OkxOutcomeCandle[]): Array<{ timestamp: string; close: number; index: number }> {
+  if (!candles?.length) return [];
+  return candles
+    .map((candle, index) => {
+      if (candle.close === undefined || !Number.isFinite(candle.close)) return undefined;
+      return {
+        timestamp: candle.timestamp,
+        close: candle.close,
+        index
+      };
+    })
+    .filter(isDefined)
+    .sort((a, b) => {
+      const aTime = Date.parse(a.timestamp);
+      const bTime = Date.parse(b.timestamp);
+      if (Number.isFinite(aTime) && Number.isFinite(bTime) && aTime !== bTime) return aTime - bTime;
+      return a.index - b.index;
+    });
+}
+
+function createDetailActions(): PredictionDetailView["actions"] {
+  return [
+    {
+      id: "observe",
+      label: "让 Agent 观察",
+      kind: "read_only",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "simulate",
+      label: "模拟预览",
+      kind: "dry_run",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "track",
+      label: "加入跟踪",
+      kind: "local_record",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "build_strategy",
+      label: "生成策略",
+      kind: "local_record",
+      enabled: true,
+      disabledLiveExecution: true
+    },
+    {
+      id: "order_closed",
+      label: "下单未开放",
+      kind: "closed",
+      enabled: false,
+      disabledLiveExecution: true,
+      disabledReason: "第二阶段不开放真实下单、签名或广播。"
+    }
+  ];
 }
 
 function createOutcomeRow(
@@ -181,6 +280,13 @@ function formatAmount(value?: number): string | undefined {
   if (value >= 1_000_000) return `${formatNumber(value / 1_000_000)}M`;
   if (value >= 1_000) return `${formatNumber(value / 1_000)}K`;
   return formatNumber(value);
+}
+
+function formatPriceChange(value: number): string {
+  if (!Number.isFinite(value)) return "0¢";
+  const cents = Math.round(Math.abs(value) * 100);
+  if (cents === 0) return "0¢";
+  return `${value > 0 ? "+" : "-"}${cents}¢`;
 }
 
 function formatNumber(value: number): string {

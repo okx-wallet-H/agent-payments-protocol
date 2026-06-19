@@ -10,8 +10,9 @@ URLs, or reusable passwords into git, chat, PRs, logs, or public docs.
   as the main experience.
 - Review environment: `https://app.hwallet.vip`.
 - Login method: email-based Privy login.
-- Live execution boundary: observe and simulate only. Live signing, swaps,
-  prediction orders, broadcasts, and autonomous money movement stay closed.
+- Live execution boundary: read-only observation, simulation, local tracking,
+  and strategy drafts only. Live signing, swaps, prediction orders, broadcasts,
+  and autonomous money movement stay closed.
 - Reviewer should be able to verify:
   - Email login and logout.
   - HWallet receive address creation.
@@ -39,8 +40,9 @@ Use this in private reviewer notes after replacing placeholder values inside the
 store console only:
 
 ```text
-This build is observe/simulate only. It does not submit live orders, sign
-transactions, swap tokens, or broadcast transactions.
+This build supports read-only observation, simulation, local tracking, and
+strategy drafts only. It does not submit live orders, sign transactions, swap
+tokens, or broadcast transactions.
 
 To test:
 1. Open the App and enter the provided review email.
@@ -72,7 +74,7 @@ Go when all are true:
 
 - `npm run smoke:store-review-account-plan` passes.
 - `npm run smoke:mobile-store-submission` passes.
-- Store reviewer notes explain email-code login and observe/simulate-only scope.
+- Store reviewer notes explain email-code login and the closed-live-execution scope.
 - Owner has created or approved the dedicated review email outside git.
 - Live execution remains closed.
 

@@ -7,6 +7,7 @@ import { createMobileActionTurn } from "@/v2/app/mobile-chat";
 import { resolvePhaseOneUser } from "@/v2/auth/request-user";
 import { evaluateAgentPolicy, type AgentPolicyAction } from "@/v2/agent/policy";
 import type { BusinessGoalType, ConversationCard, MarketSnapshot } from "@/v2/domain/types";
+import { createOkxOutcomesDryRunPlan, executeOkxOutcomesDryRunPreview } from "@/v2/execution/okx-outcomes-preview";
 import { createPolymarketDryRunPlan, executePolymarketDryRun } from "@/v2/execution/polymarket-dry-run";
 import { saveAgentAction, saveAgentRun } from "@/v2/storage/agent-action-store";
 import { saveAuditTimelineEvent } from "@/v2/storage/audit-timeline-store";
@@ -171,12 +172,23 @@ export async function POST(request: Request) {
 
   const goal = createBusinessGoal("市场机会");
   const basePlan = createPredictionResearchPlan(goal, body.market);
-  const dryRunPlan = createPolymarketDryRunPlan({
-    basePlan,
-    amountUsd: body.amountUsd || 1,
-    limitPrice: body.market.yesPrice
-  });
-  const result = await executePolymarketDryRun(dryRunPlan);
+  const amountUsd = body.amountUsd || 1;
+  const result =
+    body.market.provider === "okx-outcomes"
+      ? executeOkxOutcomesDryRunPreview(
+          createOkxOutcomesDryRunPlan({
+            basePlan,
+            amountUsd,
+            limitPrice: body.market.yesPrice
+          })
+        )
+      : await executePolymarketDryRun(
+          createPolymarketDryRunPlan({
+            basePlan,
+            amountUsd,
+            limitPrice: body.market.yesPrice
+          })
+        );
   const card = createSimulationCard(result, body.market);
   const record = await savePhaseOneRecord({
     type: "simulation.saved",
@@ -205,7 +217,7 @@ export async function POST(request: Request) {
     action: body.action,
     status: result.status === "dry_run_completed" ? "completed" : "failed",
     market: body.market,
-    amountUsd: body.amountUsd || 1,
+    amountUsd,
     idempotencyKey,
     policyDecision,
     recordId: record.id,

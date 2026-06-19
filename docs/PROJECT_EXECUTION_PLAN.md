@@ -56,7 +56,7 @@ Acceptance:
 - `[x]` Add market data source status and fallback mode: OKX Outcomes live data, plugin fallback, or local sample data with user-friendly copy.
 - `[x]` Carry OKX Outcomes market snapshots into Agent observe replies with friendly `会 / 不会` odds.
 - `[x]` Add a read-only prediction detail view for `会 / 不会` outcomes, order book summary, volume/liquidity labels, and redacted asset ids.
-- `[x]` Add smoke coverage that keeps prediction detail actions limited to observe/simulate and blocks order, signature, swap, and broadcast wording.
+- `[x]` Add smoke coverage that keeps prediction detail actions in the server-provided observe/simulate/local-record/closed-order model and blocks order, signature, swap, and broadcast execution.
 - `[~]` Real execution remains gated until TEE signing, production policy, and release approvals are complete.
 - `[!]` Live trading requires a final decision on supported market venues, execution account model, and compliance boundaries.
 

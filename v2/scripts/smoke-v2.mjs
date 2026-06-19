@@ -64,21 +64,27 @@ assert(Array.isArray(home.home?.recent?.tracking), "home returns recent tracking
 assert(Array.isArray(home.home?.recent?.strategies), "home returns recent strategy list");
 assert(Array.isArray(home.home?.recent?.records), "home returns recent record list");
 
-const explore = await getJson("/api/v2/world-cup/explore");
-assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");
-assert(Boolean(explore.explore?.source?.label), "world cup explore returns friendly source label");
-assert(Boolean(explore.explore?.source?.message), "world cup explore returns friendly source message");
-assert(Array.isArray(explore.explore?.categories), "world cup explore has categories");
-assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
-assert(explore.explore?.cards?.upcoming_matches !== undefined, "world cup explore has match bucket");
-assert(explore.explore?.summary?.categoryCounts?.upcoming_matches >= 1, "world cup explore keeps upcoming matches visible");
-const selectedWorldCupMarket = explore.explore?.cards?.champion?.[0]?.market;
-assert(Boolean(selectedWorldCupMarket?.marketId), "world cup explore exposes selectable market");
+const explore = await getJson("/api/v2/prediction/explore");
+assert(explore.explore?.type === "world_cup_explore_view", "prediction explore returns view");
+assert(Boolean(explore.explore?.source?.label), "prediction explore returns friendly source label");
+assert(Boolean(explore.explore?.source?.message), "prediction explore returns friendly source message");
+assert(Array.isArray(explore.explore?.categories), "prediction explore has categories");
+assert(explore.explore?.cards?.champion !== undefined, "prediction explore has champion bucket");
+assert(explore.explore?.cards?.upcoming_matches !== undefined, "prediction explore has match bucket");
+assert(explore.explore?.summary?.categoryCounts?.upcoming_matches >= 1, "prediction explore keeps upcoming matches visible");
+const selectedWorldCupCard = explore.explore?.cards?.champion?.[0];
+const selectedWorldCupMarket = selectedWorldCupCard?.marketRef;
+assert(Boolean(selectedWorldCupMarket?.marketId), "prediction explore exposes selectable market");
+assert(selectedWorldCupMarket?.readOnly === true, "prediction explore selectable market is read-only");
+assert(!("market" in (selectedWorldCupCard || {})), "prediction explore does not expose raw market snapshot");
 
-const liveModeExplore = await getJson("/api/v2/world-cup/explore?mode=live");
-assert(liveModeExplore.explore?.type === "world_cup_explore_view", "world cup live-mode fallback returns view");
+const legacyExplore = await getJson("/api/v2/world-cup/explore");
+assert(legacyExplore.explore?.type === "world_cup_explore_view", "legacy world cup explore remains compatible");
+
+const liveModeExplore = await getJson("/api/v2/prediction/explore?mode=live");
+assert(liveModeExplore.explore?.type === "world_cup_explore_view", "prediction live-mode fallback returns view");
 if (liveModeExplore.explore?.source?.mode === "sample") {
-  assert(Boolean(liveModeExplore.explore?.source?.warning), "world cup live-mode fallback explains sample data");
+  assert(Boolean(liveModeExplore.explore?.source?.warning), "prediction live-mode fallback explains sample data");
 }
 
 const recharge = await postJson("/api/v2/phase-one", {
@@ -291,6 +297,13 @@ assert(simulate.card?.agentNote?.includes("订单没有提交"), "simulation car
 assert(simulate.card?.moneyMoved === false, "simulation card explicitly records no money movement");
 assert(Boolean(simulate.card?.sideLabel), "simulation card includes side label");
 assert(simulate.card?.market?.marketId === predictionCard.market.marketId, "simulation card keeps market for next action");
+if (predictionCard.market.provider === "okx-outcomes") {
+  assert(simulate.result?.raw?.provider === "okx-outcomes", "OKX simulation keeps OKX provider");
+  assert(simulate.result?.raw?.route === "outcomes.order.preview", "OKX simulation uses OKX preview route");
+  assert(simulate.result?.raw?.moneyMoved === false, "OKX simulation cannot move money");
+  assert(simulate.result?.raw?.liveExecutionEnabled === false, "OKX simulation keeps live execution closed");
+  assert(simulate.card?.agentNote?.includes("OKX Outcomes 本地模拟预览"), "OKX simulation card uses OKX preview copy");
+}
 const auditAfterSimulation = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
 const simulationAudit = auditAfterSimulation.events?.find((event) => event.type === "simulation.completed");
 assert(simulationAudit?.moneyMoved === false, "audit timeline records simulation without money movement");
@@ -304,6 +317,36 @@ const trackFromSimulation = await postJson("/api/v2/phase-one/actions", {
   userId
 });
 assert(trackFromSimulation.record?.type === "tracking.saved", "simulation card can continue into tracking");
+
+const okxSimulationMarket = {
+  provider: "okx-outcomes",
+  chainId: 196,
+  eventId: "okx-smoke-event",
+  marketId: `okx-smoke-market-${userId}`,
+  question: "西班牙会赢得 2026 年世界杯冠军吗？",
+  status: "active",
+  marketType: "binary",
+  yesAssetId: "yes-asset-redacted",
+  noAssetId: "no-asset-redacted",
+  yesPrice: 0.17,
+  noPrice: 0.83,
+  acceptingOrders: true,
+  liquidity: 4210,
+  volume24h: 988
+};
+const okxSimulation = await postJson("/api/v2/phase-one/actions", {
+  action: "simulate",
+  market: okxSimulationMarket,
+  amountUsd: 3,
+  userId
+});
+assert(okxSimulation.result?.status === "dry_run_completed", "OKX simulation completes dry-run");
+assert(okxSimulation.result?.raw?.provider === "okx-outcomes", "OKX simulation keeps OKX provider");
+assert(okxSimulation.result?.raw?.route === "outcomes.order.preview", "OKX simulation uses OKX preview route");
+assert(okxSimulation.result?.raw?.moneyMoved === false, "OKX simulation cannot move money");
+assert(okxSimulation.result?.raw?.liveExecutionEnabled === false, "OKX simulation keeps live execution closed");
+assert(okxSimulation.card?.agentNote?.includes("OKX Outcomes 本地模拟预览"), "OKX simulation card uses OKX preview copy");
+assert(okxSimulation.card?.moneyMoved === false, "OKX simulation card records no money movement");
 
 const blockedSimulation = await postStatus("/api/v2/phase-one/actions", {
   action: "simulate",
