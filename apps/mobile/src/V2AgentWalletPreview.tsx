@@ -1,17 +1,81 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createApi } from "./api";
 import { createFriendlyWalletNotice } from "./hwallet-entry";
 import type { V2WalletContext, V2WorldCupExploreCategory, V2WorldCupExploreMarketCard, V2WorldCupExploreView } from "./types";
 
 const worldCupPoster = require("../assets/world-cup-agent-poster.png");
+const appIcon = require("../assets/icon.png");
+const communityCarouselSnap = 236;
+const communityCarouselItems = [
+  {
+    id: "invite",
+    kicker: "社区任务",
+    title: "邀请好友一起开通 Agent",
+    text: "好友进入后，你的卡库和等级进度都会记录。"
+  },
+  {
+    id: "cards",
+    kicker: "卡库",
+    title: "收集你的预测卡和策略卡",
+    text: "后面会把常用卡片沉淀到这里。"
+  },
+  {
+    id: "discover",
+    kicker: "发现",
+    title: "看看社区正在玩什么",
+    text: "先把入口留好，后续接真实内容。"
+  }
+] as const;
+const platformNoticeItems = [
+  {
+    id: "wallet-beta",
+    tag: "HWallet",
+    title: "HWallet 内测已开放",
+    text: "收款地址、多账号切换和资产识别已进入真机验证。",
+    time: "刚刚"
+  },
+  {
+    id: "agent-memory",
+    tag: "Agent",
+    title: "Agent 会记住你的钱包状态",
+    text: "登录后会自动同步当前账号，不同邮箱会分开记录。",
+    time: "今天"
+  },
+  {
+    id: "community",
+    tag: "社区",
+    title: "邀请、卡库和发现入口已准备",
+    text: "后续活动、卡片和社区玩法都会从这里进入。",
+    time: "昨天"
+  }
+] as const;
+const inviteRewardSteps = [
+  {
+    id: "share",
+    title: "分享你的邀请",
+    text: "把专属入口发给好友，好友进入后关系会自动记录。"
+  },
+  {
+    id: "open",
+    title: "好友开通 HWallet",
+    text: "邮箱登录、钱包绑定和后续 Agent 记录会分开沉淀。"
+  },
+  {
+    id: "reward",
+    title: "获得 20% 佣金",
+    text: "好友产生有效佣金后，系统会同步到你的社区记录。"
+  }
+] as const;
 
-type Tab = "agent" | "worldcup" | "mine" | "wallet";
+type Tab = "agent" | "community" | "notices" | "invite" | "worldcup" | "mine" | "wallet";
+type LoginStep = "email" | "code";
 type WorldCupView = "sentiment" | "prediction" | "explore" | "profile";
 type MarketCategory = "冠军" | "金靴奖得主" | "小组赛" | "近期比赛";
 
+const loginDigits = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const marketCategories: MarketCategory[] = ["冠军", "金靴奖得主", "小组赛", "近期比赛"];
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000";
 const previewEmailStorageKey = "agent-wallet-preview-email";
@@ -120,6 +184,8 @@ const matchMarkets = [
 
 export function V2AgentWalletPreview() {
   const [previewEmail, setPreviewEmail] = useState(readStoredPreviewEmail);
+  const [previewCode, setPreviewCode] = useState("");
+  const [previewLoginStep, setPreviewLoginStep] = useState<LoginStep>("email");
   const [previewAuthed, setPreviewAuthed] = useState(() => readStoredPreviewEmail().length > 0);
   const [tab, setTab] = useState<Tab>("agent");
   const [input, setInput] = useState("");
@@ -137,13 +203,16 @@ export function V2AgentWalletPreview() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const worldCupApi = useMemo(() => createApi(apiBaseUrl), []);
   const insightCopy = createPreviewInsightCopy(worldCupExplore);
-  const showBottomDock = tab !== "worldcup" && !keyboardVisible;
+  const isCommunityStack = tab === "community" || tab === "notices" || tab === "invite";
+  const showBottomDock = tab !== "worldcup" && tab !== "community" && tab !== "notices" && tab !== "invite" && !keyboardVisible;
   const previewUserId = useMemo(() => previewUserIdFromEmail(previewEmail), [previewEmail]);
   const receiveAddress = useMemo(() => previewAddressForEmail(previewEmail), [previewEmail]);
 
   function switchPreviewAccount() {
     clearStoredPreviewEmail();
     setPreviewEmail("");
+    setPreviewCode("");
+    setPreviewLoginStep("email");
     setPreviewAuthed(false);
     setTab("agent");
     setInput("");
@@ -253,42 +322,121 @@ export function V2AgentWalletPreview() {
 
   if (!previewAuthed) {
     const canEnter = previewEmail.trim().length > 3;
+    const normalizedPreviewCode = normalizePreviewOtpCode(previewCode);
+    const canUnlock = canEnter && normalizedPreviewCode.length >= 6;
+
+    function appendPreviewCodeDigit(digit: string) {
+      setPreviewCode((current) => normalizePreviewOtpCode(`${current}${digit}`));
+    }
+
+    function deletePreviewCodeDigit() {
+      setPreviewCode((current) => normalizePreviewOtpCode(current).slice(0, -1));
+    }
+
+    function enterPreview() {
+      if (!canEnter) return;
+      if (previewLoginStep === "email") {
+        setPreviewLoginStep("code");
+        return;
+      }
+      if (!canUnlock) return;
+      const normalizedEmail = previewEmail.trim().toLowerCase();
+      setPreviewEmail(normalizedEmail);
+      saveStoredPreviewEmail(normalizedEmail);
+      setPreviewCode("");
+      setPreviewLoginStep("email");
+      setPreviewAuthed(true);
+    }
 
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.previewLogin}>
-          <View style={styles.previewLoginTop}>
-            <Text style={styles.previewLoginBrand}>海豚社区</Text>
-            <Text style={styles.previewLoginTitle}>一句话，交给 Agent</Text>
-            <Text style={styles.previewLoginSubtitle}>登录后进入海豚社区，HWallet、市场机会和 Agent 记录都会跟随你的账户。</Text>
-          </View>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 16 : 0}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={[
+              styles.previewLogin,
+              previewLoginStep === "code" ? styles.previewLoginCode : null
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.previewLoginTop}>
+              <View style={styles.previewLoginDoorLeft} />
+              <View style={styles.previewLoginDoorRight} />
+              <View style={styles.previewLoginDoorSeam} />
+              <View style={styles.previewLoginHeroGlow} />
+              <View style={styles.previewLoginLogoShell}>
+                <Image source={appIcon} style={styles.previewLoginLogo} resizeMode="cover" />
+              </View>
+              <Text style={styles.previewLoginBrand}>海豚社区</Text>
+              <Text style={styles.previewLoginTitle}>海豚，开门</Text>
+              <Text style={styles.previewLoginSubtitle}>你的 Agent 已就位。</Text>
+            </View>
 
-          <View style={styles.previewLoginCard}>
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              inputMode="email"
-              keyboardType="email-address"
-              value={previewEmail}
-              onChangeText={setPreviewEmail}
-              placeholder="邮箱"
-              placeholderTextColor="#9f9992"
-              style={styles.previewLoginInput}
-            />
-            <Pressable
-              style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
-              disabled={!canEnter}
-              onPress={() => {
-                const normalizedEmail = previewEmail.trim().toLowerCase();
-                setPreviewEmail(normalizedEmail);
-                saveStoredPreviewEmail(normalizedEmail);
-                setPreviewAuthed(true);
-              }}
-            >
-              <Text style={styles.previewLoginButtonText}>进入海豚社区</Text>
-            </Pressable>
-          </View>
-        </View>
+            <View style={styles.previewLoginCard}>
+              <Text style={styles.previewLoginCardTitle}>{previewLoginStep === "email" ? "邮箱进入" : "验证码开锁"}</Text>
+              {previewLoginStep === "email" ? (
+                <>
+                  <View style={styles.previewLoginFieldGroup}>
+                    <Text style={styles.previewLoginLabel}>邮箱</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      inputMode="email"
+                      keyboardType="email-address"
+                      value={previewEmail}
+                      onChangeText={setPreviewEmail}
+                      placeholder="输入邮箱"
+                      placeholderTextColor="#aaa39b"
+                      style={styles.previewLoginInput}
+                    />
+                  </View>
+                  <Pressable
+                    style={[styles.previewLoginButton, !canEnter ? styles.previewLoginButtonDisabled : null]}
+                    disabled={!canEnter}
+                    onPress={enterPreview}
+                  >
+                    <Text style={styles.previewLoginButtonText}>进入</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <View style={styles.previewLoginCodeDots}>
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <View
+                        key={`preview-code-dot-${index}`}
+                        style={[styles.previewLoginCodeDot, index < normalizedPreviewCode.length ? styles.previewLoginCodeDotFilled : null]}
+                      />
+                    ))}
+                  </View>
+                  <View style={styles.previewLoginKeypad}>
+                    {loginDigits.map((digit) => (
+                      <Pressable key={digit} style={styles.previewLoginKey} onPress={() => appendPreviewCodeDigit(digit)}>
+                        <Text style={styles.previewLoginKeyText}>{digit}</Text>
+                      </Pressable>
+                    ))}
+                    <Pressable style={styles.previewLoginKey} onPress={deletePreviewCodeDigit}>
+                      <Ionicons name="backspace-outline" size={22} color={colors.ink} />
+                    </Pressable>
+                    <Pressable style={styles.previewLoginKey} onPress={() => appendPreviewCodeDigit("0")}>
+                      <Text style={styles.previewLoginKeyText}>0</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.previewLoginKey, styles.previewLoginKeyConfirm, !canUnlock ? styles.previewLoginButtonDisabled : null]}
+                      disabled={!canUnlock}
+                      onPress={enterPreview}
+                    >
+                      <Ionicons name="checkmark" size={24} color="#ffffff" />
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -304,20 +452,44 @@ export function V2AgentWalletPreview() {
         {tab !== "worldcup" ? (
           <View style={styles.topbar}>
             <Pressable
-              style={styles.roundButton}
+              style={[styles.roundButton, isCommunityStack ? styles.roundButtonActive : null]}
               onPress={() => {
-                setTab("worldcup");
-                setWorldCupView("sentiment");
+                setTab(tab === "notices" || tab === "invite" ? "community" : tab === "community" ? "agent" : "community");
               }}
             >
-              <Ionicons name="menu" size={24} color={colors.ink} />
+              <Ionicons name={isCommunityStack ? "chevron-back" : "menu"} size={isCommunityStack ? 25 : 24} color={colors.ink} />
             </Pressable>
             <View style={styles.topbarCenterSpacer} />
-            <Pressable style={styles.roundButton} onPress={() => setTab("mine")}>
-              <Ionicons name="person-outline" size={21} color={colors.ink} />
+            <Pressable
+              style={[styles.roundButton, tab === "notices" ? styles.roundButtonActive : null]}
+              onPress={() => setTab(tab === "community" || tab === "invite" ? "notices" : tab === "notices" ? "notices" : "mine")}
+            >
+              <Ionicons
+                name={isCommunityStack ? "chatbubble-ellipses-outline" : "person-outline"}
+                size={isCommunityStack ? 22 : 21}
+                color={colors.ink}
+              />
             </Pressable>
           </View>
         ) : null}
+
+        {tab === "community" ? (
+          <CommunityPreview
+            email={previewEmail || "demo@hwallet.vip"}
+            onCards={() => {
+              setTab("worldcup");
+              setWorldCupView("sentiment");
+            }}
+            onDiscover={() => setTab("mine")}
+            onInvite={() => setTab("invite")}
+            onNewChat={() => {
+              setTab("agent");
+            }}
+          />
+        ) : null}
+
+        {tab === "notices" ? <NoticePreview /> : null}
+        {tab === "invite" ? <InvitePreview /> : null}
 
         {tab === "agent" ? (
           <View style={styles.agentScreen}>
@@ -711,6 +883,258 @@ function HWalletPreview({
   );
 }
 
+function CommunityPreview({
+  email,
+  onCards,
+  onDiscover,
+  onInvite,
+  onNewChat
+}: {
+  email: string;
+  onCards: () => void;
+  onDiscover: () => void;
+  onInvite: () => void;
+  onNewChat: () => void;
+}) {
+  const carouselRef = useRef<ScrollView>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const records = [
+    { id: "receive", title: "收款地址", text: "刚刚打开 HWallet 收款入口", time: "刚刚" },
+    { id: "agent", title: "Agent 对话", text: "查看可用资金和下一步机会", time: "今天" },
+    { id: "wallet", title: "钱包同步", text: "多账号地址已经分开记录", time: "昨天" }
+  ];
+  const carouselTones = [
+    styles.communityCarouselGreen,
+    styles.communityCarouselPurple,
+    styles.communityCarouselBlue
+  ];
+
+  function updateCarouselIndex(event: { nativeEvent: { contentOffset: { x: number } } }) {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / communityCarouselSnap);
+    setCarouselIndex(Math.max(0, Math.min(nextIndex, communityCarouselItems.length - 1)));
+  }
+
+  function scrollCarouselTo(index: number) {
+    carouselRef.current?.scrollTo({ x: index * communityCarouselSnap, animated: true });
+    setCarouselIndex(index);
+  }
+
+  return (
+    <View style={styles.communityShell}>
+      <ScrollView contentContainerStyle={styles.communityPage} showsVerticalScrollIndicator={false}>
+      <View style={styles.communityMemberLine}>
+        <Image source={appIcon} style={styles.communityAvatar} resizeMode="cover" />
+        <View style={styles.communityMemberInfo}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="修改昵称"
+            style={styles.communityNicknameRow}
+          >
+            <Text style={styles.communityMemberName}>海豚会员</Text>
+            <Ionicons name="create-outline" size={15} color={colors.muted} />
+          </Pressable>
+          <Text style={styles.communityMemberEmail}>{email}</Text>
+        </View>
+        <View style={styles.communityLevelBadge}>
+          <Text style={styles.communityLevelText}>Lv.3</Text>
+        </View>
+      </View>
+
+      <View style={styles.communityVipBlock}>
+        <View style={styles.communityVipRow}>
+          <Text style={styles.communityVipLabel}>VIP 进度</Text>
+          <Text style={styles.communityVipValue}>68%</Text>
+        </View>
+        <View style={styles.communityProgressTrack}>
+          <View style={styles.communityProgressFill} />
+        </View>
+      </View>
+
+      <ScrollView
+        ref={carouselRef}
+        horizontal
+        contentContainerStyle={styles.communityCarousel}
+        decelerationRate="fast"
+        disableIntervalMomentum
+        nestedScrollEnabled
+        onMomentumScrollEnd={updateCarouselIndex}
+        onScrollEndDrag={updateCarouselIndex}
+        scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
+        snapToAlignment="start"
+        snapToInterval={communityCarouselSnap}
+      >
+        {communityCarouselItems.map((item, index) => (
+          <View key={item.id} style={[styles.communityCarouselCard, carouselTones[index]]}>
+            <Text style={styles.communityCarouselKicker}>{item.kicker}</Text>
+            <Text style={styles.communityCarouselTitle}>{item.title}</Text>
+            <Text style={styles.communityCarouselText}>{item.text}</Text>
+          </View>
+        ))}
+      </ScrollView>
+      <View style={styles.communityCarouselDots}>
+        {communityCarouselItems.map((item, index) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={`切换到${item.kicker}`}
+            onPress={() => scrollCarouselTo(index)}
+            style={[
+              styles.communityCarouselDot,
+              index === carouselIndex ? styles.communityCarouselDotActive : null
+            ]}
+          />
+        ))}
+      </View>
+
+      <View style={styles.communitySection}>
+        <Text style={styles.communitySectionTitle}>入口</Text>
+      </View>
+      <View style={styles.communityEntryList}>
+        <CommunityActionCard icon="person-add-outline" title="邀请好友" text="一起进社区" onPress={onInvite} />
+        <CommunityActionCard icon="albums-outline" title="卡库" text="收藏和策略卡" onPress={onCards} />
+        <CommunityActionCard icon="compass-outline" title="发现" text="社区动态" onPress={onDiscover} />
+      </View>
+
+      <View style={styles.communityRecordsSection}>
+        <View style={styles.communityRecordsHeader}>
+          <Text style={styles.communityRecordsTitle}>对话记录</Text>
+          <Text style={styles.communityRecordsMeta}>最近</Text>
+        </View>
+        {records.map((record) => (
+          <View key={record.id} style={styles.communityRecordRow}>
+            <View style={styles.communityRecordIcon}>
+              <Ionicons name="chatbubble-ellipses" size={16} color={colors.ink} />
+            </View>
+            <View style={styles.communityRecordBody}>
+              <Text style={styles.communityRecordTitle}>{record.title}</Text>
+              <Text style={styles.communityRecordText}>{record.text}</Text>
+            </View>
+            <Text style={styles.communityRecordTime}>{record.time}</Text>
+          </View>
+        ))}
+      </View>
+      </ScrollView>
+      <Pressable style={styles.communityFloatingNewChat} onPress={onNewChat}>
+        <Ionicons name="create-outline" size={20} color="#ffffff" />
+        <Text style={styles.communityNewChatText}>新会话</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function CommunityActionCard({
+  icon,
+  title,
+  text,
+  onPress
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  text: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={styles.communityActionCard}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}，${text}`}
+    >
+      <View style={styles.communityActionIcon}>
+        <Ionicons name={icon} size={22} color={colors.ink} />
+      </View>
+      <View style={styles.communityActionBody}>
+        <Text style={styles.communityActionTitle}>{title}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function NoticePreview() {
+  return (
+    <View style={styles.noticeShell}>
+      <ScrollView contentContainerStyle={styles.noticePage} showsVerticalScrollIndicator={false}>
+        <View style={styles.noticeHeader}>
+          <Text style={styles.noticeEyebrow}>平台通知</Text>
+          <Text style={styles.noticeTitle}>公告</Text>
+          <Text style={styles.noticeSubtitle}>社区更新、钱包状态和活动消息都会放在这里。</Text>
+        </View>
+        <View style={styles.noticeList}>
+          {platformNoticeItems.map((item) => (
+            <View key={item.id} style={styles.noticeCard}>
+              <View style={styles.noticeCardTop}>
+                <Text style={styles.noticeTag}>{item.tag}</Text>
+                <Text style={styles.noticeTime}>{item.time}</Text>
+              </View>
+              <Text style={styles.noticeCardTitle}>{item.title}</Text>
+              <Text style={styles.noticeCardText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function InvitePreview() {
+  const { copied, flashCopied } = usePreviewCopyFeedback();
+
+  async function copyInviteLink() {
+    await Clipboard.setStringAsync("https://app.hwallet.vip/invite/HAITUN20");
+    flashCopied();
+  }
+
+  return (
+    <View style={styles.inviteShell}>
+      <ScrollView contentContainerStyle={styles.invitePage} showsVerticalScrollIndicator={false}>
+        <View style={styles.inviteHero}>
+          <Text style={styles.inviteEyebrow}>邀请好友</Text>
+          <Text style={styles.inviteTitle}>一起开通 Agent，赚 20% 佣金</Text>
+          <Text style={styles.inviteText}>分享你的专属邀请，好友进入社区并使用 HWallet 后，佣金记录会自动沉淀。</Text>
+          <View style={styles.inviteRewardRow}>
+            <View>
+              <Text style={styles.inviteRewardLabel}>佣金比例</Text>
+              <Text style={styles.inviteRewardValue}>20%</Text>
+            </View>
+            <View style={styles.inviteRewardBadge}>
+              <Text style={styles.inviteRewardBadgeText}>自动记录</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.inviteCodeCard}>
+          <Text style={styles.inviteCodeLabel}>专属邀请码</Text>
+          <Text style={styles.inviteCode}>HAITUN20</Text>
+          <Pressable
+            style={styles.inviteCopyButton}
+            onPress={copyInviteLink}
+            accessibilityRole="button"
+            accessibilityLabel="复制邀请链接"
+          >
+            <Ionicons name={copied ? "checkmark-circle-outline" : "copy-outline"} size={17} color="#ffffff" />
+            <Text style={styles.inviteCopyText}>{copied ? "已复制" : "复制邀请链接"}</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.inviteStepList}>
+          {inviteRewardSteps.map((step, index) => (
+            <View key={step.id} style={styles.inviteStepRow}>
+              <View style={styles.inviteStepIndex}>
+                <Text style={styles.inviteStepIndexText}>{index + 1}</Text>
+              </View>
+              <View style={styles.inviteStepBody}>
+                <Text style={styles.inviteStepTitle}>{step.title}</Text>
+                <Text style={styles.inviteStepText}>{step.text}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
 function AgentReceiveCard({ address }: { address: string }) {
   const { copied, flashCopied } = usePreviewCopyFeedback();
 
@@ -776,6 +1200,10 @@ function lifecycleDotStyle(status: NonNullable<V2WalletContext["lifecycle"]>[num
 
 function shortPreviewAddress(address: string): string {
   return `${address.slice(0, 8)}...${address.slice(-6)}`;
+}
+
+function normalizePreviewOtpCode(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 6);
 }
 
 function readStoredPreviewEmail(): string {
@@ -1560,46 +1988,174 @@ const styles = StyleSheet.create({
     backgroundColor: colors.shell
   },
   previewLogin: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 28,
-    gap: 24,
+    flexGrow: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 28,
+    gap: 18,
     backgroundColor: "#ffffff"
   },
+  previewLoginCode: {
+    paddingTop: 32,
+    paddingBottom: 96
+  },
   previewLoginTop: {
-    gap: 8
+    position: "relative",
+    minHeight: 316,
+    borderRadius: 38,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    padding: 26,
+    gap: 8,
+    backgroundColor: "#071812",
+    shadowColor: "#0b160f",
+    shadowOpacity: 0.34,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 7
+  },
+  previewLoginDoorLeft: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: "50%",
+    backgroundColor: "rgba(255, 255, 255, 0.035)"
+  },
+  previewLoginDoorRight: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: "50%",
+    backgroundColor: "rgba(0, 0, 0, 0.16)"
+  },
+  previewLoginDoorSeam: {
+    position: "absolute",
+    top: 26,
+    bottom: 26,
+    left: "50%",
+    width: 1,
+    backgroundColor: "rgba(201, 255, 63, 0.38)"
+  },
+  previewLoginHeroGlow: {
+    position: "absolute",
+    top: 30,
+    right: 24,
+    width: 148,
+    height: 5,
+    backgroundColor: "#c9ff3f"
+  },
+  previewLoginLogoShell: {
+    width: 112,
+    height: 112,
+    borderRadius: 30,
+    overflow: "hidden",
+    backgroundColor: "#ffffff",
+    marginBottom: 16,
+    shadowColor: "#000000",
+    shadowOpacity: 0.34,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6
+  },
+  previewLoginLogo: {
+    width: "100%",
+    height: "100%"
   },
   previewLoginBrand: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: "800"
+    alignSelf: "flex-start",
+    color: "#c9ff3f",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 0
   },
   previewLoginTitle: {
-    color: colors.ink,
-    fontSize: 30,
-    lineHeight: 38,
-    fontWeight: "900"
+    color: "#ffffff",
+    fontSize: 42,
+    lineHeight: 49,
+    fontWeight: "900",
+    letterSpacing: 0,
+    marginTop: 4
   },
   previewLoginSubtitle: {
-    color: "#68625c",
-    fontSize: 15,
-    lineHeight: 22,
+    maxWidth: 300,
+    color: "#d8d2ca",
+    fontSize: 16,
+    lineHeight: 23,
     fontWeight: "700"
   },
   previewLoginCard: {
-    borderRadius: 28,
-    backgroundColor: "#f7f5f2",
-    padding: 14,
-    gap: 10
+    borderRadius: 32,
+    backgroundColor: "#ffffff",
+    padding: 16,
+    gap: 12,
+    shadowColor: "#d9d1c8",
+    shadowOpacity: 0.34,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 5
+  },
+  previewLoginCardTitle: {
+    color: colors.ink,
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 2
+  },
+  previewLoginFieldGroup: {
+    gap: 7
+  },
+  previewLoginLabel: {
+    color: "#6f675f",
+    fontSize: 13,
+    fontWeight: "900"
   },
   previewLoginInput: {
     minHeight: 54,
     borderRadius: 20,
     paddingHorizontal: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f6f3ef",
     color: colors.ink,
     fontSize: 16,
     fontWeight: "700"
+  },
+  previewLoginCodeDots: {
+    height: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9
+  },
+  previewLoginCodeDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#e2ddd6"
+  },
+  previewLoginCodeDotFilled: {
+    backgroundColor: "#c9ff3f"
+  },
+  previewLoginKeypad: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  previewLoginKey: {
+    width: "30.6%",
+    minHeight: 56,
+    borderRadius: 22,
+    backgroundColor: "#f6f3ef",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  previewLoginKeyConfirm: {
+    backgroundColor: colors.ink
+  },
+  previewLoginKeyText: {
+    color: colors.ink,
+    fontSize: 21,
+    fontWeight: "900"
   },
   previewLoginButton: {
     minHeight: 54,
@@ -1611,6 +2167,20 @@ const styles = StyleSheet.create({
   previewLoginButtonDisabled: {
     opacity: 0.38
   },
+  previewLoginSecondaryButton: {
+    minHeight: 52,
+    borderRadius: 20,
+    backgroundColor: "#f6f3ef",
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  previewLoginSecondaryButtonText: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
   previewLoginButtonText: {
     color: "#ffffff",
     fontSize: 16,
@@ -1618,6 +2188,7 @@ const styles = StyleSheet.create({
   },
   topbar: {
     height: 72,
+    backgroundColor: colors.shell,
     paddingHorizontal: 26,
     flexDirection: "row",
     alignItems: "center",
@@ -1636,9 +2207,482 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 4
   },
+  roundButtonActive: {
+    backgroundColor: "#efe7df"
+  },
   topbarCenterSpacer: {
     width: 76,
     height: 50
+  },
+  communityShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  communityPage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 156,
+    gap: 24,
+    backgroundColor: "#ffffff"
+  },
+  communityMemberLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 8
+  },
+  communityAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16
+  },
+  communityMemberInfo: {
+    flex: 1,
+    gap: 4
+  },
+  communityNicknameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6
+  },
+  communityMemberName: {
+    color: colors.ink,
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900"
+  },
+  communityMemberEmail: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  communityLevelBadge: {
+    minWidth: 54,
+    minHeight: 32,
+    borderRadius: 16,
+    backgroundColor: "#f1ebe5",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  communityLevelText: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  communityVipBlock: {
+    gap: 8
+  },
+  communityVipRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  communityVipLabel: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  communityVipValue: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  communityProgressTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+    backgroundColor: "#f1ebe5"
+  },
+  communityProgressFill: {
+    width: "68%",
+    height: "100%",
+    borderRadius: 4,
+    backgroundColor: colors.ink
+  },
+  communityCarousel: {
+    paddingRight: 32,
+    gap: 12,
+    marginHorizontal: -2
+  },
+  communityCarouselCard: {
+    width: 224,
+    minHeight: 96,
+    borderRadius: 22,
+    padding: 14,
+    justifyContent: "space-between",
+    overflow: "hidden"
+  },
+  communityCarouselGreen: {
+    backgroundColor: "#d9ff55"
+  },
+  communityCarouselPurple: {
+    backgroundColor: "#6b38ff"
+  },
+  communityCarouselBlue: {
+    backgroundColor: "#1db6ff"
+  },
+  communityCarouselKicker: {
+    color: "rgba(7, 24, 18, 0.72)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  communityCarouselTitle: {
+    color: "#071812",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  communityCarouselText: {
+    color: "rgba(7, 24, 18, 0.72)",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800"
+  },
+  communityCarouselDots: {
+    marginTop: -14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7
+  },
+  communityCarouselDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ded7cf"
+  },
+  communityCarouselDotActive: {
+    width: 18,
+    backgroundColor: colors.ink
+  },
+  communitySection: {
+    marginBottom: -8
+  },
+  communitySectionTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  communityEntryList: {
+    gap: 24
+  },
+  communityActionCard: {
+    minHeight: 34,
+    borderRadius: 0,
+    backgroundColor: "transparent",
+    padding: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18
+  },
+  communityActionIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  communityActionBody: {
+    flex: 1
+  },
+  communityActionTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  communityActionText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800"
+  },
+  communityRecordsSection: {
+    gap: 20
+  },
+  communityRecordsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  communityRecordsTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  communityRecordsMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  communityRecordRow: {
+    minHeight: 48,
+    borderRadius: 0,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16
+  },
+  communityRecordIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  communityRecordBody: {
+    flex: 1,
+    gap: 3
+  },
+  communityRecordTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  communityRecordText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700"
+  },
+  communityRecordTime: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  communityFloatingNewChat: {
+    position: "absolute",
+    right: 32,
+    bottom: 34,
+    minHeight: 56,
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    backgroundColor: colors.ink,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  communityNewChatText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  noticeShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  noticePage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 112,
+    gap: 26,
+    backgroundColor: "#ffffff"
+  },
+  noticeHeader: {
+    gap: 8,
+    paddingTop: 8
+  },
+  noticeEyebrow: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  noticeTitle: {
+    color: colors.ink,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "900"
+  },
+  noticeSubtitle: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  noticeList: {
+    gap: 10
+  },
+  noticeCard: {
+    minHeight: 118,
+    borderRadius: 24,
+    backgroundColor: "#fbfaf8",
+    padding: 18,
+    gap: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  noticeCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  noticeTag: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  noticeTime: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  noticeCardTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900"
+  },
+  noticeCardText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
+  },
+  inviteShell: {
+    flex: 1,
+    backgroundColor: "#ffffff"
+  },
+  invitePage: {
+    minHeight: "100%",
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 112,
+    gap: 18,
+    backgroundColor: "#ffffff"
+  },
+  inviteHero: {
+    borderRadius: 30,
+    backgroundColor: colors.ink,
+    padding: 22,
+    gap: 14,
+    overflow: "hidden"
+  },
+  inviteEyebrow: {
+    color: "#d9ff55",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  inviteTitle: {
+    color: "#ffffff",
+    fontSize: 29,
+    lineHeight: 36,
+    fontWeight: "900"
+  },
+  inviteText: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700"
+  },
+  inviteRewardRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14
+  },
+  inviteRewardLabel: {
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  inviteRewardValue: {
+    color: "#ffffff",
+    fontSize: 44,
+    lineHeight: 50,
+    fontWeight: "900"
+  },
+  inviteRewardBadge: {
+    borderRadius: 999,
+    backgroundColor: "#d9ff55",
+    paddingHorizontal: 14,
+    paddingVertical: 9
+  },
+  inviteRewardBadgeText: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  inviteCodeCard: {
+    borderRadius: 24,
+    backgroundColor: "#fbfaf8",
+    padding: 18,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  inviteCodeLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  inviteCode: {
+    color: colors.ink,
+    fontSize: 24,
+    fontWeight: "900"
+  },
+  inviteCopyButton: {
+    minHeight: 48,
+    borderRadius: 24,
+    backgroundColor: colors.ink,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  inviteCopyText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  inviteStepList: {
+    gap: 12
+  },
+  inviteStepRow: {
+    flexDirection: "row",
+    gap: 12,
+    borderRadius: 22,
+    backgroundColor: "#fbfaf8",
+    padding: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee7df"
+  },
+  inviteStepIndex: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#f1ebe5",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  inviteStepIndexText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  inviteStepBody: {
+    flex: 1,
+    gap: 4
+  },
+  inviteStepTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  inviteStepText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
   },
   agentScreen: {
     flex: 1
