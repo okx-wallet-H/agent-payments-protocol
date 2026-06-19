@@ -761,9 +761,9 @@ function WorldCupTab({
           style={styles.eventHero}
           imageStyle={styles.eventHeroImage}
         >
-          <Text style={styles.worldCupLabel}>世界杯狂欢季</Text>
-          <Text style={styles.worldCupTitle}>跟着 Agent 看世界杯，瓜分 USDT 奖池</Text>
-          <Text style={styles.worldCupNote}>距离结束 42天 03时 46分 08秒</Text>
+          <Text style={styles.worldCupLabel}>预测市场 · OKX Outcomes</Text>
+          <Text style={styles.worldCupTitle}>让 Agent 先看市场，再给你机会卡</Text>
+          <Text style={styles.worldCupNote}>世界杯只是第一个样例。当前支持只读查询、模拟预览和本地跟踪。</Text>
         </ImageBackground>
 
         <View style={styles.rewardCard}>
@@ -802,6 +802,34 @@ function WorldCupTab({
             <Text style={styles.scaleMuted}>5万</Text>
           </View>
         </View>
+
+        <Pressable style={styles.predictionStageCard} onPress={() => setWorldCupView("explore")}>
+          <View style={styles.predictionStageHeader}>
+            <View style={styles.predictionStageIcon}>
+              <Ionicons name="analytics-outline" size={22} color="#0d2118" />
+            </View>
+            <View style={styles.predictionStageTitleStack}>
+              <Text style={styles.predictionStageEyebrow}>第二阶段能力</Text>
+              <Text style={styles.predictionStageTitle}>预测市场控制台</Text>
+            </View>
+            <Text style={styles.predictionStageBadge}>只读</Text>
+          </View>
+          <Text style={styles.predictionStageText}>
+            已接入 OKX Outcomes 市场查询。先看事件、会/不会赔率、订单簿和流动性；真实下单先占位关闭。
+          </Text>
+          <View style={styles.predictionStageGrid}>
+            {["查市场", "看订单簿", "模拟预览", "API Key 占位"].map((label) => (
+              <Text key={label} style={styles.predictionStageChip}>{label}</Text>
+            ))}
+          </View>
+          <View style={styles.predictionStageFooter}>
+            <Text style={styles.predictionStageClosed}>下单未开放</Text>
+            <View style={styles.predictionStageCta}>
+              <Text style={styles.predictionStageCtaText}>进入市场</Text>
+              <Ionicons name="arrow-forward" size={16} color="#0d2118" />
+            </View>
+          </View>
+        </Pressable>
 
         <View style={styles.scoreSection}>
           <View style={styles.sectionTitleRow}>
@@ -843,7 +871,7 @@ function WorldCupTab({
               onHome();
               return;
             }
-            onAsk("继续分析今天的世界杯机会");
+            onAsk("继续分析今天的预测市场机会");
           }}
         >
           <View style={styles.agentInsightTop}>
@@ -918,7 +946,7 @@ function WorldCupTab({
         </View>
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>探索赛事</Text>
+          <Text style={styles.sectionTitle}>预测市场</Text>
           <Text style={styles.sectionHint}>Agent 实时看</Text>
         </View>
 
@@ -1044,7 +1072,7 @@ function ExploreWorldCupPage({
           <Pressable style={styles.exploreBackButton} onPress={onBack}>
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
-          <Text style={styles.exploreTitle}>探索世界杯</Text>
+          <Text style={styles.exploreTitle}>预测市场</Text>
           <View style={styles.exploreHeaderGhost} />
         </View>
 
@@ -1065,7 +1093,7 @@ function ExploreWorldCupPage({
       {exploreLoading ? (
         <View style={styles.exploreStatusRow}>
           <ActivityIndicator size="small" />
-          <Text style={styles.exploreStatusText}>正在更新世界杯数据</Text>
+          <Text style={styles.exploreStatusText}>正在更新预测市场数据</Text>
         </View>
       ) : null}
 
@@ -1138,7 +1166,7 @@ function DynamicChampionMarketGrid({
         <View style={styles.marketIconBadge}>
           <Text style={styles.marketIconText}>⚽</Text>
         </View>
-        <Text style={styles.marketSectionTitle}>2026 年世界杯冠军</Text>
+        <Text style={styles.marketSectionTitle}>冠军预测市场</Text>
         <Ionicons name="chevron-forward" size={22} color={colors.ink} />
       </View>
       <View style={styles.championGrid}>
@@ -1185,7 +1213,7 @@ function DynamicGoldenBootMarketList({
             <Text style={styles.noPill}>{card.options[1]?.priceLabel ? `No ${card.options[1].priceLabel}` : "No"}</Text>
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
-          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1214,7 +1242,7 @@ function DynamicGroupMarketList({
               <Text style={styles.groupPrice}>{optionPriceLabel(card) || card.probabilityLabel || "观察"}</Text>
             </View>
           </View>
-          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || card.subtitle || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1260,7 +1288,7 @@ function DynamicMatchMarketList({
             ) : null}
           </View>
           {card.agentNote ? <Text style={styles.marketAgentNote}>{card.agentNote}</Text> : null}
-          <Text style={styles.marketVolume}>{card.volumeLabel || "世界杯数据展示"}</Text>
+          <Text style={styles.marketVolume}>{card.volumeLabel || "预测市场数据展示"}</Text>
         </Pressable>
       ))}
     </View>
@@ -1321,7 +1349,7 @@ function WorldCupMarketDetailPage({
           <Pressable style={styles.exploreBackButton} onPress={onBack}>
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
-          <Text style={styles.exploreTitle}>市场详情</Text>
+          <Text style={styles.exploreTitle}>预测详情</Text>
           <View style={styles.exploreHeaderGhost} />
         </View>
 
@@ -5478,6 +5506,103 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
     marginHorizontal: 2,
     backgroundColor: "rgba(0, 0, 0, 0.44)"
+  },
+  predictionStageCard: {
+    borderRadius: 26,
+    backgroundColor: "#101f1b",
+    padding: 18,
+    gap: 14,
+    shadowColor: "#0b1c11",
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4
+  },
+  predictionStageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  predictionStageIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: "#c9ff4d",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  predictionStageTitleStack: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0
+  },
+  predictionStageEyebrow: {
+    color: "#aaff35",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageTitle: {
+    color: "#fff",
+    fontSize: 21,
+    lineHeight: 26,
+    fontWeight: "900"
+  },
+  predictionStageBadge: {
+    overflow: "hidden",
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "rgba(255, 255, 255, 0.82)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageText: {
+    color: "rgba(255, 255, 255, 0.76)",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
+  },
+  predictionStageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  predictionStageChip: {
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "#fff",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  predictionStageClosed: {
+    color: "rgba(255, 255, 255, 0.56)",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  predictionStageCta: {
+    minHeight: 40,
+    borderRadius: 20,
+    backgroundColor: "#c9ff4d",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6
+  },
+  predictionStageCtaText: {
+    color: "#0d2118",
+    fontSize: 13,
+    fontWeight: "900"
   },
   scoreSection: {
     marginHorizontal: -22,
