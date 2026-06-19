@@ -66,6 +66,7 @@ assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview
 assertIncludes(webHumanPreview, "...current", "root web preview prepends each sent user message to the top of the chat thread");
 assertIncludes(webHumanPreview, "latestUserMessageRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
 assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
+assertIncludes(webHumanPreview, ".filter((message) => !message.seed)", "root web preview removes starter demo messages after the first real user message");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
 assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
 assertNotIncludes(webHumanPreview, "readOnly value=\"\"", "root web preview composer is no longer a static read-only input");
