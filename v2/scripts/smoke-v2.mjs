@@ -64,24 +64,27 @@ assert(Array.isArray(home.home?.recent?.tracking), "home returns recent tracking
 assert(Array.isArray(home.home?.recent?.strategies), "home returns recent strategy list");
 assert(Array.isArray(home.home?.recent?.records), "home returns recent record list");
 
-const explore = await getJson("/api/v2/world-cup/explore");
-assert(explore.explore?.type === "world_cup_explore_view", "world cup explore returns view");
-assert(Boolean(explore.explore?.source?.label), "world cup explore returns friendly source label");
-assert(Boolean(explore.explore?.source?.message), "world cup explore returns friendly source message");
-assert(Array.isArray(explore.explore?.categories), "world cup explore has categories");
-assert(explore.explore?.cards?.champion !== undefined, "world cup explore has champion bucket");
-assert(explore.explore?.cards?.upcoming_matches !== undefined, "world cup explore has match bucket");
-assert(explore.explore?.summary?.categoryCounts?.upcoming_matches >= 1, "world cup explore keeps upcoming matches visible");
+const explore = await getJson("/api/v2/prediction/explore");
+assert(explore.explore?.type === "world_cup_explore_view", "prediction explore returns view");
+assert(Boolean(explore.explore?.source?.label), "prediction explore returns friendly source label");
+assert(Boolean(explore.explore?.source?.message), "prediction explore returns friendly source message");
+assert(Array.isArray(explore.explore?.categories), "prediction explore has categories");
+assert(explore.explore?.cards?.champion !== undefined, "prediction explore has champion bucket");
+assert(explore.explore?.cards?.upcoming_matches !== undefined, "prediction explore has match bucket");
+assert(explore.explore?.summary?.categoryCounts?.upcoming_matches >= 1, "prediction explore keeps upcoming matches visible");
 const selectedWorldCupCard = explore.explore?.cards?.champion?.[0];
 const selectedWorldCupMarket = selectedWorldCupCard?.marketRef;
-assert(Boolean(selectedWorldCupMarket?.marketId), "world cup explore exposes selectable market");
-assert(selectedWorldCupMarket?.readOnly === true, "world cup explore selectable market is read-only");
-assert(!("market" in (selectedWorldCupCard || {})), "world cup explore does not expose raw market snapshot");
+assert(Boolean(selectedWorldCupMarket?.marketId), "prediction explore exposes selectable market");
+assert(selectedWorldCupMarket?.readOnly === true, "prediction explore selectable market is read-only");
+assert(!("market" in (selectedWorldCupCard || {})), "prediction explore does not expose raw market snapshot");
 
-const liveModeExplore = await getJson("/api/v2/world-cup/explore?mode=live");
-assert(liveModeExplore.explore?.type === "world_cup_explore_view", "world cup live-mode fallback returns view");
+const legacyExplore = await getJson("/api/v2/world-cup/explore");
+assert(legacyExplore.explore?.type === "world_cup_explore_view", "legacy world cup explore remains compatible");
+
+const liveModeExplore = await getJson("/api/v2/prediction/explore?mode=live");
+assert(liveModeExplore.explore?.type === "world_cup_explore_view", "prediction live-mode fallback returns view");
 if (liveModeExplore.explore?.source?.mode === "sample") {
-  assert(Boolean(liveModeExplore.explore?.source?.warning), "world cup live-mode fallback explains sample data");
+  assert(Boolean(liveModeExplore.explore?.source?.warning), "prediction live-mode fallback explains sample data");
 }
 
 const recharge = await postJson("/api/v2/phase-one", {

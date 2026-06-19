@@ -19,6 +19,8 @@ const files = {
   taskWorkflow: read("docs/TASK_REVIEW_WORKFLOW.md"),
   okxClient: read("v2/execution/okx-outcomes-client.ts"),
   okxPreview: read("v2/execution/okx-outcomes-preview.ts"),
+  predictionExploreData: read("v2/app/prediction-explore-data.ts"),
+  predictionExploreRoute: read("app/api/v2/prediction/explore/route.ts"),
   exploreRoute: read("app/api/v2/world-cup/explore/route.ts"),
   detailRoute: read("app/api/v2/prediction/detail/route.ts"),
   exploreView: read("v2/app/world-cup-explore.ts"),
@@ -93,9 +95,20 @@ excludesAny("OKX Outcomes client", files.okxClient, [
   "broadcast"
 ]);
 
-includesAll("explore route", files.exploreRoute, [
-  "guardPredictionReadRequest",
+includesAll("prediction explore data", files.predictionExploreData, [
+  "readPredictionExploreData",
   "listOkxWorldCupMarkets",
+  "capturePredictionMarketSnapshotsSafely"
+]);
+includesAll("generic explore route", files.predictionExploreRoute, [
+  "guardPredictionReadRequest",
+  "prediction-explore",
+  "readPredictionExploreData",
+  "createWorldCupExploreView"
+]);
+includesAll("legacy explore route", files.exploreRoute, [
+  "world-cup-explore",
+  "readPredictionExploreData",
   "createWorldCupExploreView"
 ]);
 includesAll("detail route", files.detailRoute, [
@@ -157,7 +170,7 @@ includesAll("mobile prediction actions", files.mobileTypes, [
   '"order_closed"'
 ]);
 includesAll("mobile prediction APIs", files.mobileApi, [
-  "/api/v2/world-cup/explore",
+  "/api/v2/prediction/explore",
   "/api/v2/prediction/detail"
 ]);
 includesAll("mobile prediction smoke", files.mobilePredictionSmoke, [

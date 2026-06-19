@@ -10,7 +10,7 @@ import { guardPredictionReadRequest } from "@/v2/auth/prediction-read-guard";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const guard = await guardPredictionReadRequest(request, { route: "world-cup-explore" });
+  const guard = await guardPredictionReadRequest(request, { route: "prediction-explore" });
   if (!guard.ok) {
     return NextResponse.json(guard.body, {
       status: guard.status,

@@ -129,6 +129,12 @@ const requirements = [
       !/return data\.detail/.test(api)
   },
   {
+    label: "mobile prediction-market API reads generic explore endpoint",
+    pass: () =>
+      /getPredictionExplore\(\): Promise<V2WorldCupExploreView>/.test(api) &&
+      /\/api\/v2\/prediction\/explore/.test(api)
+  },
+  {
     label: "mobile prediction-market hook preserves detail source response",
     pass: () =>
       /loadPredictionDetail = useCallback\(\(marketId: string\): Promise<V2PredictionDetailResponse>/.test(hook) &&
