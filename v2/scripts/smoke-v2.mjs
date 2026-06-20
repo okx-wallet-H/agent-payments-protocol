@@ -64,7 +64,7 @@ assert(Array.isArray(home.home?.recent?.tracking), "home returns recent tracking
 assert(Array.isArray(home.home?.recent?.strategies), "home returns recent strategy list");
 assert(Array.isArray(home.home?.recent?.records), "home returns recent record list");
 
-const explore = await getJson("/api/v2/prediction/explore?mode=sample");
+const explore = await getJson(`/api/v2/prediction/explore?mode=sample&userId=${encodeURIComponent(userId)}`);
 assert(explore.explore?.type === "world_cup_explore_view", "prediction explore returns view");
 assert(Boolean(explore.explore?.source?.label), "prediction explore returns friendly source label");
 assert(Boolean(explore.explore?.source?.message), "prediction explore returns friendly source message");
@@ -79,10 +79,10 @@ assert(Boolean(selectedWorldCupMarket?.marketId), "prediction explore exposes se
 assert(selectedWorldCupMarket?.readOnly === true, "prediction explore selectable market is read-only");
 assert(!("market" in (selectedWorldCupCard || {})), "prediction explore does not expose raw market snapshot");
 
-const legacyExplore = await getJson("/api/v2/world-cup/explore");
+const legacyExplore = await getJson(`/api/v2/world-cup/explore?userId=${encodeURIComponent(userId)}`);
 assert(legacyExplore.explore?.type === "world_cup_explore_view", "legacy world cup explore remains compatible");
 
-const liveModeExplore = await getJson("/api/v2/prediction/explore?mode=live");
+const liveModeExplore = await getJson(`/api/v2/prediction/explore?mode=live&userId=${encodeURIComponent(userId)}`);
 assert(liveModeExplore.explore?.type === "world_cup_explore_view", "prediction live mode returns view");
 assert(liveModeExplore.explore?.source?.mode !== "sample", "prediction live mode does not return sample data");
 if (liveModeExplore.explore?.source?.mode === "unavailable") {
