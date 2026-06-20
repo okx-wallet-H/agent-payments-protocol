@@ -62,12 +62,18 @@ assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、�
 assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
 assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
 assertIncludes(webHumanPreview, "const [settingsOpen, setSettingsOpen] = useState(false)", "root web preview has settings sheet state");
+assertIncludes(webHumanPreview, "const [toolMenuOpen, setToolMenuOpen] = useState(false)", "root web preview has a composer tool menu state");
 assertIncludes(webHumanPreview, "className=\"human-settings-sheet\"", "root web preview opens a clean settings sheet");
 assertIncludes(webHumanPreview, "Agent 设置", "root web preview labels the settings layer");
 assertIncludes(webHumanPreview, "新会话", "root web preview lets users start a clean conversation from settings");
 assertIncludes(webHumanPreview, "只读保护", "root web preview surfaces read-only safety in settings");
 assertIncludes(webHumanPreview, "执行关闭", "root web preview keeps execution closed in settings");
 assertIncludes(webHumanPreview, "setMessages([])", "root web preview settings can clear the active conversation");
+assertIncludes(webHumanPreview, "className=\"human-tool-menu\"", "root web preview keeps tools behind the composer plus menu");
+assertIncludes(webHumanPreview, "aria-label={toolMenuOpen ? \"收起能力\" : \"打开能力\"}", "root web preview turns the composer plus into a tool toggle");
+assertIncludes(webHumanPreview, "生成我的收款地址", "root web preview exposes receive as a hidden composer action");
+assertIncludes(webHumanPreview, "看看预测市场", "root web preview exposes prediction as a hidden composer action");
+assertIncludes(webHumanPreview, "刷新我的资产", "root web preview exposes asset refresh as a hidden composer action");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
 assertIncludes(webHumanPreview, "const initialHumanChatMessages: HumanChatMessage[] = []", "root web preview starts with an empty human Agent chat");
 assertNotIncludes(webHumanPreview, "HWallet 已连接。我可以先帮你看资产", "root web preview does not seed default Agent copy");
@@ -94,6 +100,7 @@ assertIncludes(webStyles, ".human-app-page", "root web human preview styles the 
 assertIncludes(webStyles, ".human-chat-thread", "root web human preview styles the default Agent chat thread");
 assertNotIncludes(webStyles, ".human-quick-prompts", "root web human preview removes empty-screen quick prompt styles");
 assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does not keep stale hero styles");
+assertIncludes(webStyles, ".human-tool-menu", "root web human preview styles hidden composer tools");
 assertIncludes(webStyles, "--human-keyboard-offset", "root web human preview exposes a keyboard offset CSS variable");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-composer", "root web human preview lifts the composer above the keyboard");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-nav", "root web human preview hides bottom nav while the keyboard is open");

@@ -532,6 +532,40 @@ button.compact {
   color: rgba(255, 255, 255, 0.78);
 }
 
+.human-tool-menu {
+  position: fixed;
+  right: max(24px, calc((100vw - 430px) / 2 + 24px));
+  bottom: calc(max(158px, calc(env(safe-area-inset-bottom) + 158px)) + var(--human-keyboard-offset, 0px));
+  left: max(24px, calc((100vw - 430px) / 2 + 24px));
+  z-index: 21;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  border-radius: 28px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 52px rgba(17, 24, 39, 0.13);
+  backdrop-filter: blur(18px);
+}
+
+.human-tool-menu button {
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  min-height: 72px;
+  border-radius: 22px;
+  padding: 10px 4px;
+  background: #f6f3ef;
+  color: #171717;
+  font-size: 12px;
+  font-weight: 920;
+  box-shadow: none;
+}
+
+.human-tool-menu button:active {
+  transform: translateY(1px);
+}
+
 .human-chat-composer {
   position: fixed;
   right: max(24px, calc((100vw - 430px) / 2 + 24px));
