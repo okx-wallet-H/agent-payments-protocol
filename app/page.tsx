@@ -231,6 +231,7 @@ function HumanAgentChatHome() {
     function syncKeyboardOffset() {
       const offset = Math.max(0, window.innerHeight - activeViewport.height - activeViewport.offsetTop);
       setKeyboardOffset(Math.round(offset));
+      setKeyboardOpen(offset > 24 || document.activeElement instanceof HTMLInputElement);
     }
 
     syncKeyboardOffset();
@@ -245,7 +246,11 @@ function HumanAgentChatHome() {
   useEffect(() => {
     if (!pendingFocusMessageId.current) return;
     const frame = window.requestAnimationFrame(() => {
-      latestUserMessageRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      const target = latestUserMessageRef.current;
+      if (target) {
+        const focusTop = target.getBoundingClientRect().top + window.scrollY - 106;
+        window.scrollTo({ top: Math.max(0, focusTop), behavior: "smooth" });
+      }
       pendingFocusMessageId.current = null;
     });
     return () => window.cancelAnimationFrame(frame);
@@ -339,8 +344,15 @@ function HumanAgentChatHome() {
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          onFocus={() => setKeyboardOpen(true)}
-          onBlur={() => setKeyboardOpen(false)}
+          onFocus={() => {
+            setKeyboardOpen(true);
+            setToolMenuOpen(false);
+          }}
+          onBlur={() => {
+            const viewport = window.visualViewport;
+            const offset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+            setKeyboardOpen(offset > 24);
+          }}
           placeholder="向 Agent 发送消息"
         />
         <button type="submit" aria-label="发送" disabled={!draft.trim()}>
