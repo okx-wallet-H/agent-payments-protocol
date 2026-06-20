@@ -24,6 +24,16 @@ const invalidBearer = await fetch(`${baseUrl}/api/v2/mobile/home`, {
 
 assert(invalidBearer.status === 401, "invalid bearer token is rejected");
 
+const localMissingUser = await fetch(`${baseUrl}/api/v2/mobile/home`);
+const localMissingUserData = await localMissingUser.json().catch(() => ({}));
+
+assert(localMissingUser.status === 401, "local missing user is rejected");
+assert(localMissingUserData.error === "userId is required", "local missing user does not fall back to demo user");
+
+const resolvedMissingUser = await resolvePhaseOneUser(new Request("http://localhost/api/v2/mobile/home"));
+assert(resolvedMissingUser.ok === false && resolvedMissingUser.status === 401, "resolver rejects missing user");
+assert(resolvedMissingUser.userId === "", "resolver does not return demo user");
+
 const localFallback = await fetch(`${baseUrl}/api/v2/mobile/home?userId=${encodeURIComponent(userId)}`);
 const localFallbackData = await localFallback.json().catch(() => ({}));
 

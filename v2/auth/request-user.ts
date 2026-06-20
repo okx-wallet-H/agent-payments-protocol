@@ -1,5 +1,4 @@
 import { resolveRequestUser, type AccessCheck } from "../../lib/access-control";
-import { DEFAULT_PHASE_ONE_USER_ID } from "../storage/phase-one-store";
 
 export type PhaseOneUserBody = {
   ownerUserId?: string;
@@ -39,9 +38,18 @@ export async function resolvePhaseOneUser(request: Request, body?: PhaseOneUserB
     };
   }
 
+  if (!resolved.userId) {
+    return {
+      ok: false,
+      status: 401,
+      error: "userId is required",
+      userId: ""
+    };
+  }
+
   return {
     ...resolved,
-    userId: resolved.userId || DEFAULT_PHASE_ONE_USER_ID
+    userId: resolved.userId
   };
 }
 
