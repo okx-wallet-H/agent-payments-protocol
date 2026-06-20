@@ -26,6 +26,7 @@ async function main() {
     const storage = await runStorageHealthPath();
     const executionGates = await runExecutionGatePath();
     const accessControl = await runAccessControlPath();
+    const agentOwnerBoundary = await runAgentOwnerBoundaryPath(accessControl);
     const accessDenied = await runAccessDeniedPath();
     const happyPath = await runHappyPath();
     const chatPath = await runChatPath();
@@ -38,6 +39,7 @@ async function main() {
       storage,
       executionGates,
       accessControl,
+      agentOwnerBoundary,
       accessDenied,
       happyPath,
       chatPath,
@@ -60,8 +62,45 @@ async function runAccessControlPath() {
   assertEqual(response.accessControl.enforcement, expectedOwnerGuard ? "owner_user_id" : "off", "access enforcement");
   return {
     requireOwner: response.accessControl.requireOwner,
+    requirePrivyToken: response.accessControl.requirePrivyToken,
     enforcement: response.accessControl.enforcement,
     warningCount: response.accessControl.warnings.length
+  };
+}
+
+async function runAgentOwnerBoundaryPath(accessControl) {
+  const expectedAuthErrorStatus = accessControl.requirePrivyToken ? 401 : accessControl.requireOwner ? 403 : undefined;
+  const list = expectedAuthErrorStatus
+    ? await getRawAllowingError("/api/agents", expectedAuthErrorStatus)
+    : await getRaw("/api/agents");
+
+  if (!expectedAuthErrorStatus) {
+    assertTruthy(Array.isArray(list.agents), "ownerless agent list shape");
+    assertEqual(list.agents.length, 0, "ownerless agent list is empty");
+  }
+
+  const expectedCreateStatus = expectedAuthErrorStatus || 400;
+  const denied = await postRawAllowingError(
+    "/api/agents",
+    {
+      name: "Ownerless Smoke Agent",
+      userWalletAddress: randomAddress()
+    },
+    expectedCreateStatus
+  );
+  const deniedError = String(denied.error || "");
+  assertTruthy(
+    deniedError.includes("ownerUserId is required") ||
+      deniedError.includes("Missing Privy access token") ||
+      deniedError.includes("owner guard is enabled"),
+    "ownerless agent creation rejected"
+  );
+
+  return {
+    ownerlessListStatus: expectedAuthErrorStatus || 200,
+    ownerlessListCount: Array.isArray(list.agents) ? list.agents.length : undefined,
+    ownerlessCreateStatus: expectedCreateStatus,
+    ownerlessCreateError: denied.error
   };
 }
 
@@ -402,10 +441,26 @@ async function get(pathname) {
   return parseResponse(response, pathname);
 }
 
+async function getRaw(pathname) {
+  const response = await fetch(`${baseUrl}${pathname}`);
+  return parseResponse(response, pathname);
+}
+
 async function getAllowingError(pathname, expectedStatus, ownerOverride = ownerUserId) {
   const response = await fetch(`${baseUrl}${pathname}`, {
     headers: agentApiHeaders(pathname, ownerOverride)
   });
+  const data = await response.json().catch(() => ({}));
+  if (response.status !== expectedStatus) {
+    throw new Error(
+      `${pathname} expected HTTP ${expectedStatus}, got HTTP ${response.status}: ${JSON.stringify(data)}`
+    );
+  }
+  return data;
+}
+
+async function getRawAllowingError(pathname, expectedStatus) {
+  const response = await fetch(`${baseUrl}${pathname}`);
   const data = await response.json().catch(() => ({}));
   if (response.status !== expectedStatus) {
     throw new Error(
@@ -443,6 +498,23 @@ async function postAllowingError(pathname, body, expectedStatus) {
       ...agentApiHeaders(pathname, String(nextBody?.ownerUserId || ownerUserId))
     },
     body: JSON.stringify(nextBody || {})
+  });
+  const data = await response.json().catch(() => ({}));
+  if (response.status !== expectedStatus) {
+    throw new Error(
+      `${pathname} expected HTTP ${expectedStatus}, got HTTP ${response.status}: ${JSON.stringify(data)}`
+    );
+  }
+  return data;
+}
+
+async function postRawAllowingError(pathname, body, expectedStatus) {
+  const response = await fetch(`${baseUrl}${pathname}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body || {})
   });
   const data = await response.json().catch(() => ({}));
   if (response.status !== expectedStatus) {

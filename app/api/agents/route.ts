@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
   const agents = await listAgents();
   return NextResponse.json({
-    agents: user.userId ? agents.filter((agent) => agent.ownerUserId === user.userId) : agents
+    agents: user.userId ? agents.filter((agent) => agent.ownerUserId === user.userId) : []
   });
 }
 
@@ -41,9 +41,14 @@ export async function POST(request: Request) {
     userWalletAddress = body.userWalletAddress;
   }
 
+  const ownerUserId = user.userId || body.ownerUserId?.trim();
+  if (!ownerUserId) {
+    return jsonError("ownerUserId is required to create an Agent", 400);
+  }
+
   const agent: Agent = {
     id: crypto.randomUUID(),
-    ownerUserId: user.userId || body.ownerUserId || "demo-user",
+    ownerUserId,
     name: body.name || "World Cup Prediction Agent",
     status: "active",
     strategyProfile:
