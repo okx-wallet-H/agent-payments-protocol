@@ -177,6 +177,7 @@ function HumanAgentChatHome() {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [toolMenuOpen, setToolMenuOpen] = useState(false);
   const latestUserMessageRef = useRef<HTMLElement | null>(null);
   const pendingFocusMessageId = useRef<string | null>(null);
   const agentPageStyle = { "--human-keyboard-offset": `${keyboardOffset}px` } as CSSProperties;
@@ -209,9 +210,7 @@ function HumanAgentChatHome() {
     return () => window.cancelAnimationFrame(frame);
   }, [messages]);
 
-  function sendAgentMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = draft.trim();
+  function submitAgentText(text: string) {
     if (!text) return;
 
     const nextMessage: HumanChatMessage = {
@@ -223,6 +222,12 @@ function HumanAgentChatHome() {
     pendingFocusMessageId.current = nextMessage.id;
     setMessages([nextMessage]);
     setDraft("");
+    setToolMenuOpen(false);
+  }
+
+  function sendAgentMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    submitAgentText(draft.trim());
   }
 
   return (
@@ -262,8 +267,30 @@ function HumanAgentChatHome() {
         ))}
       </section>
 
+      {toolMenuOpen ? (
+        <section className="human-tool-menu" aria-label="Agent 能力">
+          <button type="button" onClick={() => submitAgentText("生成我的收款地址")}>
+            <Wallet size={20} />
+            <span>收款</span>
+          </button>
+          <button type="button" onClick={() => submitAgentText("看看预测市场")}>
+            <Sparkles size={20} />
+            <span>预测</span>
+          </button>
+          <button type="button" onClick={() => submitAgentText("刷新我的资产")}>
+            <Coins size={20} />
+            <span>资产</span>
+          </button>
+        </section>
+      ) : null}
+
       <form className="human-chat-composer" aria-label="发送消息" onSubmit={sendAgentMessage}>
-        <button type="button" aria-label="添加">
+        <button
+          type="button"
+          aria-label={toolMenuOpen ? "收起能力" : "打开能力"}
+          aria-expanded={toolMenuOpen}
+          onClick={() => setToolMenuOpen((open) => !open)}
+        >
           +
         </button>
         <input
