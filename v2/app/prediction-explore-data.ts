@@ -1,7 +1,5 @@
 import {
-  createWorldCupExploreSource,
-  inferWorldCupCategory,
-  type WorldCupExploreCategory
+  createWorldCupExploreSource
 } from "./world-cup-explore";
 import { hasOkxOutcomesCredentials, listOkxWorldCupMarkets } from "../execution/okx-outcomes-client";
 import { normalizeOkxOutcomes } from "../execution/okx-outcomes-output";
@@ -20,25 +18,21 @@ export type PredictionExploreData = {
 export async function readPredictionExploreData(mode: PredictionExploreMode): Promise<PredictionExploreData> {
   if (mode === "sample") return samplePredictionExploreData();
 
-  if (mode !== "plugin" && hasOkxOutcomesCredentials()) {
+  const credentialsBound = hasOkxOutcomesCredentials();
+
+  if (mode !== "plugin" && credentialsBound) {
     try {
       const okxMarkets = await listOkxWorldCupMarkets();
       if (okxMarkets.length > 0) {
-        const augmented = withSampleMarketsForMissingCategories(okxMarkets);
-        const supplemented = augmented.length > okxMarkets.length;
         return {
-          markets: augmented,
-          source: createWorldCupExploreSource(
-            "okx-outcomes",
-            "live",
-            supplemented ? "OKX 实时数据已同步；暂缺的预测分类先用样例补齐，方便页面完整演示。" : undefined
-          )
+          markets: okxMarkets,
+          source: createWorldCupExploreSource("okx-outcomes", "live")
         };
       }
     } catch (error) {
-      console.warn("OKX Outcomes prediction explore read failed; falling back to local/plugin data.", error);
+      console.warn("OKX Outcomes prediction explore read failed; returning unavailable live data.", error);
       if (mode === "live") {
-        return samplePredictionExploreData("OKX 数据暂时不可用，先展示市场样例。");
+        return unavailablePredictionExploreData("OKX 数据暂时不可用，请稍后刷新。", credentialsBound);
       }
     }
   }
@@ -53,15 +47,14 @@ export async function readPredictionExploreData(mode: PredictionExploreMode): Pr
         };
       }
     } catch (error) {
-      console.warn("Prediction market plugin read failed; falling back to sample data.", error);
+      console.warn("Prediction market plugin read failed; returning unavailable market data.", error);
     }
   }
 
-  if (mode === "live") {
-    return samplePredictionExploreData("OKX 数据暂时不可用，先展示市场样例。");
-  }
-
-  return samplePredictionExploreData();
+  return unavailablePredictionExploreData(
+    credentialsBound ? "暂时没有拿到真实预测市场数据，请稍后刷新。" : "OKX Outcomes 读取凭据未配置，暂时不展示样例行情。",
+    credentialsBound
+  );
 }
 
 export function readPredictionExploreMode(request: Request): PredictionExploreMode {
@@ -89,16 +82,14 @@ function samplePredictionExploreData(warning?: string): PredictionExploreData {
   };
 }
 
-function withSampleMarketsForMissingCategories(markets: MarketSnapshot[]): MarketSnapshot[] {
-  const required: WorldCupExploreCategory[] = ["champion", "golden_boot", "group_stage", "upcoming_matches"];
-  const categories = new Set(markets.map(inferWorldCupCategory));
-  const missing = required.filter((category) => !categories.has(category));
-  if (missing.length === 0) return markets;
-
-  const seenMarketIds = new Set(markets.map((market) => market.marketId));
-  const sampleMarkets = normalizeOkxOutcomes(sampleOkxWorldCupPayload).markets.filter((market) => {
-    return missing.includes(inferWorldCupCategory(market)) && !seenMarketIds.has(market.marketId);
-  });
-
-  return [...markets, ...sampleMarkets];
+function unavailablePredictionExploreData(warning: string, credentialsBound: boolean): PredictionExploreData {
+  const source = createWorldCupExploreSource("okx-outcomes", "unavailable", warning);
+  return {
+    markets: [],
+    source: {
+      ...source,
+      providerStatus: credentialsBound ? "unavailable" : "not_configured",
+      credentialsBound
+    }
+  };
 }

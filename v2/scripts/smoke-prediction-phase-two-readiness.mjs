@@ -81,6 +81,8 @@ check(
 check(detailRoute.includes("getOkxOutcomeMarketData"), "prediction detail route reads OKX Outcomes market data");
 check(detailRoute.includes("guardPredictionReadRequest"), "prediction detail route guards read access before provider reads");
 check(detailRoute.includes("createPredictionDetailView"), "prediction detail route returns normalized detail view");
+check(detailRoute.includes("okx_outcomes_not_configured") && detailRoute.includes("okx_outcomes_unavailable"), "prediction detail route exposes explicit unavailable states");
+check(detailRoute.includes("No sample detail was returned.") && !detailRoute.includes("using sample detail"), "prediction detail route does not silently return sample detail for live failures");
 check(/includeOrderBook\s*:\s*true/.test(detailRoute), "prediction detail route requests order book data");
 check(/includeCandles\s*:\s*true/.test(detailRoute), "prediction detail route requests candle data for trend summary");
 check(detailRoute.includes("providerStatus") && detailRoute.includes("credentialsBound"), "prediction detail route returns redacted provider status");

@@ -4052,12 +4052,14 @@ function createPredictionOrderBookSummary(detail?: V2PredictionDetailView): stri
 function predictionSourceStatusLabel(source?: V2PredictionDetailResponse["source"], detail?: V2PredictionDetailView): string {
   if (!detail) return "等待同步";
   if (source?.mode === "sample") return "样例数据";
+  if (source?.mode === "unavailable") return "真实数据不可用";
   return "只读详情已同步";
 }
 
 function predictionSourceModeLabel(source?: V2PredictionDetailResponse["source"]): string {
+  if (source?.mode === "live") return "实时";
   if (source?.mode === "sample") return "样例数据";
-  if (source?.mode === "live_or_fallback") return "实时/回退";
+  if (source?.mode === "unavailable") return "真实数据不可用";
   return "等待同步";
 }
 

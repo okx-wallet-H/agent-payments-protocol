@@ -144,8 +144,8 @@ const requirements = [
     label: "mobile prediction-market types expose detail source contract",
     pass: () =>
       /interface V2PredictionDetailSource/.test(types) &&
-      /mode: "live_or_fallback" \| "sample"/.test(types) &&
-      /providerStatus\?: "connected" \| "not_configured" \| "sample"/.test(types) &&
+      /mode: "live" \| "sample" \| "unavailable"/.test(types) &&
+      /providerStatus\?: "connected" \| "not_configured" \| "sample" \| "unavailable"/.test(types) &&
       /credentialsBound\?: boolean/.test(types) &&
       /apiKeyBindingLabel\?: string/.test(types) &&
       /liveExecutionClosed: true/.test(types) &&

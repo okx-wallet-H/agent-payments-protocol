@@ -64,10 +64,11 @@ assert(Array.isArray(home.home?.recent?.tracking), "home returns recent tracking
 assert(Array.isArray(home.home?.recent?.strategies), "home returns recent strategy list");
 assert(Array.isArray(home.home?.recent?.records), "home returns recent record list");
 
-const explore = await getJson("/api/v2/prediction/explore");
+const explore = await getJson("/api/v2/prediction/explore?mode=sample");
 assert(explore.explore?.type === "world_cup_explore_view", "prediction explore returns view");
 assert(Boolean(explore.explore?.source?.label), "prediction explore returns friendly source label");
 assert(Boolean(explore.explore?.source?.message), "prediction explore returns friendly source message");
+assert(explore.explore?.source?.mode === "sample", "prediction explore only returns sample data when sample mode is explicit");
 assert(Array.isArray(explore.explore?.categories), "prediction explore has categories");
 assert(explore.explore?.cards?.champion !== undefined, "prediction explore has champion bucket");
 assert(explore.explore?.cards?.upcoming_matches !== undefined, "prediction explore has match bucket");
@@ -82,9 +83,11 @@ const legacyExplore = await getJson("/api/v2/world-cup/explore");
 assert(legacyExplore.explore?.type === "world_cup_explore_view", "legacy world cup explore remains compatible");
 
 const liveModeExplore = await getJson("/api/v2/prediction/explore?mode=live");
-assert(liveModeExplore.explore?.type === "world_cup_explore_view", "prediction live-mode fallback returns view");
-if (liveModeExplore.explore?.source?.mode === "sample") {
-  assert(Boolean(liveModeExplore.explore?.source?.warning), "prediction live-mode fallback explains sample data");
+assert(liveModeExplore.explore?.type === "world_cup_explore_view", "prediction live mode returns view");
+assert(liveModeExplore.explore?.source?.mode !== "sample", "prediction live mode does not return sample data");
+if (liveModeExplore.explore?.source?.mode === "unavailable") {
+  assert(liveModeExplore.explore?.summary?.totalMarkets === 0, "prediction unavailable live mode returns no fake markets");
+  assert(Boolean(liveModeExplore.explore?.source?.warning), "prediction unavailable live mode explains missing real data");
 }
 
 const recharge = await postJson("/api/v2/phase-one", {
