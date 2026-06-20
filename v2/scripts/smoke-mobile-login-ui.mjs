@@ -59,7 +59,9 @@ assertIncludes(webHumanPreview, "className=\"human-keypad\"", "root web preview 
 assertIncludes(webHumanPreview, "setUnlocked(true)", "root web preview unlock button opens the app after a full code");
 assertIncludes(webHumanPreview, "return <HumanAgentChatHome", "root web preview exits the door into the human Agent chat home");
 assertIncludes(webHumanPreview, "function HumanAgentChatHome", "root web preview has a dedicated human Agent post-login shell");
+assertIncludes(webHumanPreview, "const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages)", "root web preview keeps the Agent screen state local and controllable");
 assertNotIncludes(webHumanPreview, "海豚，今天看什么？", "root web preview does not show an instruction-style post-login hero");
+assertNotIncludes(webHumanPreview, "demo · HWallet 已就位", "root web preview does not show development status copy on the human Agent screen");
 assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、市场数据和下一步建议放在一条对话里。", "root web preview removes manual-like Agent intro copy");
 assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
 assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
@@ -78,6 +80,7 @@ assertIncludes(webHumanPreview, "看看预测市场", "root web preview exposes 
 assertIncludes(webHumanPreview, "刷新我的资产", "root web preview exposes asset refresh as a hidden composer action");
 assertIncludes(webHumanPreview, "function buildAgentReply", "root web preview builds a focused current Agent reply");
 assertIncludes(webHumanPreview, "setMessages([nextMessage, nextReply])", "root web preview clears old messages and keeps only the current exchange");
+assertNotIncludes(webHumanPreview, "setMessages((current", "root web preview does not append old messages back onto the active screen");
 assertIncludes(webHumanPreview, "我先看市场热度和赔率，只给你观察结果。", "root web preview returns a concise prediction reply card");
 assertIncludes(webHumanPreview, "我来打开你的 HWallet 收款入口。", "root web preview returns a concise receive reply card");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
@@ -88,10 +91,14 @@ assertNotIncludes(webHumanPreview, "我会先观察预测市场和钱包资金",
 assertNotIncludes(webHumanPreview, "human-quick-prompts", "root web preview does not show default quick prompt cards on the empty Agent screen");
 assertNotIncludes(webHumanPreview, "查收款地址", "root web preview does not show receive-address quick prompt on the empty Agent screen");
 assertNotIncludes(webHumanPreview, "刷新资产", "root web preview does not show refresh-assets quick prompt on the empty Agent screen");
+assertIncludes(webHumanPreview, "<section className=\"human-chat-thread\" aria-label=\"最近对话\">", "root web preview keeps the active conversation as the only screen content");
+assertIncludes(webHumanPreview, "messages.map((message) =>", "root web preview renders only the active exchange from message state");
+assertIncludes(webHumanPreview, "ref={message.id === pendingFocusMessageId.current ? latestUserMessageRef : undefined}", "root web preview attaches the focus ref only to the newest user message");
 assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
 assertNotIncludes(webHumanPreview, "...current", "root web preview does not keep old preview messages on the active screen");
 assertIncludes(webHumanPreview, "window.scrollTo({ top: Math.max(0, focusTop), behavior: \"smooth\" });", "root web preview scrolls the latest user message into the top focus area");
 assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
+assertIncludes(webHumanPreview, "pendingFocusMessageId.current = null", "root web preview clears the focus marker after scrolling the current exchange");
 assertIncludes(webHumanPreview, "setToolMenuOpen(false);", "root web preview closes the tool menu when the composer or a new message takes focus");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
 assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
