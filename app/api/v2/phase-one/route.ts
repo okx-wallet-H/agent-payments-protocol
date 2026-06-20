@@ -7,9 +7,8 @@ import { createMobileChatTurn } from "@/v2/app/mobile-chat";
 import { createUserConsolePanel } from "@/v2/app/user-console";
 import { createWorldCupInfoPanel } from "@/v2/app/world-cup-info";
 import { resolvePhaseOneUser } from "@/v2/auth/request-user";
-import { normalizeOkxOutcomes, pickBestOkxWorldCupMarket } from "@/v2/execution/okx-outcomes-output";
-import { sampleOkxWorldCupPayload } from "@/v2/execution/okx-world-cup-sample";
-import { listWorldCupMarkets, getWorldCupCandidateMarket } from "@/v2/execution/polymarket-cli";
+import { readPredictionExploreData } from "@/v2/app/prediction-explore-data";
+import { pickBestOkxWorldCupMarket } from "@/v2/execution/okx-outcomes-output";
 import { saveAgentAction, saveAgentRun } from "@/v2/storage/agent-action-store";
 import { saveAuditTimelineEvent } from "@/v2/storage/audit-timeline-store";
 import { savePhaseOneRecord } from "@/v2/storage/phase-one-store";
@@ -295,7 +294,8 @@ async function syncWalletAssetsSafely(
 
 async function readMarketsSafely() {
   try {
-    return await listWorldCupMarkets(8);
+    const data = await readPredictionExploreData("auto");
+    return data.markets.slice(0, 8);
   } catch {
     return [];
   }
@@ -303,13 +303,11 @@ async function readMarketsSafely() {
 
 async function getWorldCupCandidateSafely() {
   try {
-    const market = await getWorldCupCandidateMarket();
-    if (market) return market;
+    const data = await readPredictionExploreData("auto");
+    return pickBestOkxWorldCupMarket(data.markets) || data.markets[0];
   } catch {
-    // Local/CI builds may not have the plugin installed; keep the Agent flow card-backed.
+    return undefined;
   }
-
-  return pickBestOkxWorldCupMarket(normalizeOkxOutcomes(sampleOkxWorldCupPayload).markets);
 }
 
 function readCandidateMarket(input: unknown): MarketSnapshot | undefined {

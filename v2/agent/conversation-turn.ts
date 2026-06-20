@@ -60,7 +60,7 @@ export function handlePhaseOneUserText(input: {
       cards: input.candidateMarket ? [createPredictionCard(input.candidateMarket)] : [],
       finalText: plan.market
         ? `${walletSyncPrefix}${marketSnapshotText}这场我先建议观察，点卡片可以继续跟踪或先模拟。${safetySuffix}`
-        : `${walletSyncPrefix}我先去找世界杯相关市场。${safetySuffix}`,
+        : `${walletSyncPrefix}暂时没有拿到真实预测市场数据，我先不生成行情卡。稍后刷新或换个市场再试。${safetySuffix}`,
       createdAt: new Date().toISOString()
     };
   }

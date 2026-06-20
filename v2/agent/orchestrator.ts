@@ -96,7 +96,7 @@ export async function createAgentOrchestrationPlan(input: {
         candidateMarket,
         walletStatusText: input.walletStatusText,
         walletFundText: input.walletFundText,
-        progressHint: "资金到账后进入世界杯机会分析"
+        progressHint: "资金到账后进入真实预测市场分析"
       }, input.wallet);
     }
 
@@ -129,7 +129,7 @@ export async function createAgentOrchestrationPlan(input: {
       candidateMarket,
       walletStatusText: input.walletStatusText,
       walletFundText: input.walletFundText,
-      progressHint: "读取世界杯市场并生成预测卡"
+      progressHint: "读取真实预测市场并生成观察卡"
     }, input.wallet);
   }
 
