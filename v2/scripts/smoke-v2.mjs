@@ -184,20 +184,35 @@ assert(prediction.orchestration?.action === "analyze_worldcup_market", "predicti
 assert(prediction.orchestration?.capability?.onchainSkill?.mode === "observe", "prediction orchestration uses observe mode");
 assert(prediction.orchestration?.capability?.liveExecution?.enabled === false, "prediction orchestration keeps live execution disabled");
 const predictionCard = prediction.mobileTurn.cards.find((card) => card.type === "prediction_card");
-assert(Boolean(predictionCard?.market), "prediction returns a market card");
+if (predictionCard?.market) {
+  assert(predictionCard.market.provider !== "local-sample", "prediction does not use a local sample fallback");
+  assert(!String(predictionCard.market.marketId || "").startsWith("sample-"), "prediction market is not a sample id");
+} else {
+  assert(
+    prediction.mobileTurn?.messages?.some((message) => /真实预测市场数据|不生成行情卡|稍后刷新/.test(message.text || "")),
+    "prediction explains when real market data is unavailable"
+  );
+}
 const auditAfterPrediction = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
 assert(
   auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && event.moneyMoved === false),
   "audit timeline records prediction analysis without money movement"
 );
-assert(
-  auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && event.card?.type === "prediction_card"),
-  "audit timeline links prediction analysis back to its card"
-);
-assert(
-  auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && Boolean(event.recordId)),
-  "audit timeline links prediction analysis to a record id"
-);
+if (predictionCard?.market) {
+  assert(
+    auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && event.card?.type === "prediction_card"),
+    "audit timeline links prediction analysis back to its card"
+  );
+  assert(
+    auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && Boolean(event.recordId)),
+    "audit timeline links prediction analysis to a record id"
+  );
+} else {
+  assert(
+    !auditAfterPrediction.events?.some((event) => event.type === "prediction.analyzed" && event.card?.market?.marketId?.startsWith?.("sample-")),
+    "audit timeline does not link unavailable real-data analysis to a sample market card"
+  );
+}
 const memoryAfterPrediction = await getJson(`/api/v2/mobile/memory?userId=${encodeURIComponent(userId)}`);
 assert(memoryAfterPrediction.memory?.type === "mobile_agent_memory", "memory endpoint returns mobile memory");
 assert(memoryAfterPrediction.memory?.counters?.chatTurns >= 1, "memory endpoint records chat turns");
@@ -240,16 +255,18 @@ assert(
   selectedPredictionCard?.market?.marketId === selectedWorldCupMarket.marketId,
   "prediction can analyze selected world cup market"
 );
+const actionMarket = selectedPredictionCard?.market;
+assert(Boolean(actionMarket), "selected prediction returns an action market");
 assert(selectedProgressText.includes("我先看这场的价格和热度"), "selected market uses friendly analysis progress");
 assert(!selectedPrediction.mobileTurn.messages.some((message) => message.text === "我先整理成一张策略卡，你可以先模拟。"), "selected market avoids old strategy-card wording");
 assert(selectedPredictionCard?.title?.includes("世界杯"), "selected prediction card uses friendly world cup title");
 assert(!/^Will /i.test(selectedPredictionCard?.title || ""), "selected prediction card title is not raw English");
 assert(selectedPredictionCard?.metrics?.priceLabel?.includes("会"), "selected prediction card uses friendly price labels");
 
-const trackIdempotencyKey = `track-${userId}-${predictionCard.market.marketId}`;
+const trackIdempotencyKey = `track-${userId}-${actionMarket.marketId}`;
 const track = await postJson("/api/v2/phase-one/actions", {
   action: "track",
-  market: predictionCard.market,
+  market: actionMarket,
   idempotencyKey: trackIdempotencyKey,
   userId
 });
@@ -272,7 +289,7 @@ assert(
 
 const duplicateTrack = await postJson("/api/v2/phase-one/actions", {
   action: "track",
-  market: predictionCard.market,
+  market: actionMarket,
   idempotencyKey: trackIdempotencyKey,
   userId
 });
@@ -281,7 +298,7 @@ assert(duplicateTrack.idempotent === true, "track idempotency marks duplicate re
 
 const strategy = await postJson("/api/v2/phase-one/actions", {
   action: "build_strategy",
-  market: predictionCard.market,
+  market: actionMarket,
   userId
 });
 assert(strategy.record?.type === "strategy.saved", "build_strategy writes strategy record");
@@ -290,7 +307,7 @@ assert(strategy.card?.title?.includes("世界杯") || strategy.card?.market?.pro
 
 const simulate = await postJson("/api/v2/phase-one/actions", {
   action: "simulate",
-  market: predictionCard.market,
+  market: actionMarket,
   amountUsd: 1,
   userId
 });
@@ -299,8 +316,8 @@ assert(simulate.result?.status === "dry_run_completed", "simulate completes dry-
 assert(simulate.card?.agentNote?.includes("订单没有提交"), "simulation card keeps no-order boundary");
 assert(simulate.card?.moneyMoved === false, "simulation card explicitly records no money movement");
 assert(Boolean(simulate.card?.sideLabel), "simulation card includes side label");
-assert(simulate.card?.market?.marketId === predictionCard.market.marketId, "simulation card keeps market for next action");
-if (predictionCard.market.provider === "okx-outcomes") {
+assert(simulate.card?.market?.marketId === actionMarket.marketId, "simulation card keeps market for next action");
+if (actionMarket.provider === "okx-outcomes") {
   assert(simulate.result?.raw?.provider === "okx-outcomes", "OKX simulation keeps OKX provider");
   assert(simulate.result?.raw?.route === "outcomes.order.preview", "OKX simulation uses OKX preview route");
   assert(simulate.result?.raw?.moneyMoved === false, "OKX simulation cannot move money");
@@ -353,7 +370,7 @@ assert(okxSimulation.card?.moneyMoved === false, "OKX simulation card records no
 
 const blockedSimulation = await postStatus("/api/v2/phase-one/actions", {
   action: "simulate",
-  market: predictionCard.market,
+  market: actionMarket,
   amountUsd: 101,
   userId
 });
@@ -362,7 +379,7 @@ assert(blockedSimulation.data?.decision?.status === "block", "blocked action ret
 const auditAfterPolicyBlock = await getJson(`/api/v2/mobile/audit?userId=${encodeURIComponent(userId)}`);
 const policyBlockedAudit = auditAfterPolicyBlock.events?.find((event) => event.type === "policy.blocked");
 assert(policyBlockedAudit?.moneyMoved === false, "policy block audit records no money movement");
-assert(policyBlockedAudit?.marketId === predictionCard.market.marketId, "policy block audit links market");
+assert(policyBlockedAudit?.marketId === actionMarket.marketId, "policy block audit links market");
 
 const [ownRecords, otherRecords, tracking, strategies] = await Promise.all([
   getJson(`/api/v2/phase-one/records?userId=${encodeURIComponent(userId)}`),
@@ -381,7 +398,7 @@ console.log(JSON.stringify({
   baseUrl,
   userId,
   checks,
-  market: predictionCard.market.question,
+  market: actionMarket.question,
   records: ownRecords.items.length
 }, null, 2));
 

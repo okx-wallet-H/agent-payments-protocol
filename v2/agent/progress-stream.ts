@@ -21,7 +21,7 @@ export function createRechargeProgress(goal: BusinessGoal): AgentProgressMessage
 export function createStrategyProgress(goal: BusinessGoal): AgentProgressMessage[] {
   return [
     createProgressMessage(goal, "我先看一下可用资金。"),
-    createProgressMessage(goal, "正在整理世界杯相关市场。"),
+    createProgressMessage(goal, "正在整理真实预测市场。"),
     createProgressMessage(goal, "我会先筛成交活跃的方向。"),
     createProgressMessage(goal, "准备生成一份策略。")
   ];
