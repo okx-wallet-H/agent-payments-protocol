@@ -9,7 +9,7 @@ placement stays closed.
 | Area | Status | Evidence |
 | --- | --- | --- |
 | OKX Outcomes market reads | Ready for read-only use | `v2/execution/okx-outcomes-client.ts` reads events, markets, ticker, candles, and order book data. |
-| Explore surface | Ready for app display | `app/api/v2/prediction/explore/route.ts` builds app-facing prediction-market cards from OKX data with fallback; `app/api/v2/world-cup/explore/route.ts` remains a compatibility wrapper. List cards expose sanitized `marketRef` and redacted outcome labels only. |
+| Explore surface | Ready for app display | `app/api/v2/prediction/explore/route.ts` builds app-facing prediction-market cards from OKX data. If real data is unavailable, it reports an unavailable empty state instead of silently showing samples. `app/api/v2/world-cup/explore` remains a compatibility wrapper. List cards expose sanitized `marketRef` and redacted outcome labels only. |
 | Detail surface | Ready for app display | `app/api/v2/prediction/detail/route.ts` returns normalized outcome rows, metrics, order-book summary, and bounded candle-derived trend summary. |
 | Detail action model | Ready for app display | The detail response carries observe, simulate, track, strategy, and disabled order-placeholder actions so the App follows backend enabled/disabled state. |
 | Read endpoint guard | Ready for preview | Prediction read routes reuse the Privy user boundary and a light per-user/IP rate limit before reading provider data. |

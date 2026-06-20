@@ -55,5 +55,5 @@ migration first:
 ## Next Cleanup Step
 
 Continue with the legacy migration before removing any Polymarket fallback files.
-Keep the OKX adapter, read-only detail view, sample fallback, archive guard, and
-all safety smokes in the merge gate.
+Keep the OKX adapter, read-only detail view, explicit sample mode, archive guard,
+and all safety smokes in the merge gate.

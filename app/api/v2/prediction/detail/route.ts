@@ -10,7 +10,6 @@ import {
 } from "@/v2/execution/okx-outcomes-client";
 import { normalizeOkxOutcomes } from "@/v2/execution/okx-outcomes-output";
 import { sampleOkxWorldCupPayload } from "@/v2/execution/okx-world-cup-sample";
-import type { MarketSnapshot } from "@/v2/domain/types";
 
 export const runtime = "nodejs";
 
@@ -40,21 +39,94 @@ export async function GET(request: Request) {
 
   const mode = readDetailMode(url);
   const credentialsBound = hasOkxOutcomesCredentials();
-  const data = await readPredictionDetailSafely(marketId, mode);
-  const liveCandidate = isOutcomeMarketData(data) && data.market?.marketId === marketId;
-  const sourceMode = liveCandidate && mode !== "sample" && credentialsBound ? "live_or_fallback" : "sample";
+
+  if (mode === "sample") {
+    return NextResponse.json(
+      {
+        detail: createPredictionDetailView(sampleDetailData(marketId)),
+        source: createPredictionDetailSource({
+          mode: "sample",
+          providerStatus: "sample",
+          credentialsBound: false
+        })
+      },
+      {
+        headers: guard.headers
+      }
+    );
+  }
+
+  if (!credentialsBound) {
+    return NextResponse.json(
+      {
+        error: "okx_outcomes_not_configured",
+        message: "OKX Outcomes read credentials are not configured. Real prediction detail data is unavailable.",
+        source: createPredictionDetailSource({
+          mode: "unavailable",
+          providerStatus: "not_configured",
+          credentialsBound: false
+        })
+      },
+      {
+        status: 503,
+        headers: guard.headers
+      }
+    );
+  }
+
+  let data: OkxOutcomeMarketData;
+  try {
+    data = await getOkxOutcomeMarketData(marketId, {
+      includeCandles: true,
+      includeOrderBook: true,
+      candleLimit: 24,
+      bookSize: 20
+    });
+  } catch (error) {
+    console.warn("OKX Outcomes prediction detail read failed; returning unavailable live detail.", error);
+    return NextResponse.json(
+      {
+        error: "okx_outcomes_unavailable",
+        message: "OKX Outcomes detail data is temporarily unavailable. No sample detail was returned.",
+        source: createPredictionDetailSource({
+          mode: "unavailable",
+          providerStatus: "unavailable",
+          credentialsBound: true
+        })
+      },
+      {
+        status: 502,
+        headers: guard.headers
+      }
+    );
+  }
+
+  if (!data.market) {
+    return NextResponse.json(
+      {
+        error: "okx_outcomes_market_not_found",
+        message: "OKX Outcomes did not return a market for this id.",
+        source: createPredictionDetailSource({
+          mode: "unavailable",
+          providerStatus: "unavailable",
+          credentialsBound: true
+        })
+      },
+      {
+        status: 404,
+        headers: guard.headers
+      }
+    );
+  }
 
   return NextResponse.json(
     {
       detail: createPredictionDetailView(data),
-      source: {
-        mode: sourceMode,
-        providerStatus: credentialsBound ? "connected" : "not_configured",
-        credentialsBound,
-        apiKeyBindingLabel: credentialsBound ? "后端已接入" : "绑定入口预留",
-        readOnly: true,
-        liveExecutionClosed: true
-      }
+      source: createPredictionDetailSource({
+        mode: "live",
+        providerStatus: "connected",
+        credentialsBound: true
+      })
     },
     {
       headers: guard.headers
@@ -62,29 +134,29 @@ export async function GET(request: Request) {
   );
 }
 
-async function readPredictionDetailSafely(marketId: string, mode: DetailMode): Promise<MarketSnapshot | OkxOutcomeMarketData> {
-  if (mode !== "sample" && hasOkxOutcomesCredentials()) {
-    try {
-      const data = await getOkxOutcomeMarketData(marketId, {
-        includeCandles: true,
-        includeOrderBook: true,
-        candleLimit: 24,
-        bookSize: 20
-      });
-      if (data.market) return data;
-    } catch (error) {
-      console.warn("OKX Outcomes prediction detail read failed; using sample detail.", error);
-      if (mode === "live") return sampleDetailData(marketId);
-    }
-  }
-
-  return sampleDetailData(marketId);
-}
-
 function readDetailMode(url: URL): DetailMode {
   const value = (url.searchParams.get("mode") || process.env.OKX_OUTCOMES_DETAIL_MODE || "").trim().toLowerCase();
   if (value === "live" || value === "sample") return value;
   return "auto";
+}
+
+function createPredictionDetailSource({
+  mode,
+  providerStatus,
+  credentialsBound
+}: {
+  mode: "live" | "sample" | "unavailable";
+  providerStatus: "connected" | "not_configured" | "sample" | "unavailable";
+  credentialsBound: boolean;
+}) {
+  return {
+    mode,
+    providerStatus,
+    credentialsBound,
+    apiKeyBindingLabel: credentialsBound ? "后端已接入" : "绑定入口预留",
+    readOnly: true,
+    liveExecutionClosed: true
+  };
 }
 
 function sampleDetailData(marketId: string): OkxOutcomeMarketData {
@@ -142,8 +214,4 @@ function createSampleBook(instId: string, centerPrice: number): OkxOutcomeOrderB
     timestamp: new Date().toISOString(),
     raw: { source: "local-sample", readOnly: true }
   };
-}
-
-function isOutcomeMarketData(value: MarketSnapshot | OkxOutcomeMarketData): value is OkxOutcomeMarketData {
-  return "marketId" in value && "market" in value;
 }

@@ -50,6 +50,18 @@ check(
   "route returns redacted provider/API key binding status"
 );
 check(
+  /mode:\s*"sample"/.test(source) && source.includes("sampleDetailData(marketId)"),
+  "route only returns sample detail through explicit sample mode"
+);
+check(
+  source.includes("okx_outcomes_not_configured") && /status:\s*503/.test(source),
+  "route returns an unavailable response instead of sample detail when credentials are missing"
+);
+check(
+  source.includes("No sample detail was returned.") && !source.includes("using sample detail"),
+  "route does not silently fall back to sample detail when OKX live reads fail"
+);
+check(
   !/apiSecret|passphrase|OK-ACCESS-KEY|OK-ACCESS-PASSPHRASE/.test(source),
   "route does not expose raw OKX credential material"
 );

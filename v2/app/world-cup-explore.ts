@@ -56,10 +56,10 @@ export type WorldCupExploreSourceProvider = "okx-outcomes" | "polymarket-plugin"
 
 export interface WorldCupExploreSource {
   provider: WorldCupExploreSourceProvider;
-  mode: "live" | "fallback" | "sample";
+  mode: "live" | "fallback" | "sample" | "unavailable";
   label: string;
   message: string;
-  providerStatus: "connected" | "not_configured" | "sample";
+  providerStatus: "connected" | "not_configured" | "sample" | "unavailable";
   credentialsBound: boolean;
   updatedAt: string;
   warning?: string;
@@ -164,14 +164,16 @@ export function createWorldCupExploreSource(
     "polymarket-plugin": "先用插件数据展示赛事机会，OKX 数据同步后会自动切换。",
     "local-sample": "先展示世界杯样例数据，真实赛事数据接入后自动替换。"
   };
+  const unavailable = mode === "unavailable";
 
   return {
     provider,
     mode,
-    label: labelByProvider[provider],
-    message: messageByProvider[provider],
-    providerStatus: provider === "okx-outcomes" ? "connected" : provider === "local-sample" ? "sample" : "not_configured",
-    credentialsBound: provider === "okx-outcomes",
+    label: unavailable ? "真实数据不可用" : labelByProvider[provider],
+    message: unavailable ? "暂时没有拿到真实预测市场数据，本次不展示样例行情。" : messageByProvider[provider],
+    providerStatus:
+      unavailable ? "unavailable" : provider === "okx-outcomes" ? "connected" : provider === "local-sample" ? "sample" : "not_configured",
+    credentialsBound: provider === "okx-outcomes" && !unavailable,
     updatedAt: new Date().toISOString(),
     warning
   };
