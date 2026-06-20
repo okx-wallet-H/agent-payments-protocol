@@ -16,7 +16,7 @@ export async function syncAgentWalletContext(
   wallet: AgentWalletContext,
   memory?: Pick<UserSessionMemory, "walletAssetSnapshot" | "walletRecords">
 ): Promise<SyncedAgentWalletContext> {
-  if (wallet.status !== "ready") return wallet;
+  if (wallet.status !== "ready" || !wallet.receiveAddress) return wallet;
 
   try {
     const synced = await readXLayerWalletAssets(wallet.receiveAddress, memory?.walletAssetSnapshot);

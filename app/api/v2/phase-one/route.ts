@@ -276,10 +276,10 @@ async function saveOrchestrationRecord(input: {
 
 async function verifySubmittedTxSafely(
   text: string,
-  walletAddress: `0x${string}`
+  walletAddress?: `0x${string}`
 ): Promise<XLayerInboundTransfer | undefined> {
   const txHash = extractTxHash(text);
-  if (!txHash) return undefined;
+  if (!txHash || !walletAddress) return undefined;
   return verifyXLayerInboundTransfer({
     txHash,
     walletAddress
