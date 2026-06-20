@@ -6,8 +6,8 @@ import type { BusinessGoalType, ConversationTurn, MarketSnapshot } from "../doma
 
 export function handlePhaseOneUserText(input: {
   userText: string;
-  xLayerAddress: `0x${string}`;
-  polygonAddress: `0x${string}`;
+  xLayerAddress?: `0x${string}`;
+  polygonAddress?: `0x${string}`;
   candidateMarket?: MarketSnapshot;
   walletStatusText?: string;
   walletFundText?: string;
@@ -17,6 +17,17 @@ export function handlePhaseOneUserText(input: {
   const goal = createBusinessGoal(input.userText, input.goalType);
 
   if (goal.type === "wallet_receive") {
+    if (!input.xLayerAddress) {
+      return {
+        id: crypto.randomUUID(),
+        goal,
+        progress: createRechargeProgress(goal),
+        cards: [],
+        finalText: "HWallet 正在生成，等地址出来我再给你收款入口。",
+        createdAt: new Date().toISOString()
+      };
+    }
+
     const addresses = createDefaultReceiveAddresses({
       xLayerAddress: input.xLayerAddress,
       polygonAddress: input.polygonAddress

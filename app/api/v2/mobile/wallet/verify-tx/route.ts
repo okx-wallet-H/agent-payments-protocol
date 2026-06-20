@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     ? toXLayerInboundTransfer(rememberedTransfer)
     : await verifyXLayerInboundTransfer({
         txHash,
-        walletAddress: wallet.receiveAddress
+        walletAddress: effectiveWalletAddress
       });
   const syncedWallet = withVerifiedInboundTransfer(
     await syncWalletAssetsSafely(wallet, memory),
@@ -82,8 +82,8 @@ export async function POST(request: Request) {
   const walletTxText = createWalletTxReply(verification);
   const turn = handlePhaseOneUserText({
     userText: txHash,
-    xLayerAddress: syncedWallet.receiveAddress,
-    polygonAddress: syncedWallet.receiveAddress,
+    xLayerAddress: syncedWallet.receiveAddress || effectiveWalletAddress,
+    polygonAddress: syncedWallet.receiveAddress || effectiveWalletAddress,
     walletTxText,
     goalType: "wallet_tx_verify"
   });

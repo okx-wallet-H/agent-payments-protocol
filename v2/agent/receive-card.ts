@@ -11,9 +11,9 @@ export function createReceiveCard(addresses: ReceiveAddress[]): ReceiveCard {
 
 export function createDefaultReceiveAddresses(input: {
   xLayerAddress: `0x${string}`;
-  polygonAddress: `0x${string}`;
+  polygonAddress?: `0x${string}`;
 }): ReceiveAddress[] {
-  return [
+  const addresses: ReceiveAddress[] = [
     {
       id: "xlayer-agent-wallet",
       label: "Agent 钱包",
@@ -21,14 +21,19 @@ export function createDefaultReceiveAddresses(input: {
       chainId: 196,
       address: input.xLayerAddress,
       supportedAssets: ["USDT0", "USDT", "OKB"]
-    },
-    {
+    }
+  ];
+
+  if (input.polygonAddress) {
+    addresses.push({
       id: "polymarket-strategy-wallet",
       label: "策略交易",
       network: "Polygon",
       chainId: 137,
       address: input.polygonAddress,
       supportedAssets: ["USDC.e", "POL"]
-    }
-  ];
+    });
+  }
+
+  return addresses;
 }

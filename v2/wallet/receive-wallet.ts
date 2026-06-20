@@ -1,12 +1,10 @@
-export const DEFAULT_PHASE_ONE_WALLET_ADDRESS = "0x65a92c1c5da328ae028e80c4fb2bfb223f652669" as const;
-
 export function readWalletAddressFromUrl(url: string): `0x${string}` | undefined {
   const value = new URL(url).searchParams.get("walletAddress")?.trim();
   return toHexAddress(value);
 }
 
-export function resolveReceiveWalletAddress(input?: string): `0x${string}` {
-  return toHexAddress(input) || DEFAULT_PHASE_ONE_WALLET_ADDRESS;
+export function resolveReceiveWalletAddress(input?: string): `0x${string}` | undefined {
+  return toHexAddress(input);
 }
 
 function toHexAddress(value?: string | null): `0x${string}` | undefined {

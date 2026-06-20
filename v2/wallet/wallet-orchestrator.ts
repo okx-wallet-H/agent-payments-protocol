@@ -4,13 +4,13 @@ import type { UserSessionMemory } from "../storage/user-session-store";
 
 export interface AgentWalletContext {
   userId: string;
-  receiveAddress: `0x${string}`;
+  receiveAddress?: `0x${string}`;
   chainId: 196;
   network: "X Layer";
   supportedAssets: string[];
   assets: AgentWalletAsset[];
   recentRecords: AgentWalletRecord[];
-  status: "ready" | "demo_fallback";
+  status: "ready" | "waiting";
   statusText: string;
   lifecycle: AgentWalletLifecycleStep[];
   agent: AgentWalletAgentState;
@@ -73,7 +73,7 @@ export function createAgentWalletContext(input: {
   memory?: UserSessionMemory;
 }): AgentWalletContext {
   const receiveAddress = resolveReceiveWalletAddress(input.walletAddress || input.memory?.walletAddress);
-  const hasUserWallet = Boolean(input.walletAddress || input.memory?.walletAddress);
+  const hasUserWallet = Boolean(receiveAddress);
 
   const assets = createPendingAssets();
   const recentRecords = input.memory?.walletRecords?.length
@@ -90,10 +90,10 @@ export function createAgentWalletContext(input: {
     supportedAssets: ["USDT0", "USDT", "OKB"],
     assets,
     recentRecords,
-    status: hasUserWallet ? "ready" : "demo_fallback",
+    status: hasUserWallet ? "ready" : "waiting",
     statusText: hasUserWallet
       ? "HWallet 已经准备好。要充值，直接复制收款地址。"
-      : "正在等待用户钱包生成，当前只展示本地演示地址。",
+      : "HWallet 正在生成。地址出来后再展示收款入口。",
     lifecycle: createAgentWalletLifecycle({ hasUserWallet, assets, agent }),
     agent,
     vault,
@@ -131,7 +131,7 @@ export function withSyncedAgentWalletState(
 export function createWalletKnowledgeNotes(context: AgentWalletContext): string[] {
   return [
     `用户默认钱包网络：${context.network}`,
-    `用户默认收款地址：${context.receiveAddress}`,
+    context.receiveAddress ? `用户默认收款地址：${context.receiveAddress}` : "用户默认收款地址：等待 HWallet 生成",
     "第一版只开放数据展示、充值收款、模拟和跟踪，不开放真实下单。"
   ];
 }

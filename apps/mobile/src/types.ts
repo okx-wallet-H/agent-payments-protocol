@@ -705,7 +705,7 @@ export interface V2MobileHomeView {
 
 export interface V2WalletContext {
   userId: string;
-  address: `0x${string}`;
+  address?: `0x${string}`;
   chainId: 196;
   network: "X Layer";
   assets: Array<{
@@ -723,7 +723,7 @@ export interface V2WalletContext {
     status: "pending" | "synced" | "failed";
     createdAt: string;
   }>;
-  status: "ready" | "demo_fallback";
+  status: "ready" | "waiting";
   statusText: string;
   lifecycle?: Array<{
     id: "identity" | "wallet" | "assets" | "agent";

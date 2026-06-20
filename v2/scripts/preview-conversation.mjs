@@ -35,8 +35,8 @@ const { handlePhaseOneUserText } = await import(path.join(outDir, "conversation-
 const { PHASE_ONE_APP_SHELL } = await import(path.join(outDir, "app-shell.mjs"));
 
 const addresses = {
-  xLayerAddress: "0x65a92c1c5da328ae028e80c4fb2bfb223f652669",
-  polygonAddress: "0x65a92c1c5da328ae028e80c4fb2bfb223f652669"
+  xLayerAddress: "0x1111111111111111111111111111111111111111",
+  polygonAddress: "0x2222222222222222222222222222222222222222"
 };
 
 const worldCupMarket = {
