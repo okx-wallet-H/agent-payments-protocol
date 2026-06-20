@@ -48,9 +48,10 @@ const actionsFile = path.join(dataDir, "agent-actions.jsonl");
 let agentActionPool: Pool | undefined;
 
 export async function saveAgentRun(input: AgentRunInput): Promise<AgentRunRecord> {
+  const userId = requireAgentUserId(input.userId);
   const run: AgentRunRecord = {
     id: input.id || crypto.randomUUID(),
-    userId: input.userId,
+    userId,
     intent: input.intent,
     status: input.status,
     input: input.input,
@@ -71,7 +72,7 @@ export async function saveAgentRun(input: AgentRunInput): Promise<AgentRunRecord
 }
 
 export async function saveAgentAction(input: AgentActionInput): Promise<AgentActionRecord> {
-  const userId = input.userId;
+  const userId = requireAgentUserId(input.userId);
   if (input.idempotencyKey) {
     const existing = await findAgentActionByIdempotencyKey(userId, input.idempotencyKey);
     if (existing) return existing;
@@ -99,6 +100,14 @@ export async function saveAgentAction(input: AgentActionInput): Promise<AgentAct
     if (storeMode === "postgres") return postgresAction;
   }
   return action;
+}
+
+function requireAgentUserId(userId: string | undefined): string {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("Agent action userId is required");
+  }
+  return normalized;
 }
 
 export async function findAgentActionByIdempotencyKey(

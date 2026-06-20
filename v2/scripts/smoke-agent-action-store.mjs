@@ -63,6 +63,21 @@ const runs = await listAgentRuns(userId);
 const actions = await listAgentActions(userId);
 const otherRuns = await listAgentRuns(otherUserId);
 const otherActions = await listAgentActions(otherUserId);
+const missingRunUser = await rejectsWithUserBoundary(() => saveAgentRun({
+  intent: "missing user should fail",
+  status: "completed",
+  input: {},
+  output: {},
+  finishedAt: new Date().toISOString()
+}));
+const missingActionUser = await rejectsWithUserBoundary(() => saveAgentAction({
+  runId: run.id,
+  action: "track",
+  status: "completed",
+  capability: {},
+  policyResult: {},
+  idempotencyKey: `missing-user-${idempotencyKey}`
+}));
 
 assert(runs.some((item) => item.id === run.id), "lists saved run");
 assert(actions.some((item) => item.id === action.id), "lists saved action");
@@ -72,6 +87,8 @@ assert(found?.id === action.id, "finds action by idempotency key");
 assert(actions[0].createdAt >= actions[actions.length - 1].createdAt, "actions sorted newest first");
 assert(otherRuns.length === 0, "other user runs isolated");
 assert(otherActions.length === 0, "other user actions isolated");
+assert(missingRunUser, "missing run user is rejected");
+assert(missingActionUser, "missing action user is rejected");
 
 console.log(JSON.stringify({
   ok: true,
@@ -82,7 +99,9 @@ console.log(JSON.stringify({
     "idempotency returns existing action",
     "find by idempotency works",
     "actions sort newest first",
-    "other user isolated"
+    "other user isolated",
+    "missing run user rejected",
+    "missing action user rejected"
   ],
   runId: run.id,
   actionId: action.id
@@ -90,4 +109,13 @@ console.log(JSON.stringify({
 
 function assert(condition, label) {
   if (!condition) throw new Error(`Agent action store smoke failed: ${label}`);
+}
+
+async function rejectsWithUserBoundary(callback) {
+  try {
+    await callback();
+    return false;
+  } catch (error) {
+    return error instanceof Error && error.message === "Agent action userId is required";
+  }
 }
