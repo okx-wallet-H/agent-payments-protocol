@@ -176,6 +176,7 @@ function HumanAgentChatHome() {
   const [draft, setDraft] = useState("");
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const latestUserMessageRef = useRef<HTMLElement | null>(null);
   const pendingFocusMessageId = useRef<string | null>(null);
   const agentPageStyle = { "--human-keyboard-offset": `${keyboardOffset}px` } as CSSProperties;
@@ -234,7 +235,7 @@ function HumanAgentChatHome() {
         <button className="human-round-button" type="button" aria-label="打开菜单">
           H
         </button>
-        <button className="human-round-button" type="button" aria-label="设置">
+        <button className="human-round-button" type="button" aria-label="设置" onClick={() => setSettingsOpen(true)}>
           <Settings size={20} />
         </button>
       </header>
@@ -294,6 +295,55 @@ function HumanAgentChatHome() {
           H
         </button>
       </nav>
+
+      {settingsOpen ? (
+        <section className="human-settings-layer" aria-label="Agent 设置">
+          <button
+            className="human-settings-backdrop"
+            type="button"
+            aria-label="关闭设置"
+            onClick={() => setSettingsOpen(false)}
+          />
+          <div className="human-settings-sheet">
+            <div className="human-settings-header">
+              <div>
+                <span>Agent</span>
+                <h2>设置</h2>
+              </div>
+              <button type="button" aria-label="关闭设置" onClick={() => setSettingsOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className="human-settings-profile">
+              <img src="/images/logo.png" alt="" />
+              <div>
+                <b>海豚社区</b>
+                <span>demo@hwallet.vip</span>
+              </div>
+            </div>
+            <div className="human-settings-grid">
+              <button
+                type="button"
+                onClick={() => {
+                  setMessages([]);
+                  setSettingsOpen(false);
+                }}
+              >
+                <Sparkles size={20} />
+                <span>新会话</span>
+              </button>
+              <button type="button">
+                <Shield size={20} />
+                <span>只读保护</span>
+              </button>
+              <button type="button">
+                <LockKeyhole size={20} />
+                <span>执行关闭</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

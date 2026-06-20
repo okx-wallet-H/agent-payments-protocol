@@ -61,6 +61,13 @@ assertNotIncludes(webHumanPreview, "海豚，今天看什么？", "root web prev
 assertNotIncludes(webHumanPreview, "先说目标，Agent 会把钱包状态、市场数据和下一步建议放在一条对话里。", "root web preview removes manual-like Agent intro copy");
 assertNotIncludes(webHumanPreview, "human-agent-avatar", "root web preview removes the post-login hero logo block");
 assertIncludes(webHumanPreview, "aria-label=\"设置\"", "root web preview uses a settings entry in the top-right button");
+assertIncludes(webHumanPreview, "const [settingsOpen, setSettingsOpen] = useState(false)", "root web preview has settings sheet state");
+assertIncludes(webHumanPreview, "className=\"human-settings-sheet\"", "root web preview opens a clean settings sheet");
+assertIncludes(webHumanPreview, "Agent 设置", "root web preview labels the settings layer");
+assertIncludes(webHumanPreview, "新会话", "root web preview lets users start a clean conversation from settings");
+assertIncludes(webHumanPreview, "只读保护", "root web preview surfaces read-only safety in settings");
+assertIncludes(webHumanPreview, "执行关闭", "root web preview keeps execution closed in settings");
+assertIncludes(webHumanPreview, "setMessages([])", "root web preview settings can clear the active conversation");
 assertIncludes(webHumanPreview, "向 Agent 发送消息", "root web preview exposes the Agent composer by default");
 assertIncludes(webHumanPreview, "const initialHumanChatMessages: HumanChatMessage[] = []", "root web preview starts with an empty human Agent chat");
 assertNotIncludes(webHumanPreview, "HWallet 已连接。我可以先帮你看资产", "root web preview does not seed default Agent copy");
@@ -90,6 +97,8 @@ assertNotIncludes(webStyles, ".human-chat-hero", "root web human preview does no
 assertIncludes(webStyles, "--human-keyboard-offset", "root web human preview exposes a keyboard offset CSS variable");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-composer", "root web human preview lifts the composer above the keyboard");
 assertIncludes(webStyles, ".human-agent-page.keyboard-open .human-chat-nav", "root web human preview hides bottom nav while the keyboard is open");
+assertIncludes(webStyles, ".human-settings-sheet", "root web human preview styles the settings sheet");
+assertIncludes(webStyles, ".human-settings-grid", "root web human preview styles compact settings actions");
 assertIncludes(webStyles, "scroll-margin-top: 112px", "root web human preview leaves safe top space when a new user message is focused");
 assertIncludes(webStyles, "min-width: min(68%, 260px)", "root web human preview keeps short user messages from collapsing into tiny pills");
 checks.push("root /?loginFlow=lock opens the human-facing login preview and enters Agent chat by default");
