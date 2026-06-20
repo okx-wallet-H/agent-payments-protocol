@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 const screen = await readFile("apps/mobile/src/V2AgentWalletScreen.tsx", "utf8");
 const preview = await readFile("apps/mobile/src/V2AgentWalletPreview.tsx", "utf8");
 const app = await readFile("apps/mobile/App.tsx", "utf8");
+const webLayout = await readFile("app/layout.tsx", "utf8");
 const webPage = await readFile("app/page.tsx", "utf8");
 const webStyles = await readFile("app/styles.css", "utf8");
 const webHumanPreview = sliceBetween(webPage, "function MobileHumanLoginPreview", "function AgentWalletHome");
@@ -45,6 +46,7 @@ assertIncludes(app, "maxWidth: 430", "web preview is capped to a phone-sized can
 checks.push("web preview stays responsive and phone-sized on desktop browsers");
 
 assertIncludes(webPage, 'searchParams.get("loginFlow") === "lock"', "root web entry switches loginFlow=lock to the human mobile preview");
+assertIncludes(webLayout, 'interactiveWidget: "resizes-content"', "root web layout asks mobile browsers to resize content for the keyboard");
 assertIncludes(webHumanPreview, "function MobileHumanLoginPreview", "root web entry has a dedicated human-facing mobile login preview");
 assertIncludes(webHumanPreview, "<h1>海豚，开门</h1>", "root web preview uses the human-facing door title");
 assertNotIncludes(webHumanPreview, "<span>海豚社区</span>", "root web preview removes the small door label");
@@ -88,10 +90,12 @@ assertNotIncludes(webHumanPreview, "查收款地址", "root web preview does not
 assertNotIncludes(webHumanPreview, "刷新资产", "root web preview does not show refresh-assets quick prompt on the empty Agent screen");
 assertIncludes(webHumanPreview, "onSubmit={sendAgentMessage}", "root web preview sends Agent messages through the composer form");
 assertNotIncludes(webHumanPreview, "...current", "root web preview does not keep old preview messages on the active screen");
-assertIncludes(webHumanPreview, "latestUserMessageRef.current?.scrollIntoView", "root web preview scrolls the latest user message into the top focus area");
+assertIncludes(webHumanPreview, "window.scrollTo({ top: Math.max(0, focusTop), behavior: \"smooth\" });", "root web preview scrolls the latest user message into the top focus area");
 assertIncludes(webHumanPreview, "pendingFocusMessageId.current = nextMessage.id", "root web preview focuses the newly sent user message instead of the whole thread");
+assertIncludes(webHumanPreview, "setToolMenuOpen(false);", "root web preview closes the tool menu when the composer or a new message takes focus");
 assertIncludes(webHumanPreview, "window.visualViewport", "root web preview listens for keyboard viewport changes");
 assertIncludes(webHumanPreview, "keyboard-open", "root web preview marks keyboard-open state for composer lift");
+assertIncludes(webHumanPreview, "setKeyboardOpen(offset > 24 || document.activeElement instanceof HTMLInputElement)", "root web preview derives keyboard state from the mobile visual viewport");
 assertNotIncludes(webHumanPreview, "readOnly value=\"\"", "root web preview composer is no longer a static read-only input");
 assertNotIncludes(webHumanPreview, "今天的钱包入口", "root web preview does not default to the wallet home after login");
 assertNotIncludes(webHumanPreview, "return <AgentWalletHome />", "root web preview does not fall back to the old AI operator shell");
