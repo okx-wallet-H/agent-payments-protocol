@@ -171,6 +171,47 @@ type HumanChatMessage = {
 
 const initialHumanChatMessages: HumanChatMessage[] = [];
 
+function buildAgentReply(text: string, timestamp: number): HumanChatMessage {
+  const normalized = text.toLowerCase();
+  if (text.includes("收款") || text.includes("地址")) {
+    return {
+      id: `assistant-${timestamp}`,
+      role: "assistant",
+      title: "收款",
+      text: "我来打开你的 HWallet 收款入口。",
+      variant: "accent"
+    };
+  }
+
+  if (text.includes("预测") || text.includes("市场") || text.includes("机会")) {
+    return {
+      id: `assistant-${timestamp}`,
+      role: "assistant",
+      title: "预测",
+      text: "我先看市场热度和赔率，只给你观察结果。",
+      variant: "accent"
+    };
+  }
+
+  if (text.includes("资产") || text.includes("余额") || normalized.includes("balance")) {
+    return {
+      id: `assistant-${timestamp}`,
+      role: "assistant",
+      title: "资产",
+      text: "我会刷新到账状态和可用余额。",
+      variant: "accent"
+    };
+  }
+
+  return {
+    id: `assistant-${timestamp}`,
+    role: "assistant",
+    title: "Agent",
+    text: "收到，我先看钱包和市场，再给你一张结果卡。",
+    variant: "accent"
+  };
+}
+
 function HumanAgentChatHome() {
   const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages);
   const [draft, setDraft] = useState("");
@@ -212,15 +253,17 @@ function HumanAgentChatHome() {
 
   function submitAgentText(text: string) {
     if (!text) return;
+    const submittedAt = Date.now();
 
     const nextMessage: HumanChatMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${submittedAt}`,
       role: "user",
       text
     };
+    const nextReply = buildAgentReply(text, submittedAt);
 
     pendingFocusMessageId.current = nextMessage.id;
-    setMessages([nextMessage]);
+    setMessages([nextMessage, nextReply]);
     setDraft("");
     setToolMenuOpen(false);
   }
