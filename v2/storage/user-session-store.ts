@@ -78,8 +78,10 @@ const dataDir = path.join(process.cwd(), ".agent-wallet-data");
 const sessionsFile = path.join(dataDir, "user-sessions.jsonl");
 
 export async function bindUserWalletSession(input: UserSessionPatch): Promise<UserWalletSessionBinding> {
-  const existingMemory = await loadUserSession(input.userId);
-  const walletConflict = getWalletAddressConflict(existingMemory, input.walletAddress);
+  const userId = requireUserSessionUserId(input.userId);
+  const normalizedInput = { ...input, userId };
+  const existingMemory = await loadUserSession(userId);
+  const walletConflict = getWalletAddressConflict(existingMemory, normalizedInput.walletAddress);
   if (walletConflict) {
     return {
       ok: false,
@@ -89,14 +91,15 @@ export async function bindUserWalletSession(input: UserSessionPatch): Promise<Us
 
   return {
     ok: true,
-    memory: await rememberUserSession(input)
+    memory: await rememberUserSession(normalizedInput)
   };
 }
 
 export async function rememberUserSession(input: UserSessionPatch): Promise<UserSessionMemory> {
+  const userId = requireUserSessionUserId(input.userId);
   const storeMode = getHWalletSessionStoreMode();
   const previous =
-    storeMode === "postgres" ? await loadUserSessionFromPostgres(input.userId) : await loadUserSessionFromJsonl(input.userId);
+    storeMode === "postgres" ? await loadUserSessionFromPostgres(userId) : await loadUserSessionFromJsonl(userId);
   const now = new Date().toISOString();
   const recentMessages = [...(previous?.recentMessages || [])];
 
@@ -117,7 +120,7 @@ export async function rememberUserSession(input: UserSessionPatch): Promise<User
   }
 
   const next: UserSessionMemory = {
-    userId: input.userId,
+    userId,
     walletAddress: resolveSessionWalletAddress(previous?.walletAddress, input.walletAddress),
     walletChainId: 196,
     walletNetwork: "X Layer",
@@ -147,6 +150,14 @@ export async function rememberUserSession(input: UserSessionPatch): Promise<User
   }
 
   return next;
+}
+
+function requireUserSessionUserId(userId: string | undefined): string {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("User session userId is required");
+  }
+  return normalized;
 }
 
 export function getWalletAddressConflict(
