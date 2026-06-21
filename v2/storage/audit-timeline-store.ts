@@ -47,11 +47,13 @@ const auditFile = path.join(dataDir, "audit-timeline.jsonl");
 let auditPool: Pool | undefined;
 
 export async function saveAuditTimelineEvent(input: AuditTimelineEventInput): Promise<AuditTimelineEvent> {
+  const userId = requireAuditUserId(input.userId);
   const event: AuditTimelineEvent = {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     moneyMoved: false,
-    ...input
+    ...input,
+    userId
   };
 
   const storeMode = getHWalletSessionStoreMode();
@@ -63,6 +65,14 @@ export async function saveAuditTimelineEvent(input: AuditTimelineEventInput): Pr
     await saveAuditTimelineEventToPostgres(event);
   }
   return event;
+}
+
+function requireAuditUserId(userId: string | undefined): string {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("Audit timeline userId is required");
+  }
+  return normalized;
 }
 
 export async function listAuditTimelineEvents(userId: string, limit = 30): Promise<AuditTimelineEvent[]> {
