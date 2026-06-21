@@ -1,7 +1,7 @@
 const checks = [];
 
 const { normalizeOkxOutcomes, pickBestOkxWorldCupMarket } = await import("../execution/okx-outcomes-output.ts");
-const { createWorldCupExploreView } = await import("../app/world-cup-explore.ts");
+const { createWorldCupExploreSource, createWorldCupExploreView } = await import("../app/world-cup-explore.ts");
 const { sampleOkxWorldCupPayload } = await import("../execution/okx-world-cup-sample.ts");
 
 const normalized = normalizeOkxOutcomes(sampleOkxWorldCupPayload);
@@ -35,7 +35,7 @@ assert(pending?.acceptingOrders === false, "assetId null is watch-only");
 const best = pickBestOkxWorldCupMarket(normalized.markets);
 assert(Boolean(best?.marketId), "picks a best observable market");
 
-const explore = createWorldCupExploreView(normalized.markets);
+const explore = createWorldCupExploreView(normalized.markets, createWorldCupExploreSource("local-sample", "sample"));
 assert(explore.type === "world_cup_explore_view", "creates explore view");
 assert(Boolean(explore.source.label), "adds source label");
 assert(explore.summary.totalMarkets === normalized.markets.length, "summarizes total market count");

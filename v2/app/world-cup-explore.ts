@@ -89,7 +89,7 @@ const categories: WorldCupExploreView["categories"] = [
 
 export function createWorldCupExploreView(
   markets: MarketSnapshot[],
-  source: WorldCupExploreSource = createWorldCupExploreSource("local-sample", "sample")
+  source: WorldCupExploreSource = createWorldCupExploreSource("okx-outcomes", "unavailable", "No explicit source was provided.")
 ): WorldCupExploreView {
   const cards = markets.map(toExploreCard);
   const updatedAt = new Date().toISOString();
@@ -170,7 +170,7 @@ export function createWorldCupExploreSource(
     provider,
     mode,
     label: unavailable ? "真实数据不可用" : labelByProvider[provider],
-    message: unavailable ? "暂时没有拿到真实预测市场数据，本次不展示样例行情。" : messageByProvider[provider],
+    message: unavailable ? "暂时没有拿到真实预测市场数据，本次不展示行情。" : messageByProvider[provider],
     providerStatus:
       unavailable ? "unavailable" : provider === "okx-outcomes" ? "connected" : provider === "local-sample" ? "sample" : "not_configured",
     credentialsBound: provider === "okx-outcomes" && !unavailable,
