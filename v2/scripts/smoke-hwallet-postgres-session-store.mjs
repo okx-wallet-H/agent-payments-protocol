@@ -26,6 +26,10 @@ const adapterRequiredSnippets = [
 ];
 
 const compactAdapter = adapter.replace(/["`,]/g, " ").replace(/\s+/g, " ");
+const sessionWritePath = sessionStore.slice(
+  sessionStore.indexOf("export async function bindUserWalletSession"),
+  sessionStore.indexOf("export function getWalletAddressConflict")
+);
 const adapterIsolationPatterns = [
   [
     /from hwallet_wallets where user_id = \$1 and chain_id = 196 and status <> 'revoked'/,
@@ -74,7 +78,9 @@ const sessionRequiredSnippets = [
   "storeMode === \"postgres\"",
   "storeMode !== \"postgres\"",
   "storeMode !== \"jsonl\"",
-  "loadUserSessionFromJsonl"
+  "loadUserSessionFromJsonl",
+  "requireUserSessionUserId",
+  "User session userId is required"
 ];
 
 for (const snippet of adapterRequiredSnippets) {
@@ -89,6 +95,31 @@ for (const [pattern, label] of adapterIsolationPatterns) {
   assert(pattern.test(compactAdapter), label);
 }
 
+assert(!sessionWritePath.includes('userId: input.userId,'), "session writes use normalized required user id");
+assert(
+  !sessionWritePath.includes('userId: input.userId || "demo-user"'),
+  "session writes do not fall back to demo-user"
+);
+
+const originalStoreMode = process.env.HWALLET_SESSION_STORE;
+try {
+  process.env.HWALLET_SESSION_STORE = "jsonl";
+  const { bindUserWalletSession, rememberUserSession } = await import("../storage/user-session-store.ts");
+  const missingRememberUserRejected = await rejectsMissingUser(() => rememberUserSession({
+    userId: "",
+    homeLoad: true
+  }));
+  const missingBindUserRejected = await rejectsMissingUser(() => bindUserWalletSession({
+    userId: "   ",
+    walletAddress: `0x${"1".repeat(40)}`
+  }));
+
+  assert(missingRememberUserRejected, "remember session rejects missing user id");
+  assert(missingBindUserRejected, "bind wallet session rejects missing user id");
+} finally {
+  restoreEnv("HWALLET_SESSION_STORE", originalStoreMode);
+}
+
 console.log(JSON.stringify({
   ok: true,
   store: "v2/storage/hwallet-postgres-session-store.ts",
@@ -97,10 +128,30 @@ console.log(JSON.stringify({
     "explicit dual/postgres mode gated by env",
     "wallet/session/message/record tables wired",
     "user-session store can read/write through adapter",
-    "wallet/session/record/transfer/memory SQL remains user scoped"
+    "wallet/session/record/transfer/memory SQL remains user scoped",
+    "session writes require a user id",
+    "missing user session writes are rejected"
   ]
 }, null, 2));
 
 function assert(condition, label) {
   if (!condition) throw new Error(`HWallet Postgres session store smoke failed: ${label}`);
+}
+
+async function rejectsMissingUser(callback) {
+  try {
+    await callback();
+    return false;
+  } catch (error) {
+    return error instanceof Error && error.message === "User session userId is required";
+  }
+}
+
+function restoreEnv(key, value) {
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+
+  process.env[key] = value;
 }
