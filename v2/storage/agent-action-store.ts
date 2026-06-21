@@ -45,6 +45,7 @@ type AgentActionInput = Omit<AgentActionRecord, "id" | "createdAt" | "moneyMoved
 const dataDir = path.join(process.cwd(), ".agent-wallet-data");
 const runsFile = path.join(dataDir, "agent-runs.jsonl");
 const actionsFile = path.join(dataDir, "agent-actions.jsonl");
+const LEGACY_AGENT_ACTION_USER_ID = "legacy-missing-user";
 let agentActionPool: Pool | undefined;
 
 export async function saveAgentRun(input: AgentRunInput): Promise<AgentRunRecord> {
@@ -286,7 +287,7 @@ function getAgentActionPool(): Pool {
 function withRunDefaults(input: Partial<AgentRunRecord>): AgentRunRecord {
   return {
     id: input.id || crypto.randomUUID(),
-    userId: input.userId || "demo-user",
+    userId: input.userId || LEGACY_AGENT_ACTION_USER_ID,
     intent: input.intent || "",
     status: isRunStatus(input.status) ? input.status : "completed",
     input: readJsonObject(input.input),
@@ -299,7 +300,7 @@ function withRunDefaults(input: Partial<AgentRunRecord>): AgentRunRecord {
 function withActionDefaults(input: Partial<AgentActionRecord>): AgentActionRecord {
   return {
     id: input.id || crypto.randomUUID(),
-    userId: input.userId || "demo-user",
+    userId: input.userId || LEGACY_AGENT_ACTION_USER_ID,
     runId: input.runId,
     action: input.action || "unknown",
     status: isActionStatus(input.status) ? input.status : "completed",
@@ -314,7 +315,7 @@ function withActionDefaults(input: Partial<AgentActionRecord>): AgentActionRecor
 function runFromRow(row: AgentRunRow): AgentRunRecord {
   return withRunDefaults({
     id: String(row.id || ""),
-    userId: String(row.user_id || "demo-user"),
+    userId: String(row.user_id || LEGACY_AGENT_ACTION_USER_ID),
     intent: String(row.intent || ""),
     status: String(row.status || "completed") as AgentRunStatus,
     input: readJsonObject(row.input_json),
@@ -327,7 +328,7 @@ function runFromRow(row: AgentRunRow): AgentRunRecord {
 function actionFromRow(row: AgentActionRow): AgentActionRecord {
   return withActionDefaults({
     id: String(row.id || ""),
-    userId: String(row.user_id || "demo-user"),
+    userId: String(row.user_id || LEGACY_AGENT_ACTION_USER_ID),
     runId: typeof row.run_id === "string" ? row.run_id : undefined,
     action: String(row.action || "unknown"),
     status: String(row.status || "completed") as AgentActionStatus,

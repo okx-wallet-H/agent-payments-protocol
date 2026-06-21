@@ -76,6 +76,7 @@ export type UserWalletSessionBinding =
 
 const dataDir = path.join(process.cwd(), ".agent-wallet-data");
 const sessionsFile = path.join(dataDir, "user-sessions.jsonl");
+const LEGACY_USER_SESSION_ID = "legacy-missing-user";
 
 export async function bindUserWalletSession(input: UserSessionPatch): Promise<UserWalletSessionBinding> {
   const userId = requireUserSessionUserId(input.userId);
@@ -227,7 +228,7 @@ async function listUserSessions(): Promise<UserSessionMemory[]> {
 function withSessionDefaults(input: Partial<UserSessionMemory>): UserSessionMemory {
   const now = new Date().toISOString();
   return {
-    userId: input.userId || "demo-user",
+    userId: input.userId || LEGACY_USER_SESSION_ID,
     walletAddress: input.walletAddress,
     walletChainId: 196,
     walletNetwork: "X Layer",
