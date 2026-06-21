@@ -44,6 +44,7 @@ type AuditTimelineEventInput = Omit<AuditTimelineEvent, "id" | "createdAt" | "mo
 
 const dataDir = path.join(process.cwd(), ".agent-wallet-data");
 const auditFile = path.join(dataDir, "audit-timeline.jsonl");
+const LEGACY_AUDIT_USER_ID = "legacy-missing-user";
 let auditPool: Pool | undefined;
 
 export async function saveAuditTimelineEvent(input: AuditTimelineEventInput): Promise<AuditTimelineEvent> {
@@ -197,7 +198,7 @@ async function listAuditTimelineEventsFromPostgres(userId: string, limit = 30): 
 function withAuditDefaults(input: Partial<AuditTimelineEvent>): AuditTimelineEvent {
   return {
     id: input.id || crypto.randomUUID(),
-    userId: input.userId || "demo-user",
+    userId: input.userId || LEGACY_AUDIT_USER_ID,
     type: input.type || "prediction.analyzed",
     title: input.title || "Agent 记录",
     note: input.note || "",
