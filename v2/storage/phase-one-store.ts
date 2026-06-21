@@ -7,7 +7,7 @@ import { createPostgresClientOptions } from "./postgres-client-options";
 
 export type PhaseOneEventType = "prediction.saved" | "tracking.saved" | "strategy.saved" | "simulation.saved";
 
-export const DEFAULT_PHASE_ONE_USER_ID = "demo-user";
+const LEGACY_PHASE_ONE_USER_ID = "legacy-missing-user";
 
 export interface PhaseOneRecord {
   id: string;
@@ -20,17 +20,16 @@ export interface PhaseOneRecord {
   createdAt: string;
 }
 
-type PhaseOneRecordInput = Omit<PhaseOneRecord, "id" | "createdAt" | "userId"> & {
-  userId?: string;
-};
+type PhaseOneRecordInput = Omit<PhaseOneRecord, "id" | "createdAt">;
 
 const dataDir = path.join(process.cwd(), ".agent-wallet-data");
 const recordsFile = path.join(dataDir, "phase-one-records.jsonl");
 let phaseOnePool: Pool | undefined;
 
 export async function savePhaseOneRecord(input: PhaseOneRecordInput): Promise<PhaseOneRecord> {
+  const userId = requirePhaseOneUserId(input.userId);
   if (input.idempotencyKey) {
-    const existing = await findPhaseOneRecordByIdempotencyKey(input.userId || DEFAULT_PHASE_ONE_USER_ID, input.idempotencyKey);
+    const existing = await findPhaseOneRecordByIdempotencyKey(userId, input.idempotencyKey);
     if (existing) return existing;
   }
 
@@ -38,7 +37,7 @@ export async function savePhaseOneRecord(input: PhaseOneRecordInput): Promise<Ph
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     ...input,
-    userId: input.userId || DEFAULT_PHASE_ONE_USER_ID
+    userId
   };
 
   const storeMode = getHWalletSessionStoreMode();
@@ -57,21 +56,23 @@ export async function findPhaseOneRecordByIdempotencyKey(
   userId: string,
   idempotencyKey: string
 ): Promise<PhaseOneRecord | undefined> {
+  const normalizedUserId = requirePhaseOneUserId(userId);
   if (getHWalletSessionStoreMode() === "postgres") {
-    return findPhaseOneRecordByIdempotencyKeyFromPostgres(userId, idempotencyKey);
+    return findPhaseOneRecordByIdempotencyKeyFromPostgres(normalizedUserId, idempotencyKey);
   }
-  const records = await listPhaseOneRecords(userId);
+  const records = await listPhaseOneRecords(normalizedUserId);
   return records.find((record) => record.idempotencyKey === idempotencyKey);
 }
 
-export async function listPhaseOneRecords(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<PhaseOneRecord[]> {
+export async function listPhaseOneRecords(userId: string): Promise<PhaseOneRecord[]> {
+  const normalizedUserId = requirePhaseOneUserId(userId);
   if (getHWalletSessionStoreMode() === "postgres") {
-    return listPhaseOneRecordsFromPostgres(userId);
+    return listPhaseOneRecordsFromPostgres(normalizedUserId);
   }
-  return listPhaseOneRecordsFromJsonl(userId);
+  return listPhaseOneRecordsFromJsonl(normalizedUserId);
 }
 
-async function listPhaseOneRecordsFromJsonl(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<PhaseOneRecord[]> {
+async function listPhaseOneRecordsFromJsonl(userId: string): Promise<PhaseOneRecord[]> {
   const raw = await readFile(recordsFile, "utf8").catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return "";
     throw error;
@@ -139,7 +140,7 @@ async function findPhaseOneRecordByIdempotencyKeyFromPostgres(
   return phaseOneRecordFromRow(result.rows[0] as PhaseOneRecordRow);
 }
 
-async function listPhaseOneRecordsFromPostgres(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<PhaseOneRecord[]> {
+async function listPhaseOneRecordsFromPostgres(userId: string): Promise<PhaseOneRecord[]> {
   const result = await getPhaseOnePool().query(
     [
       "select id, user_id, idempotency_key, type, title, note, card_json, created_at",
@@ -153,36 +154,31 @@ async function listPhaseOneRecordsFromPostgres(userId = DEFAULT_PHASE_ONE_USER_I
   return result.rows.map((row: PhaseOneRecordRow) => phaseOneRecordFromRow(row));
 }
 
-export async function listTrackingCards(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<TrackingCard[]> {
+export async function listTrackingCards(userId: string): Promise<TrackingCard[]> {
   const records = await listPhaseOneRecords(userId);
   return records
     .filter((record) => record.type === "tracking.saved" && record.card.type === "tracking_card")
     .map((record) => record.card as TrackingCard);
 }
 
-export async function listPredictionCards(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<PredictionCard[]> {
+export async function listPredictionCards(userId: string): Promise<PredictionCard[]> {
   const records = await listPhaseOneRecords(userId);
   return records
     .filter((record) => record.type === "prediction.saved" && record.card.type === "prediction_card")
     .map((record) => record.card as PredictionCard);
 }
 
-export async function listStrategyCards(userId = DEFAULT_PHASE_ONE_USER_ID): Promise<StrategyCard[]> {
+export async function listStrategyCards(userId: string): Promise<StrategyCard[]> {
   const records = await listPhaseOneRecords(userId);
   return records
     .filter((record) => record.type === "strategy.saved" && record.card.type === "strategy_card")
     .map((record) => record.card as StrategyCard);
 }
 
-export function readPhaseOneUserId(url: string): string {
-  const userId = new URL(url).searchParams.get("userId")?.trim();
-  return userId || DEFAULT_PHASE_ONE_USER_ID;
-}
-
 function withRecordDefaults(record: Partial<PhaseOneRecord>): PhaseOneRecord {
   return {
     id: record.id || crypto.randomUUID(),
-    userId: record.userId || DEFAULT_PHASE_ONE_USER_ID,
+    userId: record.userId || LEGACY_PHASE_ONE_USER_ID,
     idempotencyKey: record.idempotencyKey,
     type: record.type || "simulation.saved",
     title: record.title || "记录",
@@ -195,7 +191,7 @@ function withRecordDefaults(record: Partial<PhaseOneRecord>): PhaseOneRecord {
 function phaseOneRecordFromRow(row: PhaseOneRecordRow): PhaseOneRecord {
   return withRecordDefaults({
     id: String(row.id || ""),
-    userId: String(row.user_id || DEFAULT_PHASE_ONE_USER_ID),
+    userId: String(row.user_id || LEGACY_PHASE_ONE_USER_ID),
     idempotencyKey: typeof row.idempotency_key === "string" ? row.idempotency_key : undefined,
     type: String(row.type || "simulation.saved") as PhaseOneEventType,
     title: String(row.title || "记录"),
@@ -203,6 +199,14 @@ function phaseOneRecordFromRow(row: PhaseOneRecordRow): PhaseOneRecord {
     card: readCard(row.card_json),
     createdAt: toIso(row.created_at)
   });
+}
+
+function requirePhaseOneUserId(userId: string | undefined): string {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("Phase One record userId is required");
+  }
+  return normalized;
 }
 
 function getPhaseOnePool(): Pool {
