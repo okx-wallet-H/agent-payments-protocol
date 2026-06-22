@@ -61,7 +61,7 @@ export default function Home() {
 }
 
 function MobileHumanLoginPreview() {
-  const [email, setEmail] = useState("demo@hwallet.vip");
+  const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [code, setCode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
@@ -89,7 +89,7 @@ function MobileHumanLoginPreview() {
     setUnlocked(true);
   }
 
-  if (unlocked) return <HumanAgentChatHome />;
+  if (unlocked) return <HumanAgentChatHome email={normalizedEmail} />;
 
   return (
     <main className="human-lock-page" aria-label="海豚社区登录预览">
@@ -212,7 +212,7 @@ function buildAgentReply(text: string, timestamp: number): HumanChatMessage {
   };
 }
 
-function HumanAgentChatHome() {
+function HumanAgentChatHome({ email }: { email?: string }) {
   const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages);
   const [draft, setDraft] = useState("");
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -400,7 +400,7 @@ function HumanAgentChatHome() {
               <img src="/images/logo.png" alt="" />
               <div>
                 <b>海豚社区</b>
-                <span>demo@hwallet.vip</span>
+                <span>{email || "邮箱已验证"}</span>
               </div>
             </div>
             <div className="human-settings-grid">
