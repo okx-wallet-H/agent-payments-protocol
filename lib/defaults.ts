@@ -4,7 +4,7 @@ export const DEFAULT_POLICY: AgentPolicy = {
   maxSingleSpendOkb: 0.02,
   dailyBudgetOkb: 0.05,
   dailyLossLimitOkb: 0.03,
-  allowedMarkets: ["okx-world-cup-2026", "okx-exchange-os-observed", "polymarket-world-cup-2026"],
+  allowedMarkets: ["prediction-market-observed", "okx-exchange-os-observed"],
   allowedTokens: ["OKB"],
   expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   revoked: false

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkAgentAccess } from "@/lib/access-control";
 import { auditEvent } from "@/lib/audit";
 import { jsonError, parseJson, parsePositiveNumber } from "@/lib/http";
+import { normalizePredictionKeyword } from "@/lib/onchainos-router";
 import { runPredictionAgent } from "@/lib/agent-runner";
 import { getAgent, saveAgent } from "@/lib/store";
 
@@ -26,7 +27,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Invalid amountOkb", 400);
   }
-  const result = await runPredictionAgent(agent, amountOkb, body.keyword || "World Cup");
+  const keyword = normalizePredictionKeyword(body.keyword);
+  if (!keyword) return jsonError("keyword is required", 400);
+
+  const result = await runPredictionAgent(agent, amountOkb, keyword);
 
   const saved = await saveAgent(
     {

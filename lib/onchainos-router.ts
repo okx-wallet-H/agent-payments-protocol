@@ -28,9 +28,20 @@ export function getPredictionRouterInfo(): PredictionRouterInfo {
   };
 }
 
-export async function listPredictionMarketsViaRouter(keyword = "World Cup", limit = 10) {
+export function normalizePredictionKeyword(keyword: unknown): string | undefined {
+  const normalized = typeof keyword === "string" ? keyword.trim() : "";
+  return normalized || undefined;
+}
+
+export function requirePredictionKeyword(keyword: unknown): string {
+  const normalized = normalizePredictionKeyword(keyword);
+  if (!normalized) throw new Error("prediction keyword is required");
+  return normalized;
+}
+
+export async function listPredictionMarketsViaRouter(keyword: string, limit = 10) {
   const router = getPredictionRouterInfo();
-  const markets = await listPolymarketMarkets(keyword, limit);
+  const markets = await listPolymarketMarkets(requirePredictionKeyword(keyword), limit);
 
   return {
     router,

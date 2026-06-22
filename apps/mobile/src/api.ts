@@ -34,14 +34,14 @@ export interface ApiClient {
   syncVault(agentId: string): Promise<Agent>;
   updatePolicy(agentId: string, maxSingleSpendOkb: number, dailyBudgetOkb: number): Promise<Agent>;
   sendMessage(agentId: string, content: string, userId?: string): Promise<AgentMessage[]>;
-  runAgent(agentId: string, amountOkb: number, keyword?: string): Promise<AgentRun>;
+  runAgent(agentId: string, amountOkb: number, keyword: string): Promise<AgentRun>;
   createIntent(agentId: string, amountOkb: number, market?: PredictionMarket): Promise<TradeIntent>;
   previewIntent(agentId: string, intentId?: string): Promise<ExecutionPreview>;
   confirmPreview(agentId: string, previewId: string, confirmationText: string, confirmedBy?: string): Promise<ExecutionPreview>;
   executeIntent(agentId: string, intentId?: string, previewId?: string): Promise<ExecutionRecord>;
   updateStatus(agentId: string, status: "active" | "paused" | "revoked"): Promise<Agent>;
   listAudit(agentId: string): Promise<AuditEvent[]>;
-  listPredictionMarkets(keyword?: string): Promise<{ router?: PredictionRouterInfo; markets: PredictionMarket[] }>;
+  listPredictionMarkets(keyword: string): Promise<{ router?: PredictionRouterInfo; markets: PredictionMarket[] }>;
   getV2Home(userId?: string, walletAddress?: `0x${string}`): Promise<V2MobileHomeResponse>;
   getV2Wallet(userId?: string, walletAddress?: `0x${string}`): Promise<V2WalletContext>;
   getV2Memory(userId?: string): Promise<V2MobileAgentMemory>;
@@ -156,7 +156,7 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       }, getAccessToken);
       return data.messages;
     },
-    async runAgent(agentId, amountOkb, keyword = "World Cup") {
+    async runAgent(agentId, amountOkb, keyword) {
       const data = await request<{ run: AgentRun }>(cleanBaseUrl, `/api/agents/${agentId}/run`, {
         method: "POST",
         body: JSON.stringify({ amountOkb, keyword })
@@ -169,7 +169,7 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
         body: JSON.stringify(
           market
             ? {
-                market: "polymarket-world-cup-2026",
+                market: market.slug || market.id,
                 provider: "onchainos_plugin",
                 side: "yes",
                 amountOkb,
@@ -179,7 +179,7 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
                 marketProbability: market.yesPrice,
                 yesPrice: market.yesPrice
               }
-            : { market: "okx-world-cup-2026", side: "yes", amountOkb }
+            : { market: "prediction-market-observed", side: "yes", amountOkb }
         )
       }, getAccessToken);
       return data.intent;
@@ -221,7 +221,7 @@ export function createApi(baseUrl: string, getAccessToken?: GetAccessToken): Api
       const data = await request<{ audit: AuditEvent[] }>(cleanBaseUrl, `/api/agents/${agentId}/audit`, undefined, getAccessToken);
       return data.audit;
     },
-    async listPredictionMarkets(keyword = "World Cup") {
+    async listPredictionMarkets(keyword) {
       const params = new URLSearchParams({ keyword, limit: "10" });
       const data = await request<{ router?: PredictionRouterInfo; markets: PredictionMarket[] }>(
         cleanBaseUrl,

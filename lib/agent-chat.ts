@@ -17,12 +17,12 @@ export async function handleAgentChat(agent: Agent, content: string, userId?: st
     const amountOkb = Number(
       decision.toolCalls[0]?.arguments.amountOkb || Math.min(0.01, agent.policy.maxSingleSpendOkb)
     );
-    const result = await runPredictionAgent(agent, amountOkb, "World Cup");
+    const result = await runPredictionAgent(agent, amountOkb, content);
     const assistantMessage = createMessage(
       agent.id,
       "assistant",
       result.run.status === "failed"
-        ? `我帮你看了一下世界杯相关市场，但暂时没找到适合继续分析的机会。原因：${result.run.selectionReason}`
+        ? `我按你刚才的目标看了一下公开预测市场，但暂时没找到适合继续分析的机会。原因：${result.run.selectionReason}`
         : `我帮你看完了：一共扫到 ${result.run.observedMarketCount} 个市场，当前重点关注「${result.run.selectedQuestion}」。我已经生成了一份操作方案，默认先走模拟预览；交易签名由 TEE 可信执行环境处理。`,
       "run_agent",
       {
@@ -52,7 +52,7 @@ export async function handleAgentChat(agent: Agent, content: string, userId?: st
       return staticReply(
         agent,
         userMessage,
-        "现在还没有可以确认的方案。你可以先说“帮我看看世界杯机会”，我会先给你一份方案。",
+        "现在还没有可以确认的方案。你可以先说一个明确市场或事件，我会先观察再给方案。",
         decision
       );
     }
@@ -119,7 +119,7 @@ export async function handleAgentChat(agent: Agent, content: string, userId?: st
         }
       };
     } catch {
-      return staticReply(agent, userMessage, "现在还没有可生成方案的机会。你可以先说“帮我看看世界杯机会”。", decision);
+      return staticReply(agent, userMessage, "现在还没有可生成方案的机会。你可以先说一个明确市场或事件，我会先观察再给方案。", decision);
     }
   }
 
@@ -151,7 +151,7 @@ export async function handleAgentChat(agent: Agent, content: string, userId?: st
         }
       };
     } catch {
-      return staticReply(agent, userMessage, "现在还没有可执行的方案。你可以先说“帮我看看世界杯机会”。", decision);
+      return staticReply(agent, userMessage, "现在还没有可执行的方案。你可以先说一个明确市场或事件，我会先观察再给方案。", decision);
     }
   }
 
@@ -175,7 +175,7 @@ export async function handleAgentChat(agent: Agent, content: string, userId?: st
   return staticReply(
     agent,
     userMessage,
-    "你可以直接这样说：\n- “帮我看看世界杯有没有机会”\n- “先给我方案”\n- “模拟执行一下”\n- “现在状态怎么样”\n- “你记住了什么”\n我会先给方案、说风险、留记录；交易签名基于 TEE，私钥不离开可信执行环境。",
+    "你可以直接这样说：\n- “帮我看看一个具体市场”\n- “先给我方案”\n- “模拟执行一下”\n- “现在状态怎么样”\n- “你记住了什么”\n我会先给方案、说风险、留记录；交易签名基于 TEE，私钥不离开可信执行环境。",
     decision
   );
 }
@@ -240,7 +240,7 @@ function decideAgentAction(agent: Agent, content: string): AgentDecision {
       "run_agent",
       0.82,
       ["User asked the agent to analyze or run a prediction workflow."],
-      [{ name: "runPredictionAgent", arguments: { amountOkb, keyword: "World Cup" } }]
+      [{ name: "runPredictionAgent", arguments: { amountOkb, keyword: content.trim() } }]
     );
   }
 
