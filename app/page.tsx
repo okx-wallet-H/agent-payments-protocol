@@ -12,7 +12,6 @@ import {
   Settings,
   Shield,
   Sparkles,
-  Trophy,
   Wallet
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -439,13 +438,13 @@ function AgentWalletHome() {
     busy: false,
     message: ""
   });
-  const [agentName, setAgentName] = useState("世界杯机会助手");
+  const [agentName, setAgentName] = useState("预测市场助手");
   const [vaultAddress, setVaultAddress] = useState("");
   const [intentAmount, setIntentAmount] = useState("0.01");
   const [maxSingleSpend, setMaxSingleSpend] = useState("0.02");
   const [dailyBudget, setDailyBudget] = useState("0.05");
   const [confirmationText, setConfirmationText] = useState("");
-  const [chatInput, setChatInput] = useState("帮我看看世界杯有没有机会");
+  const [chatInput, setChatInput] = useState("");
   const [markets, setMarkets] = useState<PredictionMarket[]>([]);
   const [routerInfo, setRouterInfo] = useState<PredictionRouterInfo>();
   const [selectedMarketId, setSelectedMarketId] = useState<string>();
@@ -461,6 +460,7 @@ function AgentWalletHome() {
     () => markets.find((market) => market.id === selectedMarketId) || markets[0],
     [markets, selectedMarketId]
   );
+  const predictionKeyword = chatInput.trim();
   const apiWithAuth = <T,>(url: string, init?: RequestInit) =>
     api<T>(url, init, privyConfigured && authenticated ? getAccessToken : undefined);
 
@@ -495,7 +495,8 @@ function AgentWalletHome() {
   }
 
   async function loadPredictionMarkets() {
-    const params = new URLSearchParams({ keyword: "World Cup", limit: "10" });
+    if (!predictionKeyword) throw new Error("请先输入一个明确市场或事件");
+    const params = new URLSearchParams({ keyword: predictionKeyword, limit: "10" });
     const data = await apiWithAuth<{
       router?: PredictionRouterInfo;
       markets: PredictionMarket[];
@@ -532,9 +533,10 @@ function AgentWalletHome() {
 
   async function askAgentAction() {
     if (!selected) return;
+    if (!predictionKeyword) throw new Error("请先输入你想让 Agent 看的目标");
     await apiWithAuth(`/api/agents/${selected.id}/chat`, {
       method: "POST",
-      body: JSON.stringify({ content: chatInput || "帮我看看世界杯有没有机会", userId: ownerUserId })
+      body: JSON.stringify({ content: predictionKeyword, userId: ownerUserId })
     });
     setChatInput("");
     await load(selected.id);
@@ -542,9 +544,10 @@ function AgentWalletHome() {
 
   async function analyzeAction() {
     if (!selected) return;
+    if (!predictionKeyword) throw new Error("请先输入一个明确市场或事件");
     await apiWithAuth(`/api/agents/${selected.id}/run`, {
       method: "POST",
-      body: JSON.stringify({ amountOkb: Number(intentAmount), keyword: "World Cup" })
+      body: JSON.stringify({ amountOkb: Number(intentAmount), keyword: predictionKeyword })
     });
     await load(selected.id);
   }
@@ -603,8 +606,8 @@ function AgentWalletHome() {
               简体中文
             </button>
             <button className="chip-button gold" type="button">
-              <Trophy size={15} />
-              世界杯版
+              <Sparkles size={15} />
+              Agent 版
             </button>
           </div>
 
@@ -618,7 +621,7 @@ function AgentWalletHome() {
           <div className="login-chat-preview" aria-label="AI 对话预览">
             <article className="simple-message assistant">
               <b>AI预言帝</b>
-              <p>你可以直接问：世界杯有没有机会？我先分析公开市场和风险。</p>
+              <p>你可以直接说目标。我先分析公开市场和风险。</p>
             </article>
             <article className="simple-message user">
               <b>我</b>
@@ -709,7 +712,7 @@ function AgentWalletHome() {
       <section className="simple-chat-shell">
         <header className="chat-hero">
           <div className="assistant-avatar">
-            <img src="/agents/agent-worldcup.jpg" alt="AI 预言帝" />
+            <img src="/images/logo.png" alt="海豚社区" />
           </div>
           <div>
             <p className="eyebrow">海豚 AI 助手</p>
@@ -749,7 +752,7 @@ function AgentWalletHome() {
           {selected && selected.vault && latestMessages.length === 0 && (
             <article className="simple-message assistant">
               <b>AI预言帝</b>
-              <p>你可以直接问：“帮我看看世界杯有没有机会”。我会先分析，不会直接动钱。</p>
+              <p>你可以直接说一个市场或事件。我会先分析，不会直接动钱。</p>
             </article>
           )}
           {latestMessages.slice().reverse().map((message) => (
@@ -835,8 +838,8 @@ function AgentWalletHome() {
           )}
           {selected?.vault && !latestIntent && (
             <>
-              <button className="secondary compact" disabled={state.busy} onClick={() => setChatInput("帮我看看世界杯有没有机会")}>
-                世界杯有没有机会？
+              <button className="secondary compact" disabled={state.busy} onClick={() => setChatInput("帮我看看预测市场机会")}>
+                看预测市场
               </button>
               <button className="secondary compact" disabled={state.busy} onClick={() => setChatInput("先给我一个安全方案")}>
                 先给我安全方案
@@ -864,7 +867,7 @@ function AgentWalletHome() {
                 run("Chat", askAgentAction);
               }
             }}
-            placeholder={selected ? "直接跟 AI 说，比如：帮我看看世界杯有没有机会" : "先创建 AI 助手"}
+            placeholder={selected ? "直接跟 AI 说一个市场或事件" : "先创建 AI 助手"}
             disabled={!selected || state.busy}
           />
           <button disabled={state.busy || !selected || !chatInput.trim()} onClick={() => run("Chat", askAgentAction)}>
@@ -1208,7 +1211,7 @@ function AgentWalletHome() {
           {selected ? (
             <>
               <button
-                disabled={state.busy}
+                disabled={state.busy || !predictionKeyword}
                 onClick={() =>
                   run("Run agent", analyzeAction)
                 }
@@ -1226,7 +1229,7 @@ function AgentWalletHome() {
               )}
               <button
                 className="secondary compact"
-                disabled={state.busy}
+                disabled={state.busy || !predictionKeyword}
                 onClick={() => run("Load plugin markets", loadPredictionMarkets)}
               >
                 刷新公开市场
@@ -1266,7 +1269,7 @@ function AgentWalletHome() {
                       body: JSON.stringify(
                         selectedMarket
                           ? {
-                              market: "polymarket-world-cup-2026",
+                              market: selectedMarket.slug || selectedMarket.id,
                               provider: "onchainos_plugin",
                               side: "yes",
                               amountOkb: Number(intentAmount),
@@ -1277,7 +1280,7 @@ function AgentWalletHome() {
                               yesPrice: selectedMarket.yesPrice
                             }
                           : {
-                              market: "okx-world-cup-2026",
+                              market: "prediction-market-observed",
                               provider: "okx_observed",
                               side: "yes",
                               amountOkb: Number(intentAmount)
