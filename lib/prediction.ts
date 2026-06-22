@@ -21,14 +21,14 @@ export interface PredictionInput {
 export function createPredictionIntent(agent: Agent, input: PredictionInput): TradeIntent {
   const usesPlugin = input.provider === "polymarket_plugin" || input.provider === "onchainos_plugin";
   const liveTradingEnabled = isPolymarketLiveTradingEnabled();
-  const market = input.market || (usesPlugin ? "polymarket-world-cup-2026" : "okx-world-cup-2026");
+  const market = input.market || input.externalMarketSlug || input.externalMarketId || "prediction-market-observed";
   const side = input.side || "yes";
   const amountOkb = normalizeAmountOkb(input.amountOkb, Math.min(0.01, agent.policy.maxSingleSpendOkb));
   const thesis =
     input.thesis ||
     (usesPlugin
-      ? "Routed through the Onchain OS plugin router and observed public World Cup prediction market data with polymarket-plugin."
-      : "Observed OKX Exchange OS World Cup prediction market narrative.");
+      ? "Routed through the Onchain OS plugin router and observed public prediction market data with polymarket-plugin."
+      : "Observed OKX Exchange OS prediction market narrative.");
   const expectedProbability = 0.58;
   const marketProbability = input.marketProbability ?? input.yesPrice ?? 0.5;
   const confidence = 0.62;
@@ -53,7 +53,7 @@ export function createPredictionIntent(agent: Agent, input: PredictionInput): Tr
     previewRequired: usesPlugin ? true : undefined,
     reasoning:
       `${thesis} Agent estimates ${Math.round(expectedProbability * 100)}% fair probability vs ` +
-      `${Math.round(marketProbability * 100)}% observed placeholder probability. Execution remains gated by policy.`,
+      `${Math.round(marketProbability * 100)}% observed market probability. Execution remains gated by policy.`,
     status: "draft",
     riskNotes: [],
     createdAt: new Date().toISOString()

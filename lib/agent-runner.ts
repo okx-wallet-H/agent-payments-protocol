@@ -10,7 +10,7 @@ export interface AgentRunResult {
   preview?: ExecutionPreview;
 }
 
-export async function runPredictionAgent(agent: Agent, amountOkb: number, keyword = "World Cup"): Promise<AgentRunResult> {
+export async function runPredictionAgent(agent: Agent, amountOkb: number, keyword: string): Promise<AgentRunResult> {
   const observed = await listPredictionMarketsViaRouter(keyword, 10);
   const selectedMarket = selectPredictionMarket(observed.markets);
 
@@ -26,7 +26,7 @@ export async function runPredictionAgent(agent: Agent, amountOkb: number, keywor
   }
 
   const intent = createPredictionIntent(agent, {
-    market: "polymarket-world-cup-2026",
+    market: selectedMarket.slug || selectedMarket.id,
     provider: "onchainos_plugin",
     side: "yes",
     amountOkb,
@@ -35,7 +35,7 @@ export async function runPredictionAgent(agent: Agent, amountOkb: number, keywor
     externalQuestion: selectedMarket.question,
     marketProbability: selectedMarket.yesPrice,
     yesPrice: selectedMarket.yesPrice,
-    thesis: `AI 从公开市场中选出了一个相对活跃的世界杯相关市场：${selectedMarket.question}`
+    thesis: `AI 从公开市场中选出了一个相对活跃的预测市场：${selectedMarket.question}`
   });
   const riskNotes = evaluateIntent(agent, intent);
   const nextIntent: TradeIntent = {
@@ -85,7 +85,7 @@ function createRun(
   return {
     id: crypto.randomUUID(),
     agentId: agent.id,
-    goal: "查看世界杯相关市场，生成安全规则检查后的方案，并先给出执行预览。",
+    goal: "查看用户指定的预测市场，生成安全规则检查后的方案，并先给出执行预览。",
     createdAt: new Date().toISOString(),
     ...input
   };

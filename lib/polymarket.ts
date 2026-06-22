@@ -35,8 +35,11 @@ function sanitizeText(value: unknown): string {
     .slice(0, 500);
 }
 
-export async function listPolymarketMarkets(keyword = "World Cup", limit = 10): Promise<PredictionMarket[]> {
-  const args = ["list-markets", "--limit", String(limit), "--keyword", keyword];
+export async function listPolymarketMarkets(keyword: string, limit = 10): Promise<PredictionMarket[]> {
+  const normalizedKeyword = keyword.trim();
+  if (!normalizedKeyword) throw new Error("prediction keyword is required");
+
+  const args = ["list-markets", "--limit", String(limit), "--keyword", normalizedKeyword];
   const { stdout } = await execFileAsync("polymarket-plugin", args, {
     timeout: 15000,
     maxBuffer: 1024 * 1024

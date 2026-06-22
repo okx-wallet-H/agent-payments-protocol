@@ -49,11 +49,11 @@ export async function POST(request: Request) {
   const agent: Agent = {
     id: crypto.randomUUID(),
     ownerUserId,
-    name: body.name || "World Cup Prediction Agent",
+    name: body.name || "Prediction Agent",
     status: "active",
     strategyProfile:
       body.strategyProfile ||
-      "OKX-first prediction agent. Observe Exchange OS / World Cup markets, generate probability theses, execute only inside policy.",
+      "OKX-first prediction agent. Observe real prediction markets, generate probability theses, execute only inside policy.",
     executionMode: body.executionMode || "mainnet_small",
     userWalletAddress,
     policy: DEFAULT_POLICY,
