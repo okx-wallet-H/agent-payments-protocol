@@ -170,43 +170,76 @@ type HumanChatMessage = {
 
 const initialHumanChatMessages: HumanChatMessage[] = [];
 
-function buildAgentReply(text: string, timestamp: number): HumanChatMessage {
-  const normalized = text.toLowerCase();
-  if (text.includes("收款") || text.includes("地址")) {
+type HumanPhaseOneCard = {
+  type?: string;
+  title?: string;
+  statusText?: string;
+  agentNote?: string;
+  metrics?: Record<string, unknown>;
+};
+
+type HumanPhaseOneMobileMessage = {
+  id?: string;
+  role?: "user" | "agent";
+  kind?: "text" | "progress" | "card";
+  text?: string;
+  card?: HumanPhaseOneCard;
+};
+
+type HumanPhaseOneResponse = {
+  mobileTurn?: {
+    id?: string;
+    messages?: HumanPhaseOneMobileMessage[];
+    suggestedInput?: string;
+  };
+};
+
+function createHumanPreviewUserId(email?: string) {
+  const normalizedEmail = (email || "guest").trim().toLowerCase() || "guest";
+  return `human-web:${normalizedEmail}`;
+}
+
+function formatHumanAgentCard(card: HumanPhaseOneCard) {
+  const textParts = [card.statusText, card.agentNote].filter(Boolean);
+  if (textParts.length > 0) return textParts.join(" ");
+  if (card.title) return card.title;
+  return "真实数据已经返回，但这次没有可展示的说明。";
+}
+
+function createHumanAgentMessageFromTurn(
+  turn: HumanPhaseOneResponse["mobileTurn"] | undefined,
+  timestamp: number
+): HumanChatMessage {
+  const messages = turn?.messages || [];
+  const reversed = [...messages].reverse();
+  const cardMessage = reversed.find((message) => message.kind === "card" && message.card);
+  const textMessage = reversed.find((message) => message.role === "agent" && message.text?.trim());
+
+  if (cardMessage?.card) {
     return {
-      id: `assistant-${timestamp}`,
+      id: `assistant-${turn?.id || timestamp}`,
       role: "assistant",
-      title: "收款",
-      text: "我来打开你的 HWallet 收款入口。",
+      title: cardMessage.card.title || cardMessage.card.statusText || "Agent",
+      text: formatHumanAgentCard(cardMessage.card),
       variant: "accent"
     };
   }
 
-  if (text.includes("预测") || text.includes("市场") || text.includes("机会")) {
+  if (textMessage?.text) {
     return {
-      id: `assistant-${timestamp}`,
+      id: `assistant-${turn?.id || timestamp}`,
       role: "assistant",
-      title: "预测",
-      text: "我先看市场热度和赔率，只给你观察结果。",
-      variant: "accent"
-    };
-  }
-
-  if (text.includes("资产") || text.includes("余额") || normalized.includes("balance")) {
-    return {
-      id: `assistant-${timestamp}`,
-      role: "assistant",
-      title: "资产",
-      text: "我会刷新到账状态和可用余额。",
+      title: "Agent",
+      text: textMessage.text,
       variant: "accent"
     };
   }
 
   return {
-    id: `assistant-${timestamp}`,
+    id: `assistant-${turn?.id || timestamp}`,
     role: "assistant",
     title: "Agent",
-    text: "收到，我先看钱包和市场，再给你一张结果卡。",
+    text: "真实接口已返回，但暂时没有生成可展示内容。",
     variant: "accent"
   };
 }
@@ -214,12 +247,14 @@ function buildAgentReply(text: string, timestamp: number): HumanChatMessage {
 function HumanAgentChatHome({ email }: { email?: string }) {
   const [messages, setMessages] = useState<HumanChatMessage[]>(initialHumanChatMessages);
   const [draft, setDraft] = useState("");
+  const [agentBusy, setAgentBusy] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolMenuOpen, setToolMenuOpen] = useState(false);
   const latestUserMessageRef = useRef<HTMLElement | null>(null);
   const pendingFocusMessageId = useRef<string | null>(null);
+  const agentRequestIdRef = useRef(0);
   const agentPageStyle = { "--human-keyboard-offset": `${keyboardOffset}px` } as CSSProperties;
 
   useEffect(() => {
@@ -255,26 +290,58 @@ function HumanAgentChatHome({ email }: { email?: string }) {
     return () => window.cancelAnimationFrame(frame);
   }, [messages]);
 
-  function submitAgentText(text: string) {
-    if (!text) return;
+  async function submitAgentText(text: string) {
+    if (!text || agentBusy) return;
     const submittedAt = Date.now();
+    const requestId = agentRequestIdRef.current + 1;
+    agentRequestIdRef.current = requestId;
 
     const nextMessage: HumanChatMessage = {
       id: `user-${submittedAt}`,
       role: "user",
       text
     };
-    const nextReply = buildAgentReply(text, submittedAt);
+    const pendingMessage: HumanChatMessage = {
+      id: `assistant-pending-${submittedAt}`,
+      role: "assistant",
+      title: "Agent",
+      text: "我在读取真实钱包和市场数据。",
+      variant: "accent"
+    };
 
     pendingFocusMessageId.current = nextMessage.id;
-    setMessages([nextMessage, nextReply]);
+    setMessages([nextMessage, pendingMessage]);
     setDraft("");
     setToolMenuOpen(false);
+    setAgentBusy(true);
+
+    try {
+      const response = await api<HumanPhaseOneResponse>("/api/v2/phase-one", {
+        method: "POST",
+        body: JSON.stringify({
+          text,
+          userId: createHumanPreviewUserId(email)
+        })
+      });
+      const assistantMessage = createHumanAgentMessageFromTurn(response.mobileTurn, submittedAt);
+      if (agentRequestIdRef.current === requestId) setMessages([nextMessage, assistantMessage]);
+    } catch (error) {
+      const errorMessage: HumanChatMessage = {
+        id: `assistant-error-${submittedAt}`,
+        role: "assistant",
+        title: "Agent",
+        text: error instanceof Error ? error.message : "Agent 暂时没有返回结果。",
+        variant: "accent"
+      };
+      if (agentRequestIdRef.current === requestId) setMessages([nextMessage, errorMessage]);
+    } finally {
+      if (agentRequestIdRef.current === requestId) setAgentBusy(false);
+    }
   }
 
   function sendAgentMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    submitAgentText(draft.trim());
+    void submitAgentText(draft.trim());
   }
 
   return (
@@ -316,15 +383,15 @@ function HumanAgentChatHome({ email }: { email?: string }) {
 
       {toolMenuOpen ? (
         <section className="human-tool-menu" aria-label="Agent 能力">
-          <button type="button" onClick={() => submitAgentText("生成我的收款地址")}>
+          <button type="button" disabled={agentBusy} onClick={() => void submitAgentText("生成我的收款地址")}>
             <Wallet size={20} />
             <span>收款</span>
           </button>
-          <button type="button" onClick={() => submitAgentText("看看预测市场")}>
+          <button type="button" disabled={agentBusy} onClick={() => void submitAgentText("看看预测市场")}>
             <Sparkles size={20} />
             <span>预测</span>
           </button>
-          <button type="button" onClick={() => submitAgentText("刷新我的资产")}>
+          <button type="button" disabled={agentBusy} onClick={() => void submitAgentText("刷新我的资产")}>
             <Coins size={20} />
             <span>资产</span>
           </button>
@@ -352,9 +419,10 @@ function HumanAgentChatHome({ email }: { email?: string }) {
             const offset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
             setKeyboardOpen(offset > 24);
           }}
-          placeholder="向 Agent 发送消息"
+          disabled={agentBusy}
+          placeholder={agentBusy ? "Agent 正在整理..." : "向 Agent 发送消息"}
         />
-        <button type="submit" aria-label="发送" disabled={!draft.trim()}>
+        <button type="submit" aria-label="发送" disabled={agentBusy || !draft.trim()}>
           <ArrowRight size={18} />
         </button>
       </form>
@@ -406,6 +474,8 @@ function HumanAgentChatHome({ email }: { email?: string }) {
               <button
                 type="button"
                 onClick={() => {
+                  agentRequestIdRef.current += 1;
+                  setAgentBusy(false);
                   setMessages([]);
                   setSettingsOpen(false);
                 }}
