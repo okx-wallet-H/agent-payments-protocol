@@ -3,12 +3,19 @@ import path from "node:path";
 
 const repoRoot = process.cwd();
 const appPage = read("app/page.tsx");
+const appStyles = read("app/styles.css");
 const packageJson = JSON.parse(read("package.json"));
 const checks = [];
 
 check(appPage.includes('"/api/v2/phase-one"'), "human Agent chat posts to the real phase-one API route");
 check(appPage.includes("createHumanPreviewUserId(email)"), "human Agent chat sends a stable user id to the API route");
 check(appPage.includes("createHumanAgentMessageFromTurn"), "human Agent chat renders the real mobile turn result");
+check(appPage.includes("card?: HumanPhaseOneCard"), "human Agent messages can carry real route cards");
+check(appPage.includes("card: cardMessage.card"), "human Agent chat keeps the real mobile card payload");
+check(appPage.includes("renderHumanAgentCard"), "human Agent chat renders structured cards instead of flattening everything to copy");
+check(appPage.includes('card.type === "prediction_card"'), "human Agent chat has a prediction card branch");
+check(appPage.includes('card.type === "receive_card"'), "human Agent chat has a receive card branch");
+check(appPage.includes("shortenHumanAddress"), "human Agent receive cards avoid dumping raw long addresses into chat");
 check(appPage.includes("const [agentBusy, setAgentBusy] = useState(false)"), "human Agent chat prevents duplicate in-flight sends");
 check(appPage.includes("const agentRequestIdRef = useRef(0)"), "human Agent chat tracks in-flight route requests");
 check(appPage.includes("agentRequestIdRef.current === requestId"), "human Agent chat ignores stale route responses");
@@ -27,6 +34,9 @@ check(
   packageJson.scripts?.["verify:merge"]?.includes("npm run smoke:human-agent-real-api-chat"),
   "merge verification includes human Agent real API smoke"
 );
+check(appStyles.includes(".human-agent-card"), "human Agent card styles exist");
+check(appStyles.includes(".human-agent-card.prediction_card"), "prediction cards have a dedicated human style");
+check(appStyles.includes(".human-agent-card.receive_card"), "receive cards have a dedicated human style");
 
 reject(appPage, "function buildAgentReply", "human Agent chat no longer contains local fake reply builder");
 reject(appPage, "setMessages([nextMessage, nextReply])", "human Agent chat no longer displays local fake replies");
