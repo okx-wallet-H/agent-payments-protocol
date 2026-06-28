@@ -532,6 +532,152 @@ button.compact {
   color: rgba(255, 255, 255, 0.78);
 }
 
+.human-chat-message.carded {
+  display: block;
+  width: min(100%, 348px);
+  border-radius: 28px;
+  padding: 0;
+  background: transparent;
+  color: #171717;
+}
+
+.human-agent-card {
+  display: grid;
+  gap: 12px;
+  border-radius: 28px;
+  padding: 18px;
+  background: #f6f3ef;
+  color: #171717;
+  box-shadow: 0 18px 44px rgba(17, 24, 39, 0.08);
+}
+
+.human-agent-card.prediction_card,
+.human-agent-card.simulation_card,
+.human-agent-card.tracking_card,
+.human-agent-card.strategy_card {
+  background:
+    radial-gradient(circle at 88% 4%, rgba(201, 255, 53, 0.46), transparent 34%),
+    #071f15;
+  color: #ffffff;
+}
+
+.human-agent-card-head {
+  display: grid;
+  gap: 4px;
+}
+
+.human-agent-card-head span {
+  color: #857e75;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.human-agent-card.prediction_card .human-agent-card-head span,
+.human-agent-card.simulation_card .human-agent-card-head span,
+.human-agent-card.tracking_card .human-agent-card-head span,
+.human-agent-card.strategy_card .human-agent-card-head span {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.human-agent-card-head b {
+  display: block;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1.18;
+  font-weight: 950;
+}
+
+.human-agent-card p {
+  margin: 0;
+  color: #5f5851;
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.48;
+}
+
+.human-agent-card.prediction_card p,
+.human-agent-card.simulation_card p,
+.human-agent-card.tracking_card p,
+.human-agent-card.strategy_card p {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.human-agent-card-address {
+  display: grid;
+  gap: 4px;
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.human-agent-card-address span {
+  color: #857e75;
+  font-size: 11px;
+  font-weight: 860;
+}
+
+.human-agent-card-address b {
+  overflow-wrap: anywhere;
+  color: #171717;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.human-agent-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.human-agent-card-metrics span {
+  display: grid;
+  gap: 4px;
+  border-radius: 16px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.human-agent-card.receive_card .human-agent-card-metrics span {
+  background: rgba(23, 23, 23, 0.05);
+  color: #857e75;
+}
+
+.human-agent-card-metrics b {
+  color: inherit;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.human-agent-card.prediction_card .human-agent-card-metrics b,
+.human-agent-card.simulation_card .human-agent-card-metrics b,
+.human-agent-card.tracking_card .human-agent-card-metrics b,
+.human-agent-card.strategy_card .human-agent-card-metrics b {
+  color: #ffffff;
+}
+
+.human-agent-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.human-agent-card-actions span {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 920;
+}
+
+.human-agent-card.receive_card .human-agent-card-actions span {
+  background: #171717;
+  color: #ffffff;
+}
+
 .human-tool-menu {
   position: fixed;
   right: max(24px, calc((100vw - 430px) / 2 + 24px));

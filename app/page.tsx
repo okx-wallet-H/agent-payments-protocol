@@ -166,16 +166,39 @@ type HumanChatMessage = {
   variant?: "accent";
   title?: string;
   text: string;
+  card?: HumanPhaseOneCard;
 };
 
 const initialHumanChatMessages: HumanChatMessage[] = [];
 
 type HumanPhaseOneCard = {
   type?: string;
+  id?: string;
   title?: string;
   statusText?: string;
   agentNote?: string;
+  suggestedAction?: string;
+  actions?: Array<string | { id?: string; label?: string }>;
+  primaryAction?: string;
+  addresses?: Array<{
+    id?: string;
+    label?: string;
+    network?: string;
+    chainId?: number;
+    address?: string;
+    supportedAssets?: string[];
+  }>;
   metrics?: Record<string, unknown>;
+  market?: {
+    question?: string;
+    provider?: string;
+    status?: string;
+    yesPrice?: number;
+    noPrice?: number;
+    liquidity?: number;
+    volume?: number;
+    volume24h?: number;
+  };
 };
 
 type HumanPhaseOneMobileMessage = {
@@ -206,6 +229,125 @@ function formatHumanAgentCard(card: HumanPhaseOneCard) {
   return "真实数据已经返回，但这次没有可展示的说明。";
 }
 
+function shortenHumanAddress(address?: string) {
+  if (!address) return "";
+  if (address.length <= 14) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function formatHumanPercent(value?: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatHumanNumber(value?: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}m`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
+  return value.toFixed(value >= 10 ? 0 : 2);
+}
+
+function getHumanMetricLabel(key: string) {
+  const labels: Record<string, string> = {
+    probabilityLabel: "概率",
+    heatLabel: "热度",
+    priceLabel: "价格",
+    amountLabel: "金额",
+    sharesLabel: "份额",
+    sideLabel: "方向"
+  };
+  return labels[key] || key;
+}
+
+function normalizeHumanMetricValue(value: unknown) {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return formatHumanNumber(value);
+  if (typeof value === "boolean") return value ? "是" : "否";
+  return undefined;
+}
+
+function getHumanCardMetrics(card: HumanPhaseOneCard) {
+  const metricRows = Object.entries(card.metrics || {})
+    .map(([key, value]) => ({
+      label: getHumanMetricLabel(key),
+      value: normalizeHumanMetricValue(value)
+    }))
+    .filter((metric): metric is { label: string; value: string } => Boolean(metric.value));
+
+  if (card.market?.yesPrice !== undefined) {
+    metricRows.push({ label: "会", value: formatHumanPercent(card.market.yesPrice) || String(card.market.yesPrice) });
+  }
+
+  if (card.market?.noPrice !== undefined) {
+    metricRows.push({ label: "不会", value: formatHumanPercent(card.market.noPrice) || String(card.market.noPrice) });
+  }
+
+  const volumeLabel = formatHumanNumber(card.market?.volume24h ?? card.market?.volume);
+  if (volumeLabel) metricRows.push({ label: "成交", value: volumeLabel });
+
+  const liquidityLabel = formatHumanNumber(card.market?.liquidity);
+  if (liquidityLabel) metricRows.push({ label: "流动性", value: liquidityLabel });
+
+  return metricRows.slice(0, 4);
+}
+
+function getHumanActionLabel(action: string | { id?: string; label?: string }): string {
+  if (typeof action !== "string") return action.label || getHumanActionLabel(action.id || "");
+  const labels: Record<string, string> = {
+    copy: "复制",
+    simulate: "模拟",
+    track: "跟踪",
+    build_strategy: "策略"
+  };
+  return labels[action] || action;
+}
+
+function renderHumanAgentCard(message: HumanChatMessage) {
+  const card = message.card;
+  if (!card) return null;
+
+  const primaryAddress = card.addresses?.[0];
+  const metrics = getHumanCardMetrics(card);
+  const actions = (card.actions || (card.primaryAction ? [card.primaryAction] : [])).map(getHumanActionLabel).slice(0, 3);
+  const isReceiveCard = card.type === "receive_card";
+  const isPredictionCard = card.type === "prediction_card";
+  const title = card.title || (isReceiveCard ? "收款地址" : isPredictionCard ? "预测市场" : "Agent");
+  const body = card.agentNote || card.statusText || message.text;
+
+  return (
+    <div className={`human-agent-card ${card.type || "default"}`}>
+      <div className="human-agent-card-head">
+        <span>{isReceiveCard ? "HWallet" : isPredictionCard ? "市场" : "Agent"}</span>
+        <b>{title}</b>
+      </div>
+      {body ? <p>{body}</p> : null}
+      {primaryAddress?.address ? (
+        <div className="human-agent-card-address">
+          <span>{primaryAddress.label || primaryAddress.network || "地址"}</span>
+          <b>{shortenHumanAddress(primaryAddress.address)}</b>
+        </div>
+      ) : null}
+      {metrics.length > 0 ? (
+        <div className="human-agent-card-metrics">
+          {metrics.map((metric) => (
+            <span key={`${metric.label}-${metric.value}`}>
+              {metric.label}
+              <b>{metric.value}</b>
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {actions.length > 0 ? (
+        <div className="human-agent-card-actions">
+          {actions.map((action) => (
+            <span key={action}>{action}</span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function createHumanAgentMessageFromTurn(
   turn: HumanPhaseOneResponse["mobileTurn"] | undefined,
   timestamp: number
@@ -221,6 +363,7 @@ function createHumanAgentMessageFromTurn(
       role: "assistant",
       title: cardMessage.card.title || cardMessage.card.statusText || "Agent",
       text: formatHumanAgentCard(cardMessage.card),
+      card: cardMessage.card,
       variant: "accent"
     };
   }
@@ -364,16 +507,22 @@ function HumanAgentChatHome({ email }: { email?: string }) {
           <article
             key={message.id}
             ref={message.id === pendingFocusMessageId.current ? latestUserMessageRef : undefined}
-            className={`human-chat-message ${message.role}${message.variant ? ` ${message.variant}` : ""}`}
+            className={`human-chat-message ${message.role}${message.variant ? ` ${message.variant}` : ""}${
+              message.card ? " carded" : ""
+            }`}
           >
             {message.role === "assistant" ? (
-              <>
-                {message.variant === "accent" ? <Sparkles size={18} /> : <Bot size={18} />}
-                <div>
-                  {message.title ? <b>{message.title}</b> : null}
-                  <p>{message.text}</p>
-                </div>
-              </>
+              message.card ? (
+                renderHumanAgentCard(message)
+              ) : (
+                <>
+                  {message.variant === "accent" ? <Sparkles size={18} /> : <Bot size={18} />}
+                  <div>
+                    {message.title ? <b>{message.title}</b> : null}
+                    <p>{message.text}</p>
+                  </div>
+                </>
+              )
             ) : (
               <p>{message.text}</p>
             )}
